@@ -1,0 +1,8 @@
+<div>
+error message : <?=$message?>
+</div>
+<?php if ($context) : ?>
+<div>
+     <?=sfWebDump($context)?>
+</div>
+<?php endif; ?>

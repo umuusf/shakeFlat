@@ -1,0 +1,31 @@
+body {
+    font-size: 1rem;
+    font-family: 'Nanum Gothic', sans-serif;
+}
+
+.shakeflat-wrapper {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+}
+
+.shakeflat-container {
+    border-left: solid #f3f3f3;
+    border-right: solid #f3f3f3;
+    background-color: #fbfbfb;
+}
+
+.shakeflat-container>.shakeflat-top-logo {
+    font-weight: 800;
+    font-size: 1.5rem;
+    line-height: 140%;
+    letter-spacing: 3px;
+    padding: 10px 10px 15px 10px;
+}
+
+.shakeflat-container>.shakeflat-body {
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 0 10px 60px 10px;
+    width: 100vw;
+}

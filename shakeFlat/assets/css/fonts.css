@@ -1,0 +1,39 @@
+/* nanum-gothic-regular - latin_korean */
+@font-face {
+  font-family: 'Nanum Gothic';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../fonts/nanum-gothic-v21-latin_korean/nanum-gothic-v21-latin_korean-regular.eot'); /* IE9 Compat Modes */
+  src: local(''),
+       url('../fonts/nanum-gothic-v21-latin_korean/nanum-gothic-v21-latin_korean-regular.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('../fonts/nanum-gothic-v21-latin_korean/nanum-gothic-v21-latin_korean-regular.woff2') format('woff2'), /* Super Modern Browsers */
+       url('../fonts/nanum-gothic-v21-latin_korean/nanum-gothic-v21-latin_korean-regular.woff') format('woff'), /* Modern Browsers */
+       url('../fonts/nanum-gothic-v21-latin_korean/nanum-gothic-v21-latin_korean-regular.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('../fonts/nanum-gothic-v21-latin_korean/nanum-gothic-v21-latin_korean-regular.svg#NanumGothic') format('svg'); /* Legacy iOS */
+}
+/* nanum-gothic-700 - latin_korean */
+@font-face {
+  font-family: 'Nanum Gothic';
+  font-style: normal;
+  font-weight: 700;
+  src: url('../fonts/nanum-gothic-v21-latin_korean/nanum-gothic-v21-latin_korean-700.eot'); /* IE9 Compat Modes */
+  src: local(''),
+       url('../fonts/nanum-gothic-v21-latin_korean/nanum-gothic-v21-latin_korean-700.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('../fonts/nanum-gothic-v21-latin_korean/nanum-gothic-v21-latin_korean-700.woff2') format('woff2'), /* Super Modern Browsers */
+       url('../fonts/nanum-gothic-v21-latin_korean/nanum-gothic-v21-latin_korean-700.woff') format('woff'), /* Modern Browsers */
+       url('../fonts/nanum-gothic-v21-latin_korean/nanum-gothic-v21-latin_korean-700.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('../fonts/nanum-gothic-v21-latin_korean/nanum-gothic-v21-latin_korean-700.svg#NanumGothic') format('svg'); /* Legacy iOS */
+}
+/* nanum-gothic-800 - latin_korean */
+@font-face {
+  font-family: 'Nanum Gothic';
+  font-style: normal;
+  font-weight: 800;
+  src: url('../fonts/nanum-gothic-v21-latin_korean/nanum-gothic-v21-latin_korean-800.eot'); /* IE9 Compat Modes */
+  src: local(''),
+       url('../fonts/nanum-gothic-v21-latin_korean/nanum-gothic-v21-latin_korean-800.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+       url('../fonts/nanum-gothic-v21-latin_korean/nanum-gothic-v21-latin_korean-800.woff2') format('woff2'), /* Super Modern Browsers */
+       url('../fonts/nanum-gothic-v21-latin_korean/nanum-gothic-v21-latin_korean-800.woff') format('woff'), /* Modern Browsers */
+       url('../fonts/nanum-gothic-v21-latin_korean/nanum-gothic-v21-latin_korean-800.ttf') format('truetype'), /* Safari, Android, iOS */
+       url('../fonts/nanum-gothic-v21-latin_korean/nanum-gothic-v21-latin_korean-800.svg#NanumGothic') format('svg'); /* Legacy iOS */
+}
