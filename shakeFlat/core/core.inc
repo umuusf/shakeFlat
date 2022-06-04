@@ -78,6 +78,8 @@ class App extends L
     // If you set it up again in an individual module, use it.
     public function setMode($mode)
     {
+        $constList = Util::classDefineList("shakeFlat\Template", "MODE_", true);
+        if (!in_array($mode, array_values($constList))) $this->exit("This template mode does not exist.");
         $this->template->setMode($mode);
         return $this;
     }

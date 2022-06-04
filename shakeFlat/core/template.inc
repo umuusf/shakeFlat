@@ -82,11 +82,9 @@ class Template
         return $this;
     }
 
-    // called from Response class
+    // called from App class
     public function setMode($mode)
     {
-        $constList = Util::classDefineList("shakeFlat\Template", "MODE_", true);
-        if (!in_array($mode, array_values($constList))) $this->exit("This template mode does not exist.");
         $this->mode = $mode;
         return $this;
     }
