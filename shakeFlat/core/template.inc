@@ -32,7 +32,7 @@ class Template
     const MODE_API_ENCRYPT          = 5;
 
     private $pathTemplate;
-    private $templateLayout;
+    private $template;
     private $layoutFile;
     private $layoutFileForError;
     private $mode;
@@ -48,7 +48,7 @@ class Template
     private function __construct()
     {
         $this->pathTemplate         = SHAKEFLAT_PATH . "templates/";
-        $this->templateLayout       = "default";
+        $this->template             = "default";
         $this->layoutFile           = "layout.html";
         $this->layoutFileForError   = "layout.html";
         $this->mode                 = self::MODE_WEB;
@@ -62,9 +62,9 @@ class Template
     }
 
     // called from App class
-    public function setTemplateLayout($layout)
+    public function setTemplate($template)
     {
-        $this->templateLayout = $layout;
+        $this->template = $template;
         return $this;
     }
 
@@ -120,7 +120,7 @@ class Template
                 return;
             case self::MODE_WEB :
                 $router = Router::getInstance();
-                $p = rtrim($this->pathTemplate, " /") . "/" . trim($this->templateLayout, " /");
+                $p = rtrim($this->pathTemplate, " /") . "/" . trim($this->template, " /");
                 ob_start();
                 include("{$p}/{$router->module()}/{$router->fnc()}.html");  // You can get the value by referring to $res in the template.
                 $contentBody = ob_get_clean();
@@ -166,7 +166,7 @@ class Template
                 return;
             case self::MODE_WEB :
                 $router = Router::getInstance();
-                $p = rtrim($this->pathTemplate, " /") . "/" . trim($this->templateLayout, " /");
+                $p = rtrim($this->pathTemplate, " /") . "/" . trim($this->template, " /");
                 ob_start();
                 include("{$p}/error.html");         // use $message, $code
                 $contentBody = ob_get_clean();

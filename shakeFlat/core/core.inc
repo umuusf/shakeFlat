@@ -55,9 +55,9 @@ class App extends L
         return $this;
     }
 
-    public function setTemplateLayout($layout)
+    public function setTemplate($template)
     {
-        $this->template->setTemplateLayout($layout);
+        $this->template->setTemplate($template);
         return $this;
     }
 
@@ -67,6 +67,7 @@ class App extends L
         return $this;
     }
 
+    // Set the file to be used as layout on the screen where the error will be displayed. (default is layout.html)
     public function setLayoutFileForError($layoutFileForError)
     {
         $this->template->setLayoutFileForError($layoutFileForError);
