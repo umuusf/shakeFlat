@@ -29,7 +29,7 @@ ln -s ../shakeFlat/assets/ .
 require_once __DIR__ . "/../shakeFlat/core/autoloader.inc";
 
 $app = new shakeFlat\App();
-$app->setTransaction()->setTemplate("default")->setMode(shakeFlat\Template::MODE_WEB);
+$app->setTemplate("default")->setMode(shakeFlat\Template::MODE_WEB);
 $app->execModule()->publish();
 ```
 3. shakeFlat/modules/ 아래에 개별 웹페이지의 PHP코드 부분을 작성합니다. (welcome/main.php 참조)
