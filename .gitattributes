@@ -1,2 +1,7 @@
 *.js linguist-vendored
+*.css linguist-vendored
+*.scss linguist-vendored
+*.less linguist-vendored
+*.html linguist-vendored
 *.php linguist-vendored=false
+*.inc linguist-vendored=false
