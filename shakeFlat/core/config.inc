@@ -58,13 +58,13 @@ class Config
     // Check the storage path in the file system. Also check the upload and log folders located under storage.
     private static function checkStorage()
     {
-        if (!file_exists(STORAGE_PATH)) L::system("The storage folder does not exist in the file system : ".STORAGE_PATH);
+        if (!is_dir(STORAGE_PATH)) if (!mkdir(STORAGE_PATH, 0775, true)) L::system("Failed to create storage folder.");
         if (!is_readable(STORAGE_PATH)) L::system("You do not have read permission on the storage folder : ".STORAGE_PATH);
         if (!is_writable(STORAGE_PATH)) L::system("You do not have write access to the storage folder : ".STORAGE_PATH);
 
         $uploadPath = STORAGE_PATH . trim(SHAKEFLAT_ENV["storage"]["upload_path"], " /") . "/";
         if (!is_dir($uploadPath)) {
-            mkdir($uploadPath);
+            mkdir($uploadPath, 0775, true);
         } else {
             if (!is_readable($uploadPath)) L::system("You do not have read permission on the storage folder : {$uploadPath}");
             if (!is_writable($uploadPath)) L::system("You do not have write access to the storage folder : {$uploadPath}");
@@ -72,7 +72,7 @@ class Config
 
         $logPath = STORAGE_PATH . trim(SHAKEFLAT_ENV["storage"]["log_path"], " /") . "/";
         if (!is_dir($logPath)) {
-            mkdir($logPath);
+            mkdir($logPath, 0775, true);
         } else {
             if (!is_readable($logPath)) L::system("You do not have read permission on the storage folder : {$logPath}");
             if (!is_writable($logPath)) L::system("You do not have write access to the storage folder : {$logPath}");
