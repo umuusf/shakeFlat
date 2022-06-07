@@ -18,6 +18,9 @@ class Config
         // all configurations.
         define("SHAKEFLAT_ENV", self::parse_ini_file_extend());
 
+        // timezone
+        if (isset(SHAKEFLAT_ENV["config"]["php_timezone"])) date_default_timezone_set(SHAKEFLAT_ENV["config"]["php_timezone"]);
+
         // shakeFlat dir
         define("SHAKEFLAT_PATH", substr(__DIR__, 0, -4));        // -4 : "libs"
 
@@ -33,8 +36,15 @@ class Config
             ini_set("display_errors", "0");
         }
 
-        // timezone
-        if (isset(SHAKEFLAT_ENV["config"]["php_timezone"])) date_default_timezone_set(SHAKEFLAT_ENV["config"]["php_timezone"]);
+        // error handler
+        if (SHAKEFLAT_ENV["config"]["use_error_handler"] ?? false) {
+            error_reporting(0);
+            ini_set("display_errors", "0");             // Prevent php from outputting errors.
+
+            include_once "error_handler.inc";
+            set_error_handler("sfErrorHandler");                    // for warning
+            register_shutdown_function("sfErrorHandlerShutdown");   // for fatal
+        }
 
         // storage
         if (substr(SHAKEFLAT_ENV["storage"]["storage_path"], 0, 1) == "/") {
@@ -43,7 +53,6 @@ class Config
             define("STORAGE_PATH", SHAKEFLAT_PATH . trim(SHAKEFLAT_ENV["storage"]["storage_path"], " /") . "/");
         }
         if (SHAKEFLAT_ENV["storage"]["check_storage"] ?? false) self::checkStorage();
-
     }
 
     // Check the storage path in the file system. Also check the upload and log folders located under storage.

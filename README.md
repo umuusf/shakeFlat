@@ -50,5 +50,7 @@ error.html    : 에러가 발생한 경우 이 템플릿이 사용된다.
 4. 패키지에 포함된 shakeFlat/templates/default/ 와 shakeFlat/templates/mobile 을 참조하십시오.
 
 #### 계획
-1. 에러 처리 핸들러
-2. 다중 언어 웹사이트 개발 지원 기능
+- ~~에러 처리 핸들러~~
+- 다중 언어 웹사이트 개발 지원 기능
+- RESTful API 지원
+- Support for per-page caching

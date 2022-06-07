@@ -2,20 +2,12 @@
 /**
  * modules/welcome/main.php
  *
- * module sample.
+ * module sample for home page.
  * When accessing http(s)://domain.com/ or http(s)://domain.com/welcome/main, this module is executed.
  */
 
 use shakeFlat\libs\Param;
-use shakeFlat\libs\DB;
 use shakeFlat\libs\Response;
-use shakeFlat\libs\Util;
-use shakeFlat\libs\L;
-use shakeFlat\libs\AES256;
-use shakeFlat\libs\Cookie;
-use shakeFlat\libs\Token;
-use shakeFlat\libs\AuthSession;
-use shakeFlat\models\mUser;
 
 function fnc_main()
 {

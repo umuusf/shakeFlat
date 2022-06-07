@@ -84,6 +84,12 @@ class App extends L
         return $this;
     }
 
+    // If display_error is false in config.ini, set the error message to be displayed on the screen when an error occurs.
+    public function setDefaultErrorMessage($msg)
+    {
+        L::defaultErrorMessage($msg);
+    }
+
     // Executes one module.
     // Be sure to call exec after calling set related method first.
     public function execModule()

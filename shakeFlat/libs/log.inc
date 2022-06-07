@@ -29,6 +29,13 @@ class L
         return $log;
     }
 
+    public static function defaultErrorMessage($message = null)
+    {
+        static $msg = "Oops!! An error has occurred. Engineers comparable to advanced AI are working hard to fix it. We won't let you down!!";
+        if ($message !== null) $msg = $message;
+        return $msg;
+    }
+
     // shakeFlat framework structure error. App developers will seldom use it.
     // Do not record logs.
     public static function system($message, $context = array(), $exception = null)
@@ -71,7 +78,7 @@ class L
                 $context = null;
             }
         } else {
-            $message = "Oops!! An error has occurred. Engineers comparable to advanced AI are working hard to fix it. We won't let you down!!";
+            $message = self::defaultErrorMessage();
             $context = null;
         }
         $template = Template::getInstance();
@@ -105,7 +112,7 @@ class L
                     $traceLog[] = array (
                         "file"      => $bt["file"],
                         "line"      => $bt["line"] ?? -1,
-                        "function"  => $bt["function"] ?? "",
+                        "function"  => str_replace(array("sfErrorHandlerShutdown", "sfErrorHandler"), "", $bt["function"]) ?? "",
                         "class"     => $bt["class"] ?? "",
                     );
                 }
