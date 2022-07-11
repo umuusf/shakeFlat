@@ -18,6 +18,7 @@
  */
 
 namespace shakeFlat;
+use shakeFlat\Translation;
 use shakeFlat\libs\Response;
 use shakeFlat\libs\Router;
 use shakeFlat\libs\AES256;
@@ -36,6 +37,7 @@ class Template
     private $layoutFile;
     private $layoutFileForError;
     private $mode;
+    private $translationLang;
 
     public static function getInstance()
     {
@@ -52,6 +54,7 @@ class Template
         $this->layoutFile           = "layout.html";
         $this->layoutFileForError   = "layout.html";
         $this->mode                 = self::MODE_WEB;
+        $this->translationLang      = null;
     }
 
     // called from App class
@@ -89,17 +92,34 @@ class Template
         return $this;
     }
 
+    // If a tag for translation ([:...:]) is applied to the text written in the template, but translation is not desired, this function is called without parameters.
+    // If it is called without parameters (when it is called as null ), the passing method of the Translation class is called.
+    public function setTranslationLang($lang = null)
+    {
+        $this->translationLang = $lang;
+        return $this;
+    }
+
+    public function getTranslationLang()
+    {
+        return $this->translationLang;
+    }
+
     public function displayResult()
     {
         $res = Response::getInstance();
         switch($this->mode) {
             case self::MODE_AJAX :
                 header("Content-Type: application/json");
-                echo json_encode($res->data(), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
+                $data = $res->data();
+                $data = $this->translationOutput($data);
+                echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
                 return;
             case self::MODE_AJAX_FOR_DATATABLE :
                 header("Content-Type: application/json");
-                echo json_encode($res->data()["data"], JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
+                $data = $res->data()["data"];
+                $data = $this->translationOutput($data);
+                echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
                 return;
             case self::MODE_API :
                 header("Access-Control-Allow-Origin: *");
@@ -107,14 +127,18 @@ class Template
                 header("Access-Control-Allow-Methods: POST");
                 header("Access-Control-Allow-Headers: Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Auth-Token");
                 header("Content-Type: application/json");
-                echo json_encode($res->data(), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
+                $data = $res->data();
+                $data = $this->translationOutput($data);
+                echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
                 return;
             case self::MODE_API_ENCRYPT :
                 header("Access-Control-Allow-Origin: *");
                 header("Access-Control-Allow-Credentials: true");
                 header("Access-Control-Allow-Methods: POST");
                 header("Access-Control-Allow-Headers: Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Auth-Token");
-                echo AES256::packObject($res->data(), SHAKEFLAT_ENV["aes256"]["key_with_client"] ?? "00000000000000000000000000000000");
+                $data = $res->data();
+                $data = $this->translationOutput($data);
+                echo AES256::packObject($data, SHAKEFLAT_ENV["aes256"]["key_with_client"] ?? "00000000000000000000000000000000");
                 return;
             case self::MODE_WEB :
                 $router = Router::getInstance();
@@ -125,6 +149,8 @@ class Template
                 ob_start();
                 include("{$p}/{$this->layoutFile}");        // Insert $contentBody inside layout.html and use it.
                 $html = ob_get_clean();
+
+                $html = $this->translationOutput($html);       // translation...
                 echo $html;
                 return;
         }
@@ -138,14 +164,17 @@ class Template
             "error"  => array ( "errCode" => $code, "errMsg" => $message ),
             "data"   => array (),
         );
+
         switch($this->mode) {
             case self::MODE_AJAX :
                 header("Content-Type: application/json");
+                $data = $this->translationOutput($data);
                 echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
                 return;
             case self::MODE_AJAX_FOR_DATATABLE :
                 header("Content-Type: application/json");
-                echo json_encode($data["data"], JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
+                $data = $this->translationOutput($data["data"]);
+                echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
                 return;
             case self::MODE_API :
                 header("Access-Control-Allow-Origin: *");
@@ -153,6 +182,7 @@ class Template
                 header("Access-Control-Allow-Methods: POST");
                 header("Access-Control-Allow-Headers: Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Auth-Token");
                 header("Content-Type: application/json");
+                $data = $this->translationOutput($data);
                 echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
                 return;
             case self::MODE_API_ENCRYPT :
@@ -160,6 +190,7 @@ class Template
                 header("Access-Control-Allow-Credentials: true");
                 header("Access-Control-Allow-Methods: POST");
                 header("Access-Control-Allow-Headers: Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Auth-Token");
+                $data = $this->translationOutput($data);
                 echo AES256::packObject($data, SHAKEFLAT_ENV["aes256"]["key_with_client"] ?? "00000000000000000000000000000000");
                 return;
             case self::MODE_WEB :
@@ -171,8 +202,20 @@ class Template
                 ob_start();
                 include("{$p}/{$this->layoutFileForError}");        // Insert $contentBody inside layout.html and use it.
                 $html = ob_get_clean();
+                $html = $this->translationOutput($html);
                 echo $html;
                 return;
         }
+    }
+
+    private function translationOutput($output)
+    {
+        if ($this->translationLang) {
+            $router = Router::getInstance();
+            $translation = new Translation("{$router->module()}/{$router->fnc()}", $this->translationLang);
+            $output = $translation->convert($output);
+            $translation->updateCache();
+        }
+        return Translation::passing($output);
     }
 }

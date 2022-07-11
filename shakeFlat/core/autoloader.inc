@@ -14,6 +14,7 @@ spl_autoload_register(function($class) {
     switch($class) {
         case "shakeFlat\App" :              require_once "core.inc"; break;
         case "shakeFlat\Template" :         require_once "template.inc"; break;
+        case "shakeFlat\Translation" :      require_once "translation.inc"; break;
 
         case "shakeFlat\libs\DB" :          require_once __DIR__ . "/../libs/db.inc"; break;
         case "shakeFlat\libs\Ooro" :        require_once __DIR__ . "/../libs/ooro.inc"; break;

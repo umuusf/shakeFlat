@@ -107,7 +107,7 @@ class DB extends L
 
     private function __construct($connectionName)
     {
-        if (!isset(SHAKEFLAT_ENV["database"]["connection"][$connectionName])) $this->exit("[{$connectionName}] that does not exist.");
+        if (!isset(SHAKEFLAT_ENV["database"]["connection"][$connectionName])) $this::system("DB connection information is not defined in config.ini.", array( "connection" => $connectionName ));
         $connInfo = SHAKEFLAT_ENV["database"]["connection"][$connectionName][rand(0, count(SHAKEFLAT_ENV["database"]["connection"][$connectionName])-1)];
 
         if(isset(SHAKEFLAT_ENV["database"]["common"])) {

@@ -26,8 +26,6 @@ class App extends L
 
     public function __construct()
     {
-        $config = Config::init();
-
         $this->transactionDB    = array();
         $this->pathConfig       = SHAKEFLAT_PATH . "config/";
         $this->pathModule       = SHAKEFLAT_PATH . "modules/";
@@ -36,10 +34,10 @@ class App extends L
         $this->template->setMode(Template::MODE_WEB);
     }
 
-    public function setTransaction($databaseConnection = "default")
+    public function setTransaction($connectionName = "default")
     {
-        if (!isset(SHAKEFLAT_ENV["database"]["connection"][$databaseConnection])) $this->exit("[{$databaseConnection}] that does not exist.");
-        $this->transactionDB[] = $databaseConnection;
+        if (!isset(SHAKEFLAT_ENV["database"]["connection"][$connectionName])) $this::system("DB connection information is not defined in config.ini.", array( "connection" => $connectionName ));
+        $this->transactionDB[] = $connectionName;
         return $this;
     }
 
@@ -79,7 +77,7 @@ class App extends L
     public function setMode($mode)
     {
         $constList = Util::classDefineList("shakeFlat\Template", "MODE_", true);
-        if (!in_array($mode, array_values($constList))) $this->exit("This template mode does not exist.");
+        if (!in_array($mode, array_values($constList))) $this::system("This template mode does not exist.");
         $this->template->setMode($mode);
         return $this;
     }
@@ -90,47 +88,76 @@ class App extends L
         L::defaultErrorMessage($msg);
     }
 
+    // Select the language to use when outputting results.
+    // You need a translation file defined in translation session in config.ini.
+    public function setTranslationLang($lang = null)
+    {
+        $this->template->setTranslationLang($lang);
+        if ($lang) $this->checkTranslation();
+        return $this;
+    }
+
     // Executes one module.
     // Be sure to call exec after calling set related method first.
     public function execModule()
     {
-        try {
-            $dbList = array();
-            if ($this->transactionDB) {
-                foreach($this->transactionDB as $connectionName) {
-                    $db = DB::getInstance($connectionName);
-                    $db->beginTransaction();
-                    $dbList[] = $db;
-                }
+        $dbList = array();
+        if ($this->transactionDB) {
+            foreach($this->transactionDB as $connectionName) {
+                $db = DB::getInstance($connectionName);
+                $db->beginTransaction();
+                $dbList[] = $db;
             }
-
-            $router = Router::getInstance();
-            $moduleFile = rtrim($this->pathModule, " /") . "/{$router->module()}/{$router->fnc()}.php";
-            if (!file_exists($moduleFile)) throw new Exception("The file corresponding to module/function does not exist.");
-            if (!include_once($moduleFile)) throw new Exception("The file corresponding to module/function cannot be included.");
-
-            $fncName = "fnc_" . str_replace("-", "_", $router->fnc());
-            if (!function_exists($fncName)) throw new Exception("A function corresponding to module/function does not exist.");
-            call_user_func($fncName);
-
-            // ooro commit
-            $ooroList = Ooro::instanceList();
-            if ($ooroList) {
-                foreach($ooroList as $class => $pks) foreach($pks as $pk => $ooro) $ooro->update();
-            }
-
-            if ($this->transactionDB && $dbList) {
-                foreach($dbList as $db) $db->commit();
-            }
-
-            return $this;
-        } catch(Exception $e) {
-            $this->exit($e->getMessage() . " ({code})", array("code"=>$e->getCode()));
         }
+
+        $router = Router::getInstance();
+        $moduleFile = rtrim($this->pathModule, " /") . "/{$router->module()}/{$router->fnc()}.php";
+        if (!file_exists($moduleFile)) $this::system("The file corresponding to module/function does not exist.");
+        if (!include_once($moduleFile)) $this::system("The file corresponding to module/function cannot be included.");
+
+        $fncName = "fnc_" . str_replace("-", "_", $router->fnc());
+        if (!function_exists($fncName)) $this::system("A function corresponding to module/function does not exist.");
+
+        call_user_func($fncName, $this);
+
+        $ooroList = Ooro::instanceList();
+        if ($ooroList) {
+            foreach($ooroList as $class => $pks) foreach($pks as $pk => $ooro) $ooro->update();
+        }
+
+        if ($dbList) {
+            foreach($dbList as $db) $db->commit();
+        }
+
+        return $this;
     }
 
     public function publish()
     {
         $this->template->displayResult();
+    }
+
+    private function checkTranslation()
+    {
+        if (!isset(SHAKEFLAT_ENV["translation"]["path"])) $this::system("The path information for translation data does not exist in config.ini.");
+        if (substr(SHAKEFLAT_ENV["translation"]["path"], 0, 1) == "/") {
+            $path = rtrim(SHAKEFLAT_ENV["translation"]["path"], " /") . "/";
+        } else {
+            $path = SHAKEFLAT_PATH . trim(SHAKEFLAT_ENV["translation"]["path"], " /") . "/";
+        }
+        if (!is_dir($path)) if (!mkdir($path, 0775, true)) $this::system("Failed to create path to translation file.", array("path" => $path));
+
+        $cachePath = $path . "cache/";
+        if (!is_dir($cachePath)) if (!mkdir($cachePath, 0775, true)) $this::system("Failed to create translation cache data storage path.", array("path"=>$cachePath));
+        if (!is_writable($cachePath)) $this::system("You do not have write access to the translation data cache file.", array("path"=>$cachePath));
+
+        if (!isset(SHAKEFLAT_ENV["translation"]["translation_file"])) $this::system("There is no data file information for translation in config.ini.");
+        $allFile = $path . SHAKEFLAT_ENV["translation"]["translation_file"];
+        if (!file_exists($allFile)) $this::system("Unable to read data file for translation.");
+
+        //$json = file_get_contents($allFile);
+        //if ($json === false) $this::system("Unable to read data file for translation.");
+        //$arr = json_decode($json, true);
+        //if (!$arr || !is_array($arr)) $this::system("The data file for translation is malformed.");
     }
 }

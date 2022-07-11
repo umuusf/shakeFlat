@@ -40,8 +40,9 @@ class L
     // Do not record logs.
     public static function system($message, $context = array(), $exception = null)
     {
+        $message = self::getTranslationLangSystem($message);
         list($message, $context) = self::_shakeMsgContext($message, $context, $exception);
-        self::_terminate(array("message" => "[SYSTEM ERROR] " . $message, "context" => $context));
+        self::_terminate(array("message" => $message, "context" => $context));
     }
 
     // Terminates the process after logging. (exit)
@@ -80,7 +81,10 @@ class L
         } else {
             $message = self::defaultErrorMessage();
             $context = null;
+
+            $message = self::getTranslationLangSystem($message);
         }
+
         $template = Template::getInstance();
         $template->displayError($message, $context);
         exit;
@@ -127,6 +131,27 @@ class L
 
         if ($exception !== null) $context["exception"] = $exception;
         return array($message, $context);
+    }
+
+    private static function getTranslationLangSystem($msg)
+    {
+        if (!isset(SHAKEFLAT_ENV["translation"]["path"])) return $msg;
+        if (!isset(SHAKEFLAT_ENV["translation"]["system_translation_file"])) return $msg;
+        if (substr(SHAKEFLAT_ENV["translation"]["path"], 0, 1) == "/") {
+            $path = rtrim(SHAKEFLAT_ENV["translation"]["path"], " /");
+        } else {
+            $path = SHAKEFLAT_PATH . trim(SHAKEFLAT_ENV["translation"]["path"], " /");
+        }
+        $path .= "/" . SHAKEFLAT_ENV["translation"]["system_translation_file"];
+        if (!file_exists($path)) return $msg;
+        $json = file_get_contents($path);
+        if ($json === false) return $msg;
+        $arr = json_decode($json, true);
+        $template = Template::getInstance();
+        $lang = $template->getTranslationLang();
+        if (!$lang) return $msg;
+        if (isset($arr[$msg][0][$lang])) return $arr[$msg][0][$lang];
+        return $msg;
     }
 }
 
