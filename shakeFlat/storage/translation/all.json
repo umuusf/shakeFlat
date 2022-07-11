@@ -1,0 +1,19 @@
+{
+    "shakeFlat은 PHP framework입니다.": {
+        "0": {
+            "en": "shakeFlat is a PHP framework.",
+            "fr": "shakeFlat est un framework PHP."
+        }
+    },
+    "원문을 여기에 적으세요.": {
+        "0": {
+            "en": "Please write the translated text here.",
+            "fr": "Veuillez écrire le texte traduit ici."
+        }
+    },
+    "This is a demo module.": {
+        "0": {
+            "kr": "이것은 샘플 모듈입니다."
+        }
+    }
+}
