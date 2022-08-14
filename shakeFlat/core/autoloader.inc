@@ -18,6 +18,7 @@ spl_autoload_register(function($class) {
 
         case "shakeFlat\libs\DB" :          require_once __DIR__ . "/../libs/db.inc"; break;
         case "shakeFlat\libs\Ooro" :        require_once __DIR__ . "/../libs/ooro.inc"; break;
+        case "shakeFlat\libs\Modt" :        require_once __DIR__ . "/../libs/modt.inc"; break;
         case "shakeFlat\libs\Router" :      require_once __DIR__ . "/../libs/router.inc"; break;
         case "shakeFlat\libs\Param" :       require_once __DIR__ . "/../libs/param.inc"; break;
         case "shakeFlat\libs\Response" :    require_once __DIR__ . "/../libs/response.inc"; break;

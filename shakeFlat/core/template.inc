@@ -27,6 +27,7 @@ use shakeFlat\libs\Util;
 class Template
 {
     const MODE_WEB                  = 1;
+    const MODE_WEB_REDIRECT         = 11;
     const MODE_AJAX                 = 2;
     const MODE_AJAX_FOR_DATATABLE   = 3;
     const MODE_API                  = 4;
@@ -38,6 +39,8 @@ class Template
     private $layoutFileForError;
     private $mode;
     private $translationLang;
+    private $redirectUrl;
+    private $redirectMsg;
 
     public static function getInstance()
     {
@@ -55,6 +58,8 @@ class Template
         $this->layoutFileForError   = "layout.html";
         $this->mode                 = self::MODE_WEB;
         $this->translationLang      = null;
+        $this->redirectUrl          = null;
+        $this->redirectMsg          = null;
     }
 
     // called from App class
@@ -85,11 +90,24 @@ class Template
         return $this;
     }
 
+    public function setRedirect($url, $msg = null)
+    {
+        $this->redirectUrl = $url;
+        if ($msg) $this->redirectMsg = $msg;
+        $this->setMode(self::MODE_WEB_REDIRECT);
+        return $this;
+    }
+
     // called from App class
     public function setMode($mode)
     {
         $this->mode = $mode;
         return $this;
+    }
+
+    public function isAjax()
+    {
+        return ($this->mode === self::MODE_AJAX);
     }
 
     // If a tag for translation ([:...:]) is applied to the text written in the template, but translation is not desired, this function is called without parameters.
@@ -153,6 +171,13 @@ class Template
                 $html = $this->translationOutput($html);       // translation...
                 echo $html;
                 return;
+            case self::MODE_WEB_REDIRECT :
+                if ($this->redirectMsg) {
+                    $cookie = shakeFlat\libs\Cookie::getInstance("_rm_");
+                    $cookie->msg = $this->redirectMsg;
+                }
+                header("Location: " . $this->redirectUrl);
+                exit;
         }
     }
 
@@ -216,6 +241,12 @@ class Template
             $output = $translation->convert($output);
             $translation->updateCache();
         }
-        return Translation::passing($output);
+        if (is_array($output)) {
+            $output_json = json_encode($output, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+            $t = Translation::passing($output_json);
+            return json_decode($t);
+        } else {
+            return Translation::passing($output);
+        }
     }
 }

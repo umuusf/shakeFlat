@@ -143,6 +143,12 @@ class AuthCookie extends _Auth
         return false;
     }
 
+    public static function authInfo()
+    {
+        if (self::check()) return parent::authInfo();
+        return null;
+    }
+
     // Get each field(key) value of authInfo. The type of authInfo is array.
     public static function get($field)
     {

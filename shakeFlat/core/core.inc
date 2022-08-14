@@ -20,14 +20,12 @@ use \Exception;
 class App extends L
 {
     private $transactionDB  = array();
-    private $pathConfig     = "";
     private $pathModule     = "";
     private $template       = null;
 
     public function __construct()
     {
         $this->transactionDB    = array();
-        $this->pathConfig       = SHAKEFLAT_PATH . "config/";
         $this->pathModule       = SHAKEFLAT_PATH . "modules/";
 
         $this->template = Template::getInstance();
@@ -120,9 +118,9 @@ class App extends L
 
         call_user_func($fncName, $this);
 
-        $ooroList = Ooro::instanceList();
-        if ($ooroList) {
-            foreach($ooroList as $class => $pks) foreach($pks as $pk => $ooro) $ooro->update();
+        $modtList = Modt::instanceList();
+        if ($modtList) {
+            foreach($modtList as $class => $pks) foreach($pks as $pk => $modt) $modt->update();
         }
 
         if ($dbList) {
@@ -135,6 +133,11 @@ class App extends L
     public function publish()
     {
         $this->template->displayResult();
+    }
+
+    public function redirect($url, $msg = null)
+    {
+        $this->template->setRedirect($url, $msg);
     }
 
     private function checkTranslation()

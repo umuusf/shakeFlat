@@ -13,9 +13,9 @@
 
 namespace shakeFlat\libs;
 use shakeFlat\libs\DB;
-use shakeFlat\libs\L;
+use shakeFlat\libs\Modt;
 
-class Ooro extends L
+class Ooro extends Modt
 {
     protected static $instance = array();
 

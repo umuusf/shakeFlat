@@ -239,7 +239,11 @@ class LogQuery
         $ns = array();
         foreach($l as $i) $ns[] .= trim($i, " \r\t");
         $sql = trim(implode(" ", $ns));
-        if ($bind) $sql = str_replace(array_keys($bind), array_values($bind), $sql);
+        if ($bind) {
+            foreach($bind as $k => $v) {
+                $sql = str_replace(":".$k, $v, $sql);
+            }
+        }
         self::$queryStack[] = $sql;
     }
 

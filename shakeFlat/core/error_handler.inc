@@ -23,7 +23,15 @@ function sfErrorHandlerShutdown()
 {
     $lastError = error_get_last();
     if($lastError !== null) {
-        $msg = substr($lastError["message"], 0, strpos($lastError["message"], "\nStack trace:\n"));
+        if (strpos($lastError["message"], "Stack trace:")) {
+            $msg = substr($lastError["message"], 0, strpos($lastError["message"], "\nStack trace:\n"));
+        } else {
+            $msg = $lastError["message"];
+        }
+        if (isset($lastError["file"]) && isset($lastError["line"])) {
+            $from = " in {$lastError["file"]}:{$lastError["line"]}";
+            if (strpos($msg, $from) === false) $msg .= $from;
+        }
         L::exit($msg);
     }
 }

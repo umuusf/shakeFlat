@@ -29,6 +29,7 @@ ln -s ../shakeFlat/assets/ .
 require_once __DIR__ . "/../shakeFlat/core/autoloader.inc";
 
 $app = new shakeFlat\App();
+$app->setTranslationLang("kr");
 $app->setTemplate("default")->setMode(shakeFlat\Template::MODE_WEB);
 $app->execModule()->publish();
 ```
@@ -51,6 +52,6 @@ error.html    : 에러가 발생한 경우 이 템플릿이 사용된다.
 
 #### 계획
 - ~~에러 처리 핸들러~~
-- 다중 언어 웹사이트 개발 지원 기능
+- ~~다중 언어 웹사이트 개발 지원 기능~~
 - RESTful API 지원
 - Support for per-page caching

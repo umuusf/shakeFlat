@@ -70,6 +70,12 @@ function sfModeAjax()
     $template->setMode(shakeFlat\Template::MODE_AJAX);
 }
 
+function sfIsAjax()
+{
+    $template = shakeFlat\Template::getInstance();
+    return $template->isAjax();
+}
+
 function sfModeAjaxForDatatable()
 {
     $template = shakeFlat\Template::getInstance();
@@ -86,4 +92,19 @@ function sfModeAPIEncrypt()
 {
     $template = shakeFlat\Template::getInstance();
     $template->setMode(shakeFlat\Template::MODE_API_ENCRYPT);
+}
+
+function sfRedirect($url, $msg = null)
+{
+    $template = shakeFlat\Template::getInstance();
+    $template->setRedirect($url, $msg);
+}
+
+// If there is a message delivered when redirecting from the previous page, it is returned.
+function sfRedirectMsg()
+{
+    $cookie = shakeFlat\libs\Cookie::getInstance("_rm_");
+    $msg = $cookie->msg;
+    if ($msg) return $msg;
+    return false;
 }
