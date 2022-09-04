@@ -17,8 +17,6 @@ use shakeFlat\libs\Modt;
 
 class Ooro extends Modt
 {
-    protected static $instance = array();
-
     private $connectionName     = "default";
     private $pkList             = null;
     private $tableName          = "";
@@ -29,19 +27,18 @@ class Ooro extends Modt
     private $sourceDataList     = array();
     private $dataList           = array();
 
-    public static function instanceList()
+    // If there is preload data, use this instead of getInstance of the parent class (Modt).
+    public static function getInstancePreload($pks, $preloadData)
     {
-        return self::$instance;
-    }
-
-    public static function getInstance(...$pks)
-    {
-        if (count($pks) == 1 && (is_integer($pks[0]) || is_string($pks[0]))) $pks = $pks[0];
-        $pk = json_encode($pks, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+        if (is_array($pks)) {
+            $pk = json_encode($pks, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+        } else {
+            $pk = $pks;
+        }
         $calledClass = get_called_class();
 
         if (isset(self::$instance[$calledClass][$pk])) return self::$instance[$calledClass][$pk];
-        self::$instance[$calledClass][$pk] = new $calledClass($pk);
+        self::$instance[$calledClass][$pk] = new $calledClass($pk, $preloadData);
         return self::$instance[$calledClass][$pk];
     }
 
@@ -77,18 +74,18 @@ class Ooro extends Modt
             $where = "";
             foreach($this->pkFieldNameList as $idx => $f) {
                 $whereList[] = "{$f} = :{$f}";
-                $bind[":{$f}"] = $this->pkList[$idx];
+                $bind[$f] = $this->pkList[$idx];
             }
             if ($whereList) $where = implode(" and ", $whereList);
             $stmt = $db->query("select count(*) as cnt from ".$this->tableName." where $where", $bind);
             $count = intval($db->fetch($stmt)["cnt"]);
-            if ($count > 1) $this->exit("The query result is not one row.");
+            if ($count > 1) $this->exit("OORO : The query result is not one row.");
             if ($count == 1) {
                 $stmt = $db->query("select * from ".$this->tableName." where $where", $bind);
                 $row = $db->fetch($stmt);
                 $this->sourceDataList = $this->dataList = $row;
             } else {
-                if (($modelsInfo["nodata_error"] ?? false) == true) $this->exit("The data does not exist.");
+                if (($modelsInfo["nodata_error"] ?? false) == true) $this->exit("OORO : The data does not exist.");
                 foreach($this->pkFieldNameList as $idx => $f) {
                     $this->dataList[$f] = $this->pkList[$idx];      // This means that data is inserted with a new pk value.
                 }

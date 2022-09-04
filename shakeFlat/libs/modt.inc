@@ -24,8 +24,11 @@ class Modt extends L
 
     public static function getInstance(...$pks)
     {
-        if (count($pks) == 1 && (is_integer($pks[0]) || is_string($pks[0]))) $pks = $pks[0];
-        $pk = json_encode($pks, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+        if (count($pks) == 1 && (is_integer($pks[0]) || is_string($pks[0]))) {
+            $pk = $pks[0];
+        } else {
+            $pk = json_encode($pks, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+        }
         $calledClass = get_called_class();
 
         if (isset(self::$instance[$calledClass][$pk])) return self::$instance[$calledClass][$pk];
@@ -33,7 +36,7 @@ class Modt extends L
         return self::$instance[$calledClass][$pk];
     }
 
-    protected function __construct($pk)
+    protected function __construct(...$pk)
     {
         // for child class
     }

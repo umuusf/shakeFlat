@@ -241,7 +241,8 @@ class LogQuery
         $sql = trim(implode(" ", $ns));
         if ($bind) {
             foreach($bind as $k => $v) {
-                $sql = str_replace(":".$k, $v, $sql);
+                if (substr($k, 0, 1) != ":") $k = ":".$k;
+                $sql = str_replace($k, $v, $sql);
             }
         }
         self::$queryStack[] = $sql;
