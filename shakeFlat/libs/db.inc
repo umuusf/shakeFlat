@@ -50,18 +50,28 @@ class DB extends L
                         case "integer" : $type = PDO::PARAM_INT; break;
                         default : $type = PDO::PARAM_STR; break;
                     }
-                    $statement->bindValue($param, $value, $type);
+                    $b = $statement->bindValue($param, $value, $type);
                 }
                 $statement->execute();
                 return $statement;
             }
         } catch(Exception $e) {
             $msg = $this->dbh->errorInfo()[2] ?? "query error";
-            $msg .= " ({code2})";
+            $msg .= "({code2})";
             $context = array (
                 "code1" => $this->dbh->errorCode(),
                 "code2" => $this->dbh->errorInfo()[1] ?? "",
             );
+
+            if (SHAKEFLAT_ENV["config"]["display_error"] ?? false) {
+                $msg .= " {code3}";
+                $context["code3"] = $e->getMessage();
+                if (SHAKEFLAT_ENV["log"]["include_query"] ?? false) {
+                    $msg .= "\nQuery:{code4}";
+                    $context["code4"] = LogQuery::shakeQuery($sql, $bindList);
+                }
+            }
+
             if ($noExit) {
                 $this->error($msg, $context);
                 return false;

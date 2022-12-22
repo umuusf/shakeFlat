@@ -15,7 +15,9 @@ use shakeFlat\libs\AES256;
 use shakeFlat\libs\Cookie;
 use shakeFlat\libs\Token;
 use shakeFlat\libs\AuthSession;
+use shakeFlat\libs\DataTable;
 use shakeFlat\models\mUser;
+use shakeFlat\datatables\dtUser;
 
 function fnc_sample($app)
 {
@@ -45,6 +47,8 @@ function fnc_sample($app)
         $mUser->age = $param->_d_age;
     }
     */
+
+    $dtUser = dtUser::getInstance();
 
     // response
     $res = Response::getInstance();

@@ -103,5 +103,20 @@
         "0": {
             "kr": "config.ini에 DB 연결 정보가 정의되어 있지 않습니다."
         }
+    },
+    "DataTable setting value is missing: ajaxURL": {
+        "0": {
+            "kr": "DataTable 설정 값이 누락 되었습니다 : ajaxURL"
+        }
+    },
+    "DataTable setting value is missing: listing": {
+        "0": {
+            "kr": "DataTable 설정 값이 누락 되었습니다 : listing"
+        }
+    },
+    "DataTable setting value is missing: mainDBTable": {
+        "0": {
+            "kr": "DataTable 설정 값이 누락 되었습니다 : mainDBTable"
+        }
     }
 }

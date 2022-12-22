@@ -1,10 +1,11 @@
 <?php
 /**
- * libs/helper.inc
+ * libs/util.inc
  *
  */
 
 namespace shakeFlat\libs;
+use \DateTime;
 
 class Util
 {
@@ -128,7 +129,7 @@ class Util
     }
 
     // Prepositional particles in Korean
-    // 호출예시($ex) : 영희이(가) 가방을(를) 찾았다
+    // ex) 영희이(가) 가방을(를) 찾았다
     public static function koreanJosa($ex)
     {
         $pps = ["은(는)","이(가)","을(를)","과(와)"];

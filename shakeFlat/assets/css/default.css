@@ -1,5 +1,5 @@
 body {
-    font-size: 1rem;
+    font-size: 0.85rem;
     font-family: 'Nanum Gothic', sans-serif;
 }
 
@@ -29,3 +29,22 @@ body {
     padding: 0 10px 60px 10px;
     width: 100vw;
 }
+
+.btn-xs {
+    padding: 0.125rem 0.25rem;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    border-radius: 0.15rem;
+}
+
+.table thead th, .table tbody + tbody {
+    border-bottom: 2px solid #dee2e6;
+    border-top: 2px solid #dee2e6;
+}
+
+.table th,.table td {
+    border-top: 1px solid #dee2e6;
+}
+
+.table thead th.text-amount { text-align:center!important; }
+.table tbody td.text-amount, .table tfoot td.text-amount { text-align:right!important; padding-right:15px!important; }

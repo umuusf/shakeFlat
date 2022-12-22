@@ -136,7 +136,6 @@ class Template
             case self::MODE_AJAX_FOR_DATATABLE :
                 header("Content-Type: application/json");
                 $data = $res->data()["data"];
-                $data = $this->translationOutput($data);
                 echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
                 return;
             case self::MODE_API :
@@ -198,7 +197,6 @@ class Template
                 return;
             case self::MODE_AJAX_FOR_DATATABLE :
                 header("Content-Type: application/json");
-                $data = $this->translationOutput($data["data"]);
                 echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
                 return;
             case self::MODE_API :

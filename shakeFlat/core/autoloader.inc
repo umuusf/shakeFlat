@@ -28,6 +28,7 @@ spl_autoload_register(function($class) {
         case "shakeFlat\libs\AuthCookie" :
         case "shakeFlat\libs\AuthSession" : require_once __DIR__ . "/../libs/auth.inc"; break;
         case "shakeFlat\libs\Util" :        require_once __DIR__ . "/../libs/util.inc"; break;
+        case "shakeFlat\libs\DataTable" :   require_once __DIR__ . "/../libs/datatable.inc"; break;
 
         case "shakeFlat\libs\L" :
         case "shakeFlat\libs\Log" :
@@ -38,6 +39,9 @@ spl_autoload_register(function($class) {
             if (substr($class, 0, 16) == "shakeFlat\models") {
                 $modelName = substr($class, 17);
                 require_once __DIR__ . "/../models/{$modelName}.inc";
+            } elseif (substr($class, 0, 20) == "shakeFlat\datatables") {
+                $dataTableName = substr($class, 21);
+                require_once __DIR__ . "/../datatables/{$dataTableName}.inc";
             }
     }
 });

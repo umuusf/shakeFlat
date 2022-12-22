@@ -95,7 +95,7 @@ class L
     {
         if (SHAKEFLAT_ENV["log"]["include_parameter"] ?? false) {
             $params = array();
-            $parseUrl = parse_url($_SERVER["REQUEST_URI"]);
+            $parseUrl = parse_url($_SERVER["REQUEST_URI"] ?? 0);
             if (isset($parseUrl["query"])) parse_str($parseUrl["query"], $params);
             if ($_POST) $params = array_merge($params, $_POST);
             $context["parameters"] = $params;
@@ -233,7 +233,7 @@ class LogQuery
 {
     private static $queryStack = array();
 
-    public static function stack($sql, $bind)
+    public static function shakeQuery($sql, $bind)
     {
         $l = explode("\n", $sql);
         $ns = array();
@@ -245,7 +245,12 @@ class LogQuery
                 $sql = str_replace($k, $v, $sql);
             }
         }
-        self::$queryStack[] = $sql;
+        return $sql;
+    }
+
+    public static function stack($sql, $bind)
+    {
+        self::$queryStack[] = self::shakeQuery($sql, $bind);
     }
 
     public static function list()

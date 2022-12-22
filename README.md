@@ -13,7 +13,7 @@
 
 #### 설치
 1. 코드를 다운로드 받으면 htdocs, shakeFlat 2개의 폴더가 나옵니다.
-2. htdocs 폴더를 document_root 로 설정합니다.
+2. 웹서버 설정에서 htdocs 폴더를 document_root 로 설정합니다.
 3. (선택) 포함되어 있는 템플릿 예제를 사용하려면 shakeFlat/asset 폴더를 htdocs 아래에 심볼릭 링크를 만듭니다.
 ```
 cd htdocs
@@ -48,7 +48,7 @@ $app->execModule()->publish();
 layout.html   : 웹페이지의 전체적인 구조를 가진다.
 error.html    : 에러가 발생한 경우 이 템플릿이 사용된다.
 ```
-4. 패키지에 포함된 shakeFlat/templates/default/ 와 shakeFlat/templates/mobile 을 참조하십시오.
+4. 패키지에 포함된 shakeFlat/templates/default/ 와 shakeFlat/templates/mobile/ 을 참조하십시오.
 
 #### 계획
 - ~~에러 처리 핸들러~~
