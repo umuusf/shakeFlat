@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<title><?=SHAKEFLAT_ENV["app"]["name"] ?? "Project Name";?></title>
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="/assets/libs/jquery-3.6.0/jquery.min.js"></script>
+<script src="/assets/libs/jquery-ui-1.13.1/jquery-ui.min.js"></script>
+<script src="/assets/libs/bootstrap-5.2.3/js/bootstrap.bundle.min.js"></script>
+<script src="/assets/libs/moment-2.29.3/moment-with-locales.min.js"></script>
+<script src="/assets/libs/daterangepicker-3.1/daterangepicker.js"></script>
+<script src="/assets/libs/datetimepicker-2.5.4/jquery.datetimepicker.full.min.js"></script>
+<script src="/assets/libs/bs5-lightbox-1.8.0/index.bundle.min.js"></script>
+<script src="/assets/libs/inputmask-5.0.7/jquery.inputmask.min.js"></script>
+<script src="/assets/libs/DataTables/datatables.min.js"></script>
+<script src="/assets/libs/chart.js-3.8.0/chart.min.js"></script>
+<script src="/assets/libs/select2-4.1.0-rc.0/js/select2.full.min.js"></script>
+<script src="/assets/libs/sweetalert2-11.4.17/sweetalert2.all.min.js"></script>
+<script src="/assets/libs/fontawesome-free-6.1.1-web/js/all.min.js"></script>
+<script src="/assets/libs/simplebar-5.3.9/simplebar.min.js"></script>
+<link rel="stylesheet" href="/assets/libs/jquery-ui-1.13.1/jquery-ui.min.css" />
+<link rel="stylesheet" href="/assets/libs/bootstrap-5.2.3/css/bootstrap.min.css" />
+<link rel="stylesheet" href="/assets/libs/bootstrap-icons-1.10.2/bootstrap-icons.css">
+<link rel="stylesheet" href="/assets/libs/daterangepicker-3.1/daterangepicker.css" />
+<link rel="stylesheet" href="/assets/libs/datetimepicker-2.5.4/jquery.datetimepicker.min.css" />
+<link rel="stylesheet" href="/assets/libs/DataTables/datatables.min.css" />
+<link rel="stylesheet" href="/assets/libs/select2-4.1.0-rc.0/css/select2.min.css" />
+<link rel="stylesheet" href="/assets/libs/select2-bootstrap-5-theme-1.3.0/select2-bootstrap-5-theme.min.css" />
+<link rel="stylesheet" href="/assets/libs/sweetalert2-11.4.17/sweetalert2.min.css" />
+<link rel="stylesheet" href="/assets/libs/fontawesome-free-6.1.1-web/css/all.min.css" />
+<link rel="stylesheet" href="/assets/libs/simplebar-5.3.9/simplebar.min.css" />
+<link rel="stylesheet" href="/assets/css/fonts.css" />
+<link rel="stylesheet" href="/assets/css/admin.css?<?=sfCSSJSVer();?>" />
+
+<script src="/assets/js/shakeflat.js?<?=sfCSSJSVer();?>"></script>
+<script src="/assets/js/admin.js?<?=sfCSSJSVer();?>"></script>
+
+</head>
+
+<body>
+<div class="shakeflat-wrapper">
+    <header id="shakeflat-header" class="fixed-top">
+        <div class="shakeflat-topbar d-flex align-items-center">
+            <div class="shakeflat-logo-box d-flex">
+                <a href="/">
+                <div class="shakeflat-logo">
+                    <div class="shakeflat-logo-character text-center"><?=SHAKEFLAT_ENV["app"]["initial"] ?? "S";?></div>
+                </div>
+                </a>
+                <div class="shakeflat-logo-text">
+                    <a href="/"><?=SHAKEFLAT_ENV["app"]["name"] ?? "Project Name";?></a>
+                </div>
+            </div>
+            <div class="d-flex">
+                <button type="button" class="btn btn-sm ms-1" id="shakeflat-btn-left-menu">
+                    <i class="fa fa-fw fa-bars"></i>
+                </button>
+                <div class="shakeflat-server-comment"><?=SHAKEFLAT_ENV["config"]["server_name"] ?? "";?></div>
+            </div>
+            <div class="d-flex ms-auto me-2">
+                <div class="shakeflat-clock text-center">
+                    <div class="shakeflat-clock-time d-flex justify-content-center">
+                        <div id="shakeflat-clock-hours"></div>
+                        <div class="shakeflat-clock-point">:</div>
+                        <div id="shakeflat-clock-min"></div>
+                        <div class="shakeflat-clock-point">:</div>
+                        <div id="shakeflat-clock-sec"></div>
+                    </div>
+                    <div id="shakeflat-clock-date"></div>
+                </div>
+            </div>
+            <div class="d-flex me-2">
+                <div class="shakeflat-account-dropdown dropdown-end">
+                    <button class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Tom Cruise</button>
+                    <ul class="shakeflat-account-dropdown-menu dropdown-menu">
+                        <div class="row text-nowrap my-1 mx-3">Development</div>
+                        <div class="row text-nowrap my-1 mx-3">Last Login : 2022-12-25 00:00:00</div>
+                        <div class="dropdown-divider"></div>
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-power me-1"></i> LOGOUT</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="d-flex w-100">
+        <div data-simplebar class="shakeflat-left" data-status="full">
+            <!-- leftside menu -->
+<?php
+$leftMenu = [
+    [
+        "title" => "Item-1",
+        "icon"  => '<i class="bi bi-chat-dots"></i>',
+        "link"  => null,
+        "sub"   => [
+            [ "title" => "Item 1-1", "link"  => "/welcome/main" ],
+            [ "title" => "Item 1-2", "link"  => "/welcome/sub2" ],
+        ],
+    ],
+    [
+        "title" => "Item-2",
+        "icon"  => '<i class="bi bi-archive"></i>',
+        "link"  => null,
+        "sub"   => [
+            [ "title" => "Item 2-1", "link"  => "/member/sub1" ],
+            [ "title" => "Item 2-2", "link"  => "/member/sub2" ],
+        ],
+    ],
+    [
+        "title" => "Item-3",
+        "icon"  => '<i class="bi bi-bag-x"></i>',
+        "link"  => "/company/main",
+        "sub"   => null,
+    ],
+];
+?>
+            <div class="list-group list-group-tree mt-3">
+                <?php
+                foreach($leftMenu as $menu) :
+                    $active = "";
+                    if ($menu["sub"]) {
+                        foreach($menu["sub"] as $idx => $submenu) {
+                            $ex = explode("/", trim($submenu["link"], "/"));
+                            $m = $ex[0] ?? "welcome";
+                            $f = $ex[1] ?? "main";
+                            if ($router->module() == $m && $router->fnc() == $f) { // $route at core/template.inc
+                                $active = " active in";
+                                $menu["sub"][$idx]["active"] = " active";
+                            }
+                        }
+                    }
+                ?>
+
+                <a href="<?php echo $menu["link"] ?? "javascript:void(0);"; ?>" class="list-group-item<?php echo $active; ?>"<?php if ($menu["sub"]) echo " data-toggle=\"collapse\""; ?>>
+                    <?php echo $menu["icon"] ?? ""; ?><span class="list-group-item-text"><?php echo $menu["title"] ?? ""; ?></span>
+                </a>
+                <?php
+                    if ($menu["sub"]) :
+                ?>
+
+                <div class="list-group collapse<?php if ($active != "") echo " show"; ?>">
+                    <?php foreach($menu["sub"] as $submenu) : ?>
+
+                    <a href="<?php echo $submenu["link"] ?? "javascript:void(0);"; ?>" class="list-group-item<?php echo $submenu["active"] ?? ""; ?>">
+                        <span class="list-group-item-text"><?php echo $submenu["title"] ?? ""; ?></span>
+                    </a>
+                    <?php endforeach; ?>
+
+                </div>
+                <?php
+                    endif;
+                endforeach;
+                ?>
+
+            </div>
+        </div>
+
+        <div class="shakeflat-contents flex-fill p-3">
+            <div class="shakeflat-content-wrapper">
+                <div class="shakeflat-contents-title rounded p-3"><i class="bi bi-caret-right-fill"></i> <?php if (isset($res) && $res->pageTitle) echo $res->pageTitle; else echo "{$router->module()}/{$router->fnc()}"; ?></div>
+                <div class="shakeflat-contents-body my-3">
+                    <?= $contentBody ?>
+                </div>
+            </div>
+
+            <footer>
+                <div class="shakeflat-copyright-box rounded p-2">
+                    <div class="row align-items-end">
+                        <div class="col-auto ms-1">
+                            <?=SHAKEFLAT_ENV["app"]["name"] ?? "Project Name";?><br>
+                            Copyright © <a href="<?=SHAKEFLAT_ENV["app"]["company_link"] ?? "https://github.com/umuusf/shakeFlat";?>" target="_blank"><?=SHAKEFLAT_ENV["app"]["company"] ?? "shakeFlat";?></a>. All rights reserved.
+                        </div>
+                        <div class="shakeflat-copyright-me ms-auto me-2 col-auto text-end">
+                            Design & Develop by <a href="https://github.com/umuusf/shakeFlat" target="_blank">shakeFlat</a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <aside class="shakeflat-sidebar-blind">
+    </aside>
+</div>
+
+</body>
+</html>

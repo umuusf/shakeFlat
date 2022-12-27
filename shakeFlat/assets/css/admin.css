@@ -1,0 +1,115 @@
+body { font-size:0.85rem; font-family:'Nanum Gothic', sans-serif; overflow:hidden; }
+a,a:hover,a:visited { text-decoration:none; color:inherit; }
+
+.shakeflat-wrapper { display:flex; width:100vw; height:100vh; }
+
+.btn-xs {
+    padding:0.125rem 0.25rem;
+    font-size:0.75rem;
+    line-height:1.5;
+    border-radius:0.15rem;
+}
+
+/*
+ * for DataTable
+ */
+.table thead th, .table tbody + tbody {
+    border-bottom:2px solid #dee2e6;
+    border-top:2px solid #dee2e6;
+}
+
+.table th,.table td {
+    border-top:1px solid #dee2e6;
+}
+
+.table thead th.text-amount { text-align:center!important; }
+.table tbody td.text-amount, .table tfoot td.text-amount { text-align:right!important; padding-right:15px!important; }
+
+/*
+ * topbar
+ */
+/* mobile max size is 600px */
+@media only screen and (max-width:600px) {
+    .shakeflat-logo-box { display:none!important; }
+    .shakeflat-logo-text { display:none; }
+    .shakeflat-server-comment { font-size:1.0rem; }
+}
+
+/* for small PC max size is 600~1000px */
+@media only screen and (min-width:600px) {
+    .shakeflat-logo-box { width:60px; }
+    .shakeflat-logo-text { display:none; }
+    .shakeflat-server-comment { font-size:1.0rem; }
+}
+
+/* for PC desktop */
+@media only screen and (min-width:1000px) {
+    .shakeflat-logo-box { width:240px; }
+    .shakeflat-logo-text { display:block; }
+    .shakeflat-server-comment { font-size:1.4rem; }
+}
+
+.shakeflat-topbar { height:60px; background-color:#ffffff; }
+.shakeflat-logo-box { height:60px; padding-top:15px; flex-wrap:wrap; background-color:#2a3042; }
+.shakeflat-logo { padding-left:15px; padding-right:15px; }
+.shakeflat-logo-character { margin:0 auto; width:30px; height:30px; border-radius:50%; background-color:#f0f0f0; color:#232323; font-family:'Times New Roman', Times, serif; font-size:20px; font-weight:800; }
+.shakeflat-logo-text { font-size:1.2rem; color:#f0f0f0; padding:0; }
+.shakeflat-server-comment { font-weight:600; line-height:30px; color:#ff0000; white-space:nowrap; }
+
+.shakeflat-clock { font-family:Oswald; }
+#shakeflat-clock-date { font-size:0.6rem; font-weight:400; margin-top:-5px; color:#606060; white-space:nowrap; }
+.shakeflat-clock-time { font-size:1.0rem; font-weight:500; text-align:center; white-space:nowrap; }
+
+.shakeflat-account-dropdown > button { font-size:1.0rem; font-weight:600; }
+.shakeflat-account-dropdown-menu { font-size:0.8rem; background-color:#fafafa; }
+
+
+/*
+ * left slide bar
+ */
+.shakeflat-left { z-index:200; margin-top:60px!important; background-color:#2a3042; color:#fefefe; }
+.shakeflat-left .simplebar-scrollbar::before { background-color:#909090; }
+.shakeflat-left .list-group {
+    --bs-list-group-bg:#2a3042;
+    --bs-list-group-active-bg:#2a3042;
+    --bs-list-group-active-border-color:#2a3042;
+}
+.shakeflat-left .list-group > a { color: #a0a0a0; }
+.shakeflat-left .list-group > a.active { color: #fff; }
+
+.shakeflat-left .list-group { margin-left:3px; }
+.shakeflat-left .list-group > .list-group-item { margin-bottom:5px; }
+.shakeflat-left .list-group > [data-toggle="collapse"].hide::after { display:none; }
+.shakeflat-left .list-group > [data-toggle="collapse"]::after { float:right; padding-right:10px; padding-top:5px; font-family:"Bootstrap-icons"; }
+.shakeflat-left .list-group > [data-toggle="collapse"].list-group-item::after { content:"\F229"; }
+.shakeflat-left .list-group > [data-toggle="collapse"].in::after { content:"\F235"; }
+.shakeflat-left .list-group > .list-group-item > i { font-size:1.2rem; }
+.shakeflat-left .list-group > .list-group-item > .list-group-item-text { font-size:1.0rem; position:relative; top:-1px; margin-left:10px; }
+.shakeflat-left .list-group > .list-group { margin-left:18px; }
+.shakeflat-left .list-group > .list-group > .list-group-item { margin-top:-10px; }
+
+
+.shakeflat-sidebar-blind {
+    background-color:#121212;
+    opacity: 0.65;
+    display:none;
+    position:fixed;
+    left:0;
+    top:0;
+    width:100%;
+    height:100%;
+    z-index:100;
+}
+/*
+ * contents
+ */
+.shakeflat-contents { z-index:0; margin-top:60px!important; background-color:#eaeaea; overflow:auto; }
+.shakeflat-contents-title { font-size:1.2rem; font-weight:600; background-color:#ffffff; padding-left:12px!important; }
+.shakeflat-contents-title>i { font-size:1.0rem;  }
+
+/*
+ * footer (copyright)
+ */
+footer { min-height:55px; }
+.shakeflat-copyright-box { font-size:0.8rem; background-color:#d0d0d0; white-space:nowrap; }
+.shakeflat-copyright-me { font-size:0.6rem; white-space:nowrap; }

@@ -219,14 +219,27 @@ class Template
             case self::MODE_WEB :
                 $router = Router::getInstance();
                 $p = rtrim($this->pathTemplate, " /") . "/" . trim($this->template, " /");
-                ob_start();
-                include("{$p}/error.html");         // use $message, $code
-                $contentBody = ob_get_clean();
-                ob_start();
-                include("{$p}/{$this->layoutFileForError}");        // Insert $contentBody inside layout.html and use it.
-                $html = ob_get_clean();
-                $html = $this->translationOutput($html);
-                echo $html;
+                if (file_exists("{$p}/error.html") && file_exists("{$p}/{$this->layoutFileForError}")) {
+                    ob_start();
+                    include("{$p}/error.html");         // use $message, $code
+                    $contentBody = ob_get_clean();
+                    ob_start();
+                    include("{$p}/{$this->layoutFileForError}");        // Insert $contentBody inside layout.html and use it.
+                    $html = ob_get_clean();
+                    $html = $this->translationOutput($html);
+                    echo $html;
+                } else {
+                    echo "
+                        <div>
+                        error message : {$message}
+                        </div>
+                        <div>
+                            \n<br>\n<font style='font-size:10pt;'>" .
+                            str_replace("<span style=\"color: #0000BB\">&lt;?php<br /></span>", "", highlight_string("<?php\n".print_r($context,true), true)) .
+                            "</font><br>\n<br>\n
+                        </div>
+                    ";
+                }
                 return;
         }
     }

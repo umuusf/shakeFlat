@@ -29,9 +29,11 @@ class Router
     private function parseUrl()
     {
         $parseUrl = parse_url($_SERVER["REQUEST_URI"]);
-        if (!isset($parseUrl["path"]) || $parseUrl["path"] == "/") {
-            $this->moduleName      = "welcome";
-            $this->functionName    = "main";
+        if (!isset($parseUrl["path"]) || $parseUrl["path"] == "/" || $parseUrl["path"] == "/index.php") {
+            $mainPage = SHAKEFLAT_ENV["config"]["main_page"] ?? "welcome/main";
+            $ml = explode("/", $mainPage);
+            $this->moduleName      = $ml[0] ?? "welcome";
+            $this->functionName    = $ml[1] ?? "main";
         } else {
             $pathList = explode("/", trim($parseUrl["path"], "/"));
             $this->moduleName      = $pathList[0] ?? "welcome";

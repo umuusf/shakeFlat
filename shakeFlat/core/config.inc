@@ -9,7 +9,6 @@
  */
 
 namespace shakeFlat;
-use shakeFlat\libs\L;
 
 Config::init();
 
@@ -38,6 +37,14 @@ class Config
             ini_set("display_errors", "0");
         }
 
+        // storage
+        if (substr(SHAKEFLAT_ENV["storage"]["storage_path"], 0, 1) == "/") {
+            define("STORAGE_PATH", rtrim(SHAKEFLAT_ENV["storage"]["storage_path"], " /") . "/");
+        } else {
+            define("STORAGE_PATH", SHAKEFLAT_PATH . trim(SHAKEFLAT_ENV["storage"]["storage_path"], " /") . "/");
+        }
+        if (SHAKEFLAT_ENV["storage"]["check_storage"] ?? false) self::checkStorage();
+
         // error handler
         if (SHAKEFLAT_ENV["config"]["use_error_handler"] ?? false) {
             error_reporting(0);
@@ -47,38 +54,45 @@ class Config
             set_error_handler("sfErrorHandler");                    // for warning
             register_shutdown_function("sfErrorHandlerShutdown");   // for fatal
         }
-
-        // storage
-        if (substr(SHAKEFLAT_ENV["storage"]["storage_path"], 0, 1) == "/") {
-            define("STORAGE_PATH", rtrim(SHAKEFLAT_ENV["storage"]["storage_path"], " /") . "/");
-        } else {
-            define("STORAGE_PATH", SHAKEFLAT_PATH . trim(SHAKEFLAT_ENV["storage"]["storage_path"], " /") . "/");
-        }
-        if (SHAKEFLAT_ENV["storage"]["check_storage"] ?? false) self::checkStorage();
     }
 
     // Check the storage path in the file system. Also check the upload and log folders located under storage.
     private static function checkStorage()
     {
-        if (!is_dir(STORAGE_PATH)) if (!mkdir(STORAGE_PATH, 0775, true)) L::system("Failed to create storage folder.");
-        if (!is_readable(STORAGE_PATH)) L::system("You do not have read permission on the storage folder.", array("path" => STORAGE_PATH));
-        if (!is_writable(STORAGE_PATH)) L::system("You do not have write access to the storage folder.", array("path" => STORAGE_PATH));
+        if (!is_dir(STORAGE_PATH)) if (!mkdir(STORAGE_PATH, 0775, true)) _config_error("Failed to create storage folder.");
+        if (!is_readable(STORAGE_PATH)) _config_error("You do not have read permission on the storage folder : " . STORAGE_PATH);
+        if (!is_writable(STORAGE_PATH)) _config_error("You do not have write access to the storage folder : " . STORAGE_PATH);
 
         $uploadPath = STORAGE_PATH . trim(SHAKEFLAT_ENV["storage"]["upload_path"], " /") . "/";
         if (!is_dir($uploadPath)) {
             mkdir($uploadPath, 0775, true);
         } else {
-            if (!is_readable($uploadPath)) L::system("You do not have read permission on the storage folder.", array("path" => $uploadPath));
-            if (!is_writable($uploadPath)) L::system("You do not have write access to the storage folder.", array("path" => $uploadPath));
+            if (!is_readable($uploadPath)) _config_error("You do not have read permission on the upload folder : {$uploadPath}");
+            if (!is_writable($uploadPath)) _config_error("You do not have write access to the upload folder : {$uploadPath}");
         }
 
         $logPath = STORAGE_PATH . trim(SHAKEFLAT_ENV["storage"]["log_path"], " /") . "/";
         if (!is_dir($logPath)) {
             mkdir($logPath, 0775, true);
         } else {
-            if (!is_readable($logPath)) L::system("You do not have read permission on the storage folder.", array("path" => $logPath));
-            if (!is_writable($logPath)) L::system("You do not have write access to the storage folder.", array("path" => $logPath));
+            if (!is_readable($logPath)) _config_error("You do not have read permission on the log folder : {$logPath}");
+            if (!is_writable($logPath)) _config_error("You do not have write access to the log folder : {$logPath}");
         }
+
+        $translationPath = trim(SHAKEFLAT_ENV["translation"]["path"], " /") . "/";
+        if (substr($translationPath, 0, 1) == "/") {
+            $translationPath = rtrim($translationPath, " /");
+        } else {
+            $translationPath = SHAKEFLAT_PATH . trim($translationPath, " /");
+        }
+        if (!is_dir($translationPath)) mkdir($translationPath, 0775, true);
+        if (!is_readable($translationPath)) _config_error("You do not have read permission on the translation folder : {$translationPath}");
+        if (!is_writable($translationPath)) _config_error("You do not have write access to the translation folder : {$translationPath}");
+
+        $translationCachePath = $translationPath . "/cache/";
+        if (!is_dir($translationCachePath)) mkdir($translationCachePath, 0775, true);
+        if (!is_readable($translationCachePath)) _config_error("You do not have read permission on the translation folder : {$translationCachePath}");
+        if (!is_writable($translationCachePath)) _config_error("You do not have write access to the translation folder : {$translationCachePath}");
     }
 
     // Read the config.ini file.
@@ -86,7 +100,7 @@ class Config
     private static function parse_ini_file_extend()
     {
         $data = parse_ini_file(__DIR__ . "/../config/config.ini", true);
-        if (!$data) L::system("Could not read config.ini");
+        if (!$data) _config_error("Could not read config.ini");
 
         $explode_str = '.';
         $escape_char = "'";
@@ -127,4 +141,13 @@ class Config
 
         return $data;
     }
+}
+
+function _config_error($msg)
+{
+    $backtrace = debug_backtrace();
+    echo "*** CONFIG ERROR ***<br>\n";
+    echo "{$msg}<br>\n";
+    if (isset($backtrace[0]["file"])) echo "{$backtrace[0]["file"]}:{$backtrace[0]["line"]}<br>\n";
+    exit;
 }

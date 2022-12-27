@@ -1,0 +1,65 @@
+<style>
+body, html { width:100%; height:100%; font-family:'Nanum Gothic', sans-serif; overflow:hidden; }
+
+.wrapper {
+    width:100%;
+    height:100%;
+    background-image: url('/assets/images/admin-login-background-01.jpg');
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    display : flex;
+    justify-content: center;
+    align-items : center;
+}
+
+.inner { width:400px; height:470px; }
+.title { color:#fff; text-align:center; font-size:2rem; font-weight:800; }
+.box { width:400px; height:310px; background-color:#fff; }
+
+.btn-login {
+    width:200px;
+    height:40px;
+    font-size:1.4rem;
+    font-weight:800;
+    color:#fff;
+    border:none;
+    border-radius: 16px;
+    background: -webkit-linear-gradient(left,#a445b2,#d41872,#fa4299);
+    background: -o-linear-gradient(left,#a445b2,#d41872,#fa4299);
+    background: -moz-linear-gradient(left,#a445b2,#d41872,#fa4299);
+    background: linear-gradient(left,#a445b2,#d41872,#fa4299);
+    -webkit-transition: all .4s;
+    -o-transition: all .4s;
+    -moz-transition: all .4s;
+    transition: all .4s;
+}
+</style>
+<div class="wrapper">
+    <div class="inner">
+        <div class="title">
+            <?=SHAKEFLAT_ENV["app"]["name"] ?? "Project Name";?>
+        </div>
+        <div class="box rounded mt-5 p-4">
+            <form>
+                <div class="mb-3">
+                    <label for="login" class="form-label">Login</label>
+                    <input type="text" class="form-control" id="login" autofocus required>
+                </div>
+                <div class="mb-3">
+                    <label for="passwd" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="passwd" required>
+                </div>
+                <div class="d-flex justify-content-center">
+                    <div class="mb-4 me-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="login_keep" value="1">
+                        <label class="form-check-label" for="login_keep">Remember me</label>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <button type="submit" class="btn-login">LOGIN</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
