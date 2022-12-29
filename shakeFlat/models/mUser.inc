@@ -18,7 +18,7 @@
  */
 
 namespace shakeFlat\models;
-use shakeFlat\libs\Ooro;
+use shakeFlat\Ooro;
 
 class mUser extends Ooro
 {

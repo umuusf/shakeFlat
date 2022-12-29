@@ -1,19 +1,122 @@
 {
-    "shakeFlat은 PHP framework입니다.": {
+    "Oops!! An error has occurred. Engineers comparable to advanced AI are working hard to fix it. We won't let you down!!": {
         "0": {
-            "en": "shakeFlat is a PHP framework.",
-            "fr": "shakeFlat est un framework PHP."
+            "kr": "오류가 발생하였습니다."
         }
     },
-    "원문을 여기에 적으세요.": {
+    "Failed to create storage folder.": {
         "0": {
-            "en": "Please write the translated text here.",
-            "fr": "Veuillez écrire le texte traduit ici."
+            "kr": "storage 폴더를 생성하지 못했습니다."
         }
     },
-    "This is a demo module.": {
+    "You do not have read permission on the storage folder.": {
         "0": {
-            "kr": "이것은 샘플 모듈입니다."
+            "kr": "storage 폴더에 대한 읽기 권한이 없습니다."
+        }
+    },
+    "You do not have write access to the storage folder.": {
+        "0": {
+            "kr": "storage 폴더에 대한 쓰기 권한이 없습니다."
+        }
+    },
+    "Could not read config.ini": {
+        "0": {
+            "kr": "config.ini를 읽을 수 없습니다."
+        }
+    },
+    "Unable to read data cache file for translation.": {
+        "0": {
+            "kr": "번역을 위한 데이터 캐시 파일을 읽을 수 없습니다."
+        }
+    },
+    "The data cache file for translation is malformed.": {
+        "0": {
+            "kr": "번역을 위한 데이터 캐시 파일의 형식이 잘못되었습니다."
+        }
+    },
+    "Failed to create data cache file for translation.": {
+        "0": {
+            "kr": "번역을 위한 데이터 캐시 파일을 생성하지 못했습니다."
+        }
+    },
+    "The path information for translation data does not exist in config.ini.": {
+        "0": {
+            "kr": "번역 데이터의 경로 정보가 config.ini에 존재하지 않습니다."
+        }
+    },
+    "Failed to create translation cache data storage path.": {
+        "0": {
+            "kr": "번역 캐시 데이터 저장 경로를 생성하지 못했습니다."
+        }
+    },
+    "You do not have write access to the translation data cache file.": {
+        "0": {
+            "kr": "번역 데이터 캐시 파일에 대한 쓰기 권한이 없습니다."
+        }
+    },
+    "There is no data file information for translation in config.ini.": {
+        "0": {
+            "kr": "config.ini에는 번역을 위한 데이터 파일 정보가 없습니다."
+        }
+    },
+    "Failed to create path to translation file.": {
+        "0": {
+            "kr": "번역 파일의 경로를 생성하지 못했습니다."
+        }
+    },
+    "Unable to read data file for translation.": {
+        "0": {
+            "kr": "번역할 데이터 파일을 읽을 수 없습니다."
+        }
+    },
+    "The data file for translation is malformed.": {
+        "0": {
+            "kr": "번역용 데이터 파일의 형식이 잘못되었습니다."
+        }
+    },
+    "The storage folder does not exist in the file system.": {
+        "0": {
+            "kr": "storage 폴더가 파일 시스템에 존재하지 않습니다."
+        }
+    },
+    "The file corresponding to module/function does not exist.": {
+        "0": {
+            "kr": "module/function에 해당하는 파일이 존재하지 않습니다."
+        }
+    },
+    "The file corresponding to module/function cannot be included.": {
+        "0": {
+            "kr": "module/function에 해당하는 파일을 include 할 수 없습니다."
+        }
+    },
+    "A function corresponding to module/function does not exist.": {
+        "0": {
+            "kr": "module/function에 해당하는 function이 존재하지 않습니다."
+        }
+    },
+    "This template mode does not exist.": {
+        "0": {
+            "kr": "이 템플릿 모드는 존재하지 않습니다."
+        }
+    },
+    "DB connection information is not defined in config.ini.": {
+        "0": {
+            "kr": "config.ini에 DB 연결 정보가 정의되어 있지 않습니다."
+        }
+    },
+    "DataTable setting value is missing: ajaxURL": {
+        "0": {
+            "kr": "DataTable 설정 값이 누락 되었습니다 : ajaxURL"
+        }
+    },
+    "DataTable setting value is missing: listing": {
+        "0": {
+            "kr": "DataTable 설정 값이 누락 되었습니다 : listing"
+        }
+    },
+    "DataTable setting value is missing: mainDBTable": {
+        "0": {
+            "kr": "DataTable 설정 값이 누락 되었습니다 : mainDBTable"
         }
     }
 }

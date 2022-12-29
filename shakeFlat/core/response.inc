@@ -1,11 +1,11 @@
 <?php
 /**
- * libs/response.inc
+ * core/response.inc
  *
  * It stores the processed values in modules and delivers them to templates.
  */
 
-namespace shakeFlat\libs;
+namespace shakeFlat;
 
 class Response
 {

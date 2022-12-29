@@ -18,7 +18,7 @@
  */
 
 namespace shakeFlat\datatables;
-use shakeFlat\libs\DataTable;
+use shakeFlat\DataTable;
 
 class dtUser extends DataTable
 {

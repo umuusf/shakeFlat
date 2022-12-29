@@ -1,15 +1,15 @@
 <?php
 /**
- * libs/auth.inc
+ * core/auth.inc
  *
  * Class for authentication management including login
  *
  */
 
-namespace shakeFlat\libs;
-use shakeFlat\libs\Cookie;
-use shakeFlat\libs\AES256;
-use shakeFlat\libs\L;
+namespace shakeFlat;
+use shakeFlat\Cookie;
+use shakeFlat\AES256;
+use shakeFlat\L;
 
 // Manage authentication information using session.
 class AuthSession extends _Auth

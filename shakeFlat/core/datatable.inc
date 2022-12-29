@@ -1,15 +1,15 @@
 <?php
 /**
- * libs/datatable.inc
+ * core/datatable.inc
  *
  * When using DataTable.js, a standardized code set is provided.
  * You must include the /asset/js/shakeflat.js file.
  *
  */
 
-namespace shakeFlat\libs;
-use shakeFlat\libs\L;
-use shakeFlat\libs\Param;
+namespace shakeFlat;
+use shakeFlat\L;
+use shakeFlat\Param;
 
 class DataTable extends L
 {

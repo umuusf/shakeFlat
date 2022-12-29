@@ -6,16 +6,16 @@
  *
  */
 
-use shakeFlat\libs\Param;
-use shakeFlat\libs\DB;
-use shakeFlat\libs\Response;
-use shakeFlat\libs\Util;
-use shakeFlat\libs\L;
-use shakeFlat\libs\AES256;
-use shakeFlat\libs\Cookie;
-use shakeFlat\libs\Token;
-use shakeFlat\libs\AuthSession;
-use shakeFlat\libs\DataTable;
+use shakeFlat\Param;
+use shakeFlat\DB;
+use shakeFlat\Response;
+use shakeFlat\Util;
+use shakeFlat\L;
+use shakeFlat\AES256;
+use shakeFlat\Cookie;
+use shakeFlat\Token;
+use shakeFlat\AuthSession;
+use shakeFlat\DataTable;
 use shakeFlat\models\mUser;
 use shakeFlat\datatables\dtUser;
 

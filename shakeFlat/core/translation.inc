@@ -28,13 +28,17 @@ class Translation
         $this->cacheTable = array();
         $this->error = false;
 
-        $filepath = $this->cacheFilepath();
-        if ($filepath) {
-            if (file_exists($filepath)) {
-                $json = file_get_contents($filepath);
-                if ($json !== false) {
-                    $arr = json_decode($json, true);
-                    if ($arr) $this->cacheTable = $arr;
+        // In the case of debug mode, the cache file is updated every time.
+        // If the translation file is modified in the live environment, be sure to delete the cache files.
+        if (!IS_DEBUG) {
+            $filepath = $this->cacheFilepath();
+            if ($filepath) {
+                if (file_exists($filepath)) {
+                    $json = file_get_contents($filepath);
+                    if ($json !== false) {
+                        $arr = json_decode($json, true);
+                        if ($arr) $this->cacheTable = $arr;
+                    }
                 }
             }
         }
@@ -69,7 +73,7 @@ class Translation
 
     public function updateCache()
     {
-        if (!$this->needUpdate) return;
+        if (!$this->needUpdate && !IS_DEBUG) return;
 
         $filepath = $this->cacheFilepath();
         if ($filepath) {
@@ -85,7 +89,26 @@ class Translation
     {
         if (!isset($this->cacheTable[$k][$code][$lang])) {
             $allTable = $this->loadAll();
-            $re = $allTable[$k][$code][$lang] ?? $k;
+            $re = $k;
+            if (isset($allTable[$k][$code][$lang])) {
+                $re = $allTable[$k][$code][$lang];
+            } else {
+                foreach($allTable as $str => $arr) {
+                    $str = str_replace(array("$1", "$2", "$3", "$4", "$5", "$6", "$7", "$8", "$9"), "([a-zA-Z0-9, ]*)", $str);
+                    $str = str_replace(array("/"), array("\/"), $str);
+                    $reg = preg_match_all("/^{$str}$/", $k, $match);
+                    if (isset($match[0]) && $match[0] && isset($arr[$code][$lang])) {
+                        $re = $arr[$code][$lang];
+                        for($i=1;$i<=9;$i++) {
+                            if (isset($match[$i][0])) {
+                                $re = str_replace("$".$i, $match[$i][0], $re);
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+
             $this->cacheTable[$k][$code][$lang] = $re;
             $this->needUpdate = true;
             return $re;

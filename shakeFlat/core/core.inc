@@ -8,13 +8,13 @@
 
 namespace shakeFlat;
 use shakeFlat\Template;
-use shakeFlat\libs\Router;
-use shakeFlat\libs\L;
-use shakeFlat\libs\DB;
-use shakeFlat\libs\Ooro;
-use shakeFlat\libs\Modt;
-use shakeFlat\libs\Response;
-use shakeFlat\libs\Util;
+use shakeFlat\Router;
+use shakeFlat\L;
+use shakeFlat\DB;
+use shakeFlat\Ooro;
+use shakeFlat\Modt;
+use shakeFlat\Response;
+use shakeFlat\Util;
 
 use \Exception;
 

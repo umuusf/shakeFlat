@@ -1,12 +1,12 @@
 <?php
 /**
- * libs/router.inc
+ * core/router.inc
  *
  * By parsing URI, routing is processed for each module.
  *
  */
 
-namespace shakeFlat\libs;
+namespace shakeFlat;
 
 class Router
 {

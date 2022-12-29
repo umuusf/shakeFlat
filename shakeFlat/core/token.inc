@@ -10,8 +10,8 @@
  *
  */
 
-namespace shakeFlat\libs;
-use shakeFlat\libs\AES256;
+namespace shakeFlat;
+use shakeFlat\AES256;
 
 class Token
 {

@@ -19,10 +19,10 @@
 
 namespace shakeFlat;
 use shakeFlat\Translation;
-use shakeFlat\libs\Response;
-use shakeFlat\libs\Router;
-use shakeFlat\libs\AES256;
-use shakeFlat\libs\Util;
+use shakeFlat\Response;
+use shakeFlat\Router;
+use shakeFlat\AES256;
+use shakeFlat\Util;
 
 class Template
 {
@@ -132,12 +132,12 @@ class Template
                 $data = $res->data();
                 $data = $this->translationOutput($data);
                 echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
-                return;
+                break;
             case self::MODE_AJAX_FOR_DATATABLE :
                 header("Content-Type: application/json");
                 $data = $res->data()["data"];
                 echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
-                return;
+                break;
             case self::MODE_API :
                 header("Access-Control-Allow-Origin: *");
                 header("Access-Control-Allow-Credentials: true");
@@ -147,7 +147,7 @@ class Template
                 $data = $res->data();
                 $data = $this->translationOutput($data);
                 echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
-                return;
+                break;
             case self::MODE_API_ENCRYPT :
                 header("Access-Control-Allow-Origin: *");
                 header("Access-Control-Allow-Credentials: true");
@@ -156,7 +156,7 @@ class Template
                 $data = $res->data();
                 $data = $this->translationOutput($data);
                 echo AES256::packObject($data, SHAKEFLAT_ENV["aes256"]["key_with_client"] ?? "00000000000000000000000000000000");
-                return;
+                break;
             case self::MODE_WEB :
                 $router = Router::getInstance();
                 $p = rtrim($this->pathTemplate, " /") . "/" . trim($this->template, " /");
@@ -169,7 +169,7 @@ class Template
 
                 $html = $this->translationOutput($html);       // translation...
                 echo $html;
-                return;
+                break;
             case self::MODE_WEB_REDIRECT :
                 if ($this->redirectMsg) {
                     $cookie = shakeFlat\libs\Cookie::getInstance("_rm_");
@@ -194,11 +194,11 @@ class Template
                 header("Content-Type: application/json");
                 $data = $this->translationOutput($data);
                 echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
-                return;
+                break;
             case self::MODE_AJAX_FOR_DATATABLE :
                 header("Content-Type: application/json");
                 echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
-                return;
+                break;
             case self::MODE_API :
                 header("Access-Control-Allow-Origin: *");
                 header("Access-Control-Allow-Credentials: true");
@@ -207,7 +207,7 @@ class Template
                 header("Content-Type: application/json");
                 $data = $this->translationOutput($data);
                 echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
-                return;
+                break;
             case self::MODE_API_ENCRYPT :
                 header("Access-Control-Allow-Origin: *");
                 header("Access-Control-Allow-Credentials: true");
@@ -215,7 +215,7 @@ class Template
                 header("Access-Control-Allow-Headers: Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Auth-Token");
                 $data = $this->translationOutput($data);
                 echo AES256::packObject($data, SHAKEFLAT_ENV["aes256"]["key_with_client"] ?? "00000000000000000000000000000000");
-                return;
+                break;
             case self::MODE_WEB :
                 $router = Router::getInstance();
                 $p = rtrim($this->pathTemplate, " /") . "/" . trim($this->template, " /");
@@ -223,6 +223,7 @@ class Template
                     ob_start();
                     include("{$p}/error.html");         // use $message, $code
                     $contentBody = ob_get_clean();
+
                     ob_start();
                     include("{$p}/{$this->layoutFileForError}");        // Insert $contentBody inside layout.html and use it.
                     $html = ob_get_clean();
@@ -240,7 +241,7 @@ class Template
                         </div>
                     ";
                 }
-                return;
+                break;
         }
     }
 
@@ -249,13 +250,16 @@ class Template
         if ($this->translationLang) {
             $router = Router::getInstance();
             $translation = new Translation("{$router->module()}/{$router->fnc()}", $this->translationLang);
-            $output = $translation->convert($output);
+            if (is_array($output)) {
+                $output = json_decode($translation->convert(json_encode($output, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE)), true);
+            } else {
+                $output = $translation->convert($output);
+            }
             $translation->updateCache();
+            return $output;
         }
         if (is_array($output)) {
-            $output_json = json_encode($output, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
-            $t = Translation::passing($output_json);
-            return json_decode($t);
+            return json_decode(Translation::passing(json_encode($output, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE)), true);
         } else {
             return Translation::passing($output);
         }

@@ -1,6 +1,6 @@
 <?php
 /**
- * libs/modt.inc
+ * core/modt.inc
  *
  * Manages objects that require DB transaction processing.
  * If DB transaction processing is required in a batch when the module execution is finished, use this.
@@ -10,8 +10,8 @@
  * The inherited class must have an update() method.
  */
 
-namespace shakeFlat\libs;
-use shakeFlat\libs\L;
+namespace shakeFlat;
+use shakeFlat\L;
 
 class Modt extends L
 {

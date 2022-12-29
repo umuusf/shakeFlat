@@ -6,8 +6,8 @@
  * When accessing http(s)://domain.com/ or http(s)://domain.com/welcome/main, this module is executed.
  */
 
-use shakeFlat\libs\Param;
-use shakeFlat\libs\Response;
+use shakeFlat\Param;
+use shakeFlat\Response;
 
 function fnc_main()
 {

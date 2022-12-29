@@ -1,6 +1,6 @@
 <?php
 /**
- * libs/ooro.inc
+ * core/ooro.inc
  *
  * Only One Row ORM(Object Relational Mapping).
  *
@@ -11,9 +11,9 @@
  *
  */
 
-namespace shakeFlat\libs;
-use shakeFlat\libs\DB;
-use shakeFlat\libs\Modt;
+namespace shakeFlat;
+use shakeFlat\DB;
+use shakeFlat\Modt;
 
 class Ooro extends Modt
 {

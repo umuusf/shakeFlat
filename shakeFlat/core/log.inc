@@ -1,6 +1,6 @@
 <?php
 /**
- * libs/log.inc
+ * core/log.inc
  *
  * by shakeFlat design intent,
  * In most cases where an error occurs in the process of processing one web page, it is based on the fact that the process ends after outputting an appropriate error screen.
@@ -10,9 +10,9 @@
  *
  */
 
-namespace shakeFlat\libs;
+namespace shakeFlat;
 use shakeFlat\Template;
-use shakeFlat\libs\Response;
+use shakeFlat\Response;
 use \DateTime;
 use \DateTimeZone;
 
@@ -53,6 +53,14 @@ class L
         self::_terminate(self::error($message, $context, $exception));
     }
 
+    // Terminates the process after logging. (exit)
+    // In general, if a web process (each web page or API) encounters a (severe) error during its operation, all operations are stopped and the process is terminated.
+    // For reference, when the process is terminated, the open db transaction is automatically rolled back.
+    public static function exitCode($message, $code)
+    {
+        self::_terminate(self::error($message, array(), null), $code);
+    }
+
     // Logging for each log level. exit is not handled.
     public static function error($message, $context = array(), $exception = null)
     {
@@ -68,7 +76,7 @@ class L
 
     // Display an error screen and exit.
     // $logMsg => array( "message" => string, "context" => array )
-    private static function _terminate($logMsg)
+    private static function _terminate($logMsg, $errCode = -1)
     {
         if (SHAKEFLAT_ENV["config"]["display_error"] ?? false) {
             if (SHAKEFLAT_ENV["config"]["debug_mode"] ?? false) {
@@ -86,7 +94,7 @@ class L
         }
 
         $template = Template::getInstance();
-        $template->displayError($message, $context);
+        $template->displayError($message, $context, $errCode);
         exit;
     }
 
@@ -146,12 +154,30 @@ class L
         if (!file_exists($path)) return $msg;
         $json = file_get_contents($path);
         if ($json === false) return $msg;
-        $arr = json_decode($json, true);
+        $allTable = json_decode($json, true);
         $template = Template::getInstance();
         $lang = $template->getTranslationLang();
         if (!$lang) return $msg;
-        if (isset($arr[$msg][0][$lang])) return $arr[$msg][0][$lang];
-        return $msg;
+        if (isset($allTable[$msg][0][$lang])) return $allTable[$msg][0][$lang];
+
+        $re = $msg;
+        foreach($allTable as $str => $arr) {
+            $str = str_replace(array("$1", "$2", "$3", "$4", "$5", "$6", "$7", "$8", "$9"), "([a-zA-Z0-9, ]*)", $str);
+            $str = str_replace(array("/"), array("\/"), $str);
+
+            $reg = preg_match_all("/^{$str}$/", $msg, $match);
+            if (isset($match[0]) && $match[0] && isset($arr[0][$lang])) {
+                $re = $arr[0][$lang];
+                for($i=1;$i<=9;$i++) {
+                    if (isset($match[$i][0])) {
+                        $re = str_replace("$".$i, $match[$i][0], $re);
+                    }
+                }
+                break;
+            }
+        }
+
+        return $re;
     }
 }
 

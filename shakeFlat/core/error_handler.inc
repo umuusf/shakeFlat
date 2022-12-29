@@ -6,7 +6,7 @@
  * When an error occurs, a log is recorded through a separate handler, and an error message is output using a template.
  */
 
-use shakeFlat\libs\L;
+use shakeFlat\L;
 
 // for waring
 function sfErrorHandler($errno, $errstr, $errfile = null, $errline = null, $errcontext = null)

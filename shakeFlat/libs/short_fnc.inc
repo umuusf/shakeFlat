@@ -1,6 +1,6 @@
 <?php
 /**
- * core\short_fnc.inc
+ * libs\short_fnc.inc
  *
  * Define frequently used method (in class) as a global function.
  * It will mainly be used in templates.
@@ -60,6 +60,11 @@ function sfCutString($p, $l, $with3Dot = true)
 function sfWebDump($p, $fontSize = 10)
 {
     shakeFlat\libs\Util::webDump($p, $fontSize);
+}
+
+function sfDebug($p, $c = array())
+{
+    shakeFlat\libs\L::debug($p, $c);
 }
 
 // The mode defined in shakeFlat\libs\Response is provided as a simple function.

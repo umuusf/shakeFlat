@@ -35,6 +35,8 @@
 <link rel="stylesheet" href="/assets/css/fonts.css" />
 <link rel="stylesheet" href="/assets/css/admin.css?<?=sfCSSJSVer();?>" />
 
+<script src="/assets/js/ajax.js?<?=sfCSSJSVer();?>"></script>
+<script src="/assets/js/alert.js?<?=sfCSSJSVer();?>"></script>
 <script src="/assets/js/shakeflat.js?<?=sfCSSJSVer();?>"></script>
 <script src="/assets/js/admin.js?<?=sfCSSJSVer();?>"></script>
 
@@ -130,6 +132,13 @@ $leftMenu = [
                                 $active = " active in";
                                 $menu["sub"][$idx]["active"] = " active";
                             }
+                        }
+                    } elseif ($menu["link"]) {
+                        $ex = explode("/", trim($menu["link"], "/"));
+                        $m = $ex[0] ?? "welcome";
+                        $f = $ex[1] ?? "main";
+                        if ($router->module() == $m && $router->fnc() == $f) { // $route at core/template.inc
+                            $active = " active in";
                         }
                     }
                 ?>

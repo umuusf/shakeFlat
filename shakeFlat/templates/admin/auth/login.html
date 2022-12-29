@@ -1,9 +1,9 @@
 <style>
-body, html { width:100%; height:100%; font-family:'Nanum Gothic', sans-serif; overflow:hidden; }
+body, html { width:100%; height:100%!important; font-family:'Nanum Gothic', sans-serif; overflow:hidden; display:flex; }
 
-.wrapper {
+.shakeflat-login-wrapper {
     width:100%;
-    height:100%;
+    height:100%!important;
     background-image: url('/assets/images/admin-login-background-01.jpg');
     background-position: center;
     background-repeat: no-repeat;
@@ -13,11 +13,11 @@ body, html { width:100%; height:100%; font-family:'Nanum Gothic', sans-serif; ov
     align-items : center;
 }
 
-.inner { width:400px; height:470px; }
-.title { color:#fff; text-align:center; font-size:2rem; font-weight:800; }
-.box { width:400px; height:310px; background-color:#fff; }
+.shakeflat-login-inner { width:400px; height:470px; }
+.shakeflat-login-title { color:#fff; text-align:center; font-size:2rem; font-weight:800; }
+.shakeflat-login-box { width:400px; height:310px; background-color:#fff; }
 
-.btn-login {
+.shakeflat-login-btn-login {
     width:200px;
     height:40px;
     font-size:1.4rem;
@@ -35,13 +35,32 @@ body, html { width:100%; height:100%; font-family:'Nanum Gothic', sans-serif; ov
     transition: all .4s;
 }
 </style>
-<div class="wrapper">
-    <div class="inner">
-        <div class="title">
+<script>
+$(document).ready(function() {
+    $("#frm").on("submit", function() {
+        callAjax(
+            "auth/login-ok",
+            {
+                login: $("#login").val(),
+                passwd: $("#passwd").val(),
+                remember: $("input:checkbox[id='remember']").is(":checked"),
+            },
+            function(data) {
+                // to do ...
+                console.log(data);
+            }
+        );
+        return false;
+    });
+});
+</script>
+<div class="shakeflat-login-wrapper">
+    <div class="shakeflat-login-inner">
+        <div class="shakeflat-login-title">
             <?=SHAKEFLAT_ENV["app"]["name"] ?? "Project Name";?>
         </div>
-        <div class="box rounded mt-5 p-4">
-            <form>
+        <div class="shakeflat-login-box rounded mt-5 p-4">
+            <form id="frm">
                 <div class="mb-3">
                     <label for="login" class="form-label">Login</label>
                     <input type="text" class="form-control" id="login" autofocus required>
@@ -52,12 +71,12 @@ body, html { width:100%; height:100%; font-family:'Nanum Gothic', sans-serif; ov
                 </div>
                 <div class="d-flex justify-content-center">
                     <div class="mb-4 me-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="login_keep" value="1">
-                        <label class="form-check-label" for="login_keep">Remember me</label>
+                        <input type="checkbox" class="form-check-input" id="remember" value="1">
+                        <label class="form-check-label" for="remember">Remember me</label>
                     </div>
                 </div>
                 <div class="text-center">
-                    <button type="submit" class="btn-login">LOGIN</button>
+                    <button type="submit" class="shakeflat-login-btn-login">LOGIN</button>
                 </div>
             </form>
         </div>

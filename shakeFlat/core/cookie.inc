@@ -1,6 +1,6 @@
 <?php
 /**
- * libs/cookie.inc
+ * core/cookie.inc
  *
  * cookie handling class
  * Cookie values are packed in one cookie variable and stored.
@@ -8,8 +8,8 @@
  * If you do this, I think it's okay to use a cookie without using a session when saving login information.
  */
 
-namespace shakeFlat\libs;
-use shakeFlat\libs\AES256;
+namespace shakeFlat;
+use shakeFlat\AES256;
 
 class Cookie
 {

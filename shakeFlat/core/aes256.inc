@@ -4,7 +4,7 @@
  *
  */
 
-namespace shakeFlat\libs;
+namespace shakeFlat;
 
 class AES256
 {

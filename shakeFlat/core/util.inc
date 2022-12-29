@@ -1,10 +1,10 @@
 <?php
 /**
- * libs/util.inc
+ * core/util.inc
  *
  */
 
-namespace shakeFlat\libs;
+namespace shakeFlat;
 use \DateTime;
 
 class Util

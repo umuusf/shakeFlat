@@ -1,12 +1,12 @@
 <?php
 /**
- * libs/db.inc
+ * core/db.inc
  *
  * database handling class
  */
 
-namespace shakeFlat\libs;
-use shakeFlat\libs\L;
+namespace shakeFlat;
+use shakeFlat\L;
 use \PDO;
 use \Exception;
 
