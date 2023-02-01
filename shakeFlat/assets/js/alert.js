@@ -16,7 +16,8 @@ function alertJump(msg, url) {
     _alert.fire({
         title: msg,
         width: msg.stringWidth() + 'px',
-        onClose: () => {
+    }).then((result) => {
+        if (result.isConfirmed) {
             location.href = url;
         }
     })
@@ -35,7 +36,8 @@ function alertNotiJump(msg, url) {
         icon: 'info',
         title: msg,
         width: msg.stringWidth() + 'px',
-        onClose: () => {
+    }).then((result) => {
+        if (result.isConfirmed) {
             location.href = url;
         }
     })
@@ -83,13 +85,14 @@ function toastAlert(msg) {
 
 
 String.prototype.stringWidth = function(font) {
-    var f = font || "2.35em 'Nanum Gothic'",
+    var f = font || "2.4em 'Nanum Gothic'",
         o = $('<div></div>')
             .text(this)
             .css({'position': 'absolute', 'float': 'left', 'white-space': 'nowrap', 'visibility': 'hidden', 'font': f})
             .appendTo($('body')),
         w = o.width();
     o.remove();
+    w += 50;
     if (w < 400) w = 400;
     if (w > 1200) w = 1200;
 

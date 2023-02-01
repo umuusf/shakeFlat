@@ -44,16 +44,6 @@ class Config
             define("STORAGE_PATH", SHAKEFLAT_PATH . trim(SHAKEFLAT_ENV["storage"]["storage_path"], " /") . "/");
         }
         if (SHAKEFLAT_ENV["storage"]["check_storage"] ?? false) self::checkStorage();
-
-        // error handler
-        if (SHAKEFLAT_ENV["config"]["use_error_handler"] ?? false) {
-            error_reporting(0);
-            ini_set("display_errors", "0");             // Prevent php from outputting errors.
-
-            include_once "error_handler.inc";
-            set_error_handler("sfErrorHandler");                    // for warning
-            register_shutdown_function("sfErrorHandlerShutdown");   // for fatal
-        }
     }
 
     // Check the storage path in the file system. Also check the upload and log folders located under storage.

@@ -32,6 +32,7 @@ class Template
     const MODE_AJAX_FOR_DATATABLE   = 3;
     const MODE_API                  = 4;
     const MODE_API_ENCRYPT          = 5;
+    const MODE_API_ENCRYPT_ZIP      = 6;
 
     private $pathTemplate;
     private $template;
@@ -41,6 +42,9 @@ class Template
     private $translationLang;
     private $redirectUrl;
     private $redirectMsg;
+    private $charset;
+    private $aes256key;
+    private $aes256iv;
 
     public static function getInstance()
     {
@@ -60,6 +64,9 @@ class Template
         $this->translationLang      = null;
         $this->redirectUrl          = null;
         $this->redirectMsg          = null;
+        $this->charset              = "UTF-8";
+        $this->aes256key            = SHAKEFLAT_ENV["aes256"]["key_with_client"] ?? "00000000000000000000000000000000";
+        $this->aes256iv             = SHAKEFLAT_ENV["aes256"]["iv_with_client"] ?? "0000000000000000";
     }
 
     // called from App class
@@ -105,6 +112,12 @@ class Template
         return $this;
     }
 
+    public function setCharset($charset)
+    {
+        $this->charset = $charset;
+        return $this;
+    }
+
     public function isAjax()
     {
         return ($this->mode === self::MODE_AJAX);
@@ -118,6 +131,12 @@ class Template
         return $this;
     }
 
+    public function setAES256Key($key, $iv = null)
+    {
+        $this->aes256key = $key;
+        if ($iv !== null) $this->aes256iv = $iv;
+    }
+
     public function getTranslationLang()
     {
         return $this->translationLang;
@@ -128,36 +147,74 @@ class Template
         $res = Response::getInstance();
         switch($this->mode) {
             case self::MODE_AJAX :
-                header("Content-Type: application/json");
+                if (isset($_SERVER["HTTP_ORIGIN"])) header("Access-Control-Allow-Origin: {$_SERVER["HTTP_ORIGIN"]}");
+                header("Content-Security-Policy: default-src 'self'; frame-src 'none'; object-src 'none';");
+                header("Content-Type: application/json; charset={$this->charset}");
                 $data = $res->data();
                 $data = $this->translationOutput($data);
-                echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
+                $data = json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+                if (strtoupper($this->charset) != "UTF-8") $data = iconv("UTF-8", $this->charset, $data);
+                echo $data;
                 break;
             case self::MODE_AJAX_FOR_DATATABLE :
-                header("Content-Type: application/json");
+                header("Content-Type: application/json; charset={$this->charset}");
                 $data = $res->data()["data"];
-                echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
+                $data = json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+                if (strtoupper($this->charset) != "UTF-8") $data = iconv("UTF-8", $this->charset, $data);
+                echo $data;
                 break;
             case self::MODE_API :
                 header("Access-Control-Allow-Origin: *");
                 header("Access-Control-Allow-Credentials: true");
                 header("Access-Control-Allow-Methods: POST");
                 header("Access-Control-Allow-Headers: Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Auth-Token");
-                header("Content-Type: application/json");
+                header("Content-Type: application/json; charset={$this->charset}");
                 $data = $res->data();
                 $data = $this->translationOutput($data);
-                echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
+                $data = json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+                if (strtoupper($this->charset) != "UTF-8") $data = iconv("UTF-8", $this->charset, $data);
+                ob_start();
+                echo $data;
+                $length=ob_get_length();
+                header("Content-Length: $length");
+                ob_end_flush();
                 break;
             case self::MODE_API_ENCRYPT :
                 header("Access-Control-Allow-Origin: *");
                 header("Access-Control-Allow-Credentials: true");
                 header("Access-Control-Allow-Methods: POST");
                 header("Access-Control-Allow-Headers: Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Auth-Token");
+                header("Content-Type: text/html; charset={$this->charset}");
                 $data = $res->data();
                 $data = $this->translationOutput($data);
-                echo AES256::packObject($data, SHAKEFLAT_ENV["aes256"]["key_with_client"] ?? "00000000000000000000000000000000");
+                $data = json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+                if (strtoupper($this->charset) != "UTF-8") $data = iconv("UTF-8", $this->charset, $data);
+                $data = AES256::pack($data, $this->aes256key, $this->aes256iv, false);
+                ob_start();
+                echo $data;
+                $length=ob_get_length();
+                header("Content-Length: $length");
+                ob_end_flush();
+                break;
+            case self::MODE_API_ENCRYPT_ZIP :
+                header("Access-Control-Allow-Origin: *");
+                header("Access-Control-Allow-Credentials: true");
+                header("Access-Control-Allow-Methods: POST");
+                header("Access-Control-Allow-Headers: Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Auth-Token");
+                header("Content-Type: text/html; charset={$this->charset}");
+                $data = $res->data();
+                $data = $this->translationOutput($data);
+                $data = json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+                if (strtoupper($this->charset) != "UTF-8") $data = iconv("UTF-8", $this->charset, $data);
+                $data = AES256::pack($data, $this->aes256key, $this->aes256iv);
+                ob_start();
+                echo $data;
+                $length=ob_get_length();
+                header("Content-Length: $length");
+                ob_end_flush();
                 break;
             case self::MODE_WEB :
+                header("Content-Type: text/html; charset={$this->charset}");
                 $router = Router::getInstance();
                 $p = rtrim($this->pathTemplate, " /") . "/" . trim($this->template, " /");
                 ob_start();
@@ -168,6 +225,7 @@ class Template
                 $html = ob_get_clean();
 
                 $html = $this->translationOutput($html);       // translation...
+                if (strtoupper($this->charset) != "UTF-8") $html = iconv("UTF-8", "{$this->charset}//TRANSLIT", $html);
                 echo $html;
                 break;
             case self::MODE_WEB_REDIRECT :
@@ -191,35 +249,70 @@ class Template
 
         switch($this->mode) {
             case self::MODE_AJAX :
-                header("Content-Type: application/json");
+                if (isset($_SERVER["HTTP_ORIGIN"])) header("Access-Control-Allow-Origin: {$_SERVER["HTTP_ORIGIN"]}");
+                header("Content-Security-Policy: default-src 'self'; frame-src 'none'; object-src 'none';");
+                header("Content-Type: application/json; charset={$this->charset}");
                 $data = $this->translationOutput($data);
-                echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
+                $data = json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+                if (strtoupper($this->charset) != "UTF-8") $data = iconv("UTF-8", $this->charset, $data);
+                echo $data;
                 break;
             case self::MODE_AJAX_FOR_DATATABLE :
-                header("Content-Type: application/json");
-                echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
+                header("Content-Type: application/json; charset={$this->charset}");
+                $data = json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+                if (strtoupper($this->charset) != "UTF-8") $data = iconv("UTF-8", $this->charset, $data);
+                echo $data;
                 break;
             case self::MODE_API :
                 header("Access-Control-Allow-Origin: *");
                 header("Access-Control-Allow-Credentials: true");
-                header("Access-Control-Allow-Methods: POST");
+                header("Access-Control-Allow-Methods: POST, GET");
                 header("Access-Control-Allow-Headers: Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Auth-Token");
-                header("Content-Type: application/json");
+                header("Content-Type: application/json; charset={$this->charset}");
                 $data = $this->translationOutput($data);
-                echo json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
+                $data = json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+                if (strtoupper($this->charset) != "UTF-8") $data = iconv("UTF-8", $this->charset, $data);
+                ob_start();
+                echo $data;
+                $length=ob_get_length();
+                header("Content-Length: $length");
+                ob_end_flush();
                 break;
             case self::MODE_API_ENCRYPT :
                 header("Access-Control-Allow-Origin: *");
                 header("Access-Control-Allow-Credentials: true");
                 header("Access-Control-Allow-Methods: POST");
                 header("Access-Control-Allow-Headers: Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Auth-Token");
+                header("Content-Type: text/html; charset={$this->charset}");
                 $data = $this->translationOutput($data);
-                echo AES256::packObject($data, SHAKEFLAT_ENV["aes256"]["key_with_client"] ?? "00000000000000000000000000000000");
+                if (strtoupper($this->charset) != "UTF-8") $data = iconv("UTF-8", $this->charset, $data);
+                $data = AES256::packObject($data, $this->aes256key, $this->aes256iv, false);
+                ob_start();
+                echo $data;
+                $length=ob_get_length();
+                header("Content-Length: $length");
+                ob_end_flush();
+                break;
+            case self::MODE_API_ENCRYPT_ZIP :
+                header("Access-Control-Allow-Origin: *");
+                header("Access-Control-Allow-Credentials: true");
+                header("Access-Control-Allow-Methods: POST");
+                header("Access-Control-Allow-Headers: Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Auth-Token");
+                header("Content-Type: text/html; charset={$this->charset}");
+                $data = $this->translationOutput($data);
+                if (strtoupper($this->charset) != "UTF-8") $data = iconv("UTF-8", $this->charset, $data);
+                $data = AES256::packObject($data, $this->aes256key, $this->aes256iv);
+                ob_start();
+                echo $data;
+                $length=ob_get_length();
+                header("Content-Length: $length");
+                ob_end_flush();
                 break;
             case self::MODE_WEB :
-                $router = Router::getInstance();
-                $p = rtrim($this->pathTemplate, " /") . "/" . trim($this->template, " /");
-                if (file_exists("{$p}/error.html") && file_exists("{$p}/{$this->layoutFileForError}")) {
+                header("Content-Type: text/html; charset={$this->charset}");
+                try {
+                    $router = Router::getInstance();
+                    $p = rtrim($this->pathTemplate, " /") . "/" . trim($this->template, " /");
                     ob_start();
                     include("{$p}/error.html");         // use $message, $code
                     $contentBody = ob_get_clean();
@@ -228,8 +321,9 @@ class Template
                     include("{$p}/{$this->layoutFileForError}");        // Insert $contentBody inside layout.html and use it.
                     $html = ob_get_clean();
                     $html = $this->translationOutput($html);
+                    if (strtoupper($this->charset) != "UTF-8") $html = iconv("UTF-8", $this->charset, $html);
                     echo $html;
-                } else {
+                } catch (Exception $e) {
                     echo "
                         <div>
                         error message : {$message}

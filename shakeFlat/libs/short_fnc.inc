@@ -14,52 +14,52 @@ function sfCSSJSVer()
 
 function sfUnitFormatNumber($n, $isskip1000 = false)
 {
-    return shakeFlat\libs\Util::unitFormatNumber($n, $isskip1000);
+    return shakeFlat\Util::unitFormatNumber($n, $isskip1000);
 }
 
 function sfKoreanJosa($ex)
 {
-    return shakeFlat\libs\Util::koreanJosa($ex);
+    return shakeFlat\Util::koreanJosa($ex);
 }
 
 function sfNumberKorean($num)
 {
-    return shakeFlat\libs\Util::numberKorean($num);
+    return shakeFlat\Util::numberKorean($num);
 }
 
 function sfTimeDiffMinSec($t1, $t2, $isKorean = true)
 {
-    return shakeFlat\libs\Util::timeDiffMinSec($t1, $t2, $isKorean);
+    return shakeFlat\Util::timeDiffMinSec($t1, $t2, $isKorean);
 }
 
 function sfTimeDiffPretty($time, $postTime = null, $isKorean = true)
 {
-    return shakeFlat\libs\Util::timeDiffPretty($time, $postTime, $isKorean);
+    return shakeFlat\Util::timeDiffPretty($time, $postTime, $isKorean);
 }
 
 function sfValidateDate($date, $format = "Y-m-d H:i:s")
 {
-    return shakeFlat\libs\Util::validateDate($date, $format);
+    return shakeFlat\Util::validateDate($date, $format);
 }
 
 function sfYmdHis($date, $format)
 {
-    return shakeFlat\libs\Util::YmdHis($date, $format);
+    return shakeFlat\Util::YmdHis($date, $format);
 }
 
 function sfNumberFormatX($p, $c = "")
 {
-    return shakeFlat\libs\Util::number_formatX($p, $c);
+    return shakeFlat\Util::number_formatX($p, $c);
 }
 
 function sfCutString($p, $l, $with3Dot = true)
 {
-    return shakeFlat\libs\Util::cutString($p, $l, $with3Dot);
+    return shakeFlat\Util::cutString($p, $l, $with3Dot);
 }
 
 function sfWebDump($p, $fontSize = 10)
 {
-    shakeFlat\libs\Util::webDump($p, $fontSize);
+    shakeFlat\Util::webDump($p, $fontSize);
 }
 
 function sfDebug($p, $c = array())

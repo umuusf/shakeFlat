@@ -14,6 +14,7 @@
 
 namespace shakeFlat;
 use shakeFlat\L;
+use shakeFlat\AES256;
 use \Exception;
 
 class Param extends L
@@ -38,31 +39,71 @@ class Param extends L
 
     private $params = array();
     private $typeInfo = array();    // It has type and enum information specified for each parameter.
+    private $noEnc = false;
 
-    public static function getInstance()
+    // $queryString : a=1&b=2&...
+    public static function getInstance($queryString = null)
     {
         static $instance = null;
         if ($instance) return $instance;
-        $instance = new Param();
+        $instance = new Param($queryString);
         return $instance;
     }
 
-    private function __construct()
-    {
-        $this->parse();
-    }
-
-    private function parse()
+    private function __construct($queryString)
     {
         $this->params = array();
 
-        $parseUrl = parse_url($_SERVER["REQUEST_URI"]);
-        // get parameters
-        if (isset($parseUrl["query"])) parse_str($parseUrl["query"], $this->params);
-        // post parameters
-        if ($_POST) $this->params = array_merge($this->params, $_POST);
-
+        if ($queryString === null) {
+            $parseUrl = parse_url($_SERVER["REQUEST_URI"]);
+            // get parameters
+            if (isset($parseUrl["query"])) parse_str($parseUrl["query"], $this->params);
+            // post parameters
+            if ($_POST) $this->params = array_merge($this->params, $_POST);
+        } else {
+            parse_str($queryString, $this->params);
+        }
         // File upload($_FILES) is handled separately.
+
+        if (IS_DEBUG) {
+            if (($this->params["noenc"] ?? 0) == 1) $this->noEnc = true;
+        }
+    }
+
+    public function encryptParam($k, $key = null, $iv = null, $zip = true, $reset = true)
+    {
+        if ($reset) $this->params = array();
+
+        // get parameters
+        $get = null;
+        $parseUrl = parse_url($_SERVER["REQUEST_URI"]);
+        if (isset($parseUrl["query"])) parse_str($parseUrl["query"], $get);
+
+        $data = $_POST[$k] ?? $get[$k] ?? null;
+        if ($data) {
+            if ($key === null) $key = SHAKEFLAT_ENV["aes256"]["key_with_client"] ?? "00000000000000000000000000000000";
+            if ($iv === null) $iv = SHAKEFLAT_ENV["aes256"]["iv_with_client"] ?? "0000000000000000";
+            $dec = AES256::unpack($data, $key, $iv, $zip);
+            if ($dec) parse_str($dec, $this->params);
+        }
+
+        if (IS_DEBUG) {
+            $noenc = $_POST["noenc"] ?? $get["noenc"] ?? null;
+            if ($noenc == 1) $this->noEnc = true;
+
+            if ($get) $this->params = array_merge($this->params, $get);
+            if ($_POST) $this->params = array_merge($this->params, $_POST);
+        }
+    }
+
+    public function getAll()
+    {
+        return $this->params;
+    }
+
+    public function debugNoEnc()
+    {
+        return IS_DEBUG && $this->noEnc;
     }
 
     // magic method to get parameter value

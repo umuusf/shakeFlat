@@ -56,9 +56,21 @@ class L
     // Terminates the process after logging. (exit)
     // In general, if a web process (each web page or API) encounters a (severe) error during its operation, all operations are stopped and the process is terminated.
     // For reference, when the process is terminated, the open db transaction is automatically rolled back.
+    // In addition to $message, displays files and lines where execution is suspended according to config settings.
     public static function exitCode($message, $code)
     {
         self::_terminate(self::error($message, array(), null), $code);
+    }
+
+    // Print $message, $code and terminate the process.
+    // No other information is displayed.
+    // It is recommended to use it in the API module.
+    public static function exitNoti($message, $code)
+    {
+        $template = Template::getInstance();
+        $message = self::getTranslationLangSystem($message);
+        $template->displayError($message, array(), $code);
+        exit;
     }
 
     // Logging for each log level. exit is not handled.
@@ -82,6 +94,9 @@ class L
             if (SHAKEFLAT_ENV["config"]["debug_mode"] ?? false) {
                 $message = $logMsg["message"];
                 $context = $logMsg["context"];
+                if (isset($context["trace"][0]["file"]) && isset($context["trace"][0]["line"])) {
+                    $message .= ", passed in {$context["trace"][0]["file"]} on line {$context["trace"][0]["line"]}";
+                }
             } else {
                 $message = $logMsg["message"];
                 $context = null;
@@ -270,6 +285,29 @@ class LogQuery
                 if (substr($k, 0, 1) != ":") $k = ":".$k;
                 $sql = str_replace($k, $v, $sql);
             }
+        }
+
+        if (SHAKEFLAT_ENV["log"]["query_logging"] ?? false) {
+            $logPath = STORAGE_PATH . trim(SHAKEFLAT_ENV["storage"]["log_path"], " /") . "/";
+            $logFile = "query-".date("Ymd").".log";
+            $date = new DateTime('now', new DateTimeZone(SHAKEFLAT_ENV["log"]["timezone"] ?? SHAKEFLAT_ENV["config"]["php_timezone"]));
+            $time = $date->format('Y-m-d\TH:i:sP');     // W3C style
+            $level = LogLevel::INFO;
+
+            if ((SHAKEFLAT_ENV["log"]["json_format"] ?? false)) {
+                $logMsg = json_encode(array(
+                    "datetime"  => $time,
+                    "level"     => $level,
+                    "message"   => $sql,
+                    "context"   => array(),
+                ), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+            } else {
+                $delimiter = SHAKEFLAT_ENV["log"]["delimiter"] ?? "\t";
+                if ($delimiter == "\\t") $delimiter = "\t";
+                $logMsg = "{$time}{$delimiter}{$level}{$delimiter}{$sql}";
+            }
+
+            error_log($logMsg . "\n", 3, $logPath . $logFile);
         }
         return $sql;
     }

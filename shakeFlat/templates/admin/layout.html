@@ -126,7 +126,7 @@ $leftMenu = [
                     if ($menu["sub"]) {
                         foreach($menu["sub"] as $idx => $submenu) {
                             $ex = explode("/", trim($submenu["link"], "/"));
-                            $m = $ex[0] ?? "welcome";
+                            $m = $ex[0] ?? "welcome";   if ($m == "") $m = "welcome";
                             $f = $ex[1] ?? "main";
                             if ($router->module() == $m && $router->fnc() == $f) { // $route at core/template.inc
                                 $active = " active in";
@@ -135,7 +135,7 @@ $leftMenu = [
                         }
                     } elseif ($menu["link"]) {
                         $ex = explode("/", trim($menu["link"], "/"));
-                        $m = $ex[0] ?? "welcome";
+                        $m = $ex[0] ?? "welcome";   if ($m == "") $m = "welcome";
                         $f = $ex[1] ?? "main";
                         if ($router->module() == $m && $router->fnc() == $f) { // $route at core/template.inc
                             $active = " active in";
@@ -169,8 +169,8 @@ $leftMenu = [
 
         <div class="shakeflat-contents flex-fill p-3">
             <div class="shakeflat-content-wrapper">
-                <div class="shakeflat-contents-title rounded p-3"><i class="bi bi-caret-right-fill"></i> <?php if (isset($res) && $res->pageTitle) echo $res->pageTitle; else echo "{$router->module()}/{$router->fnc()}"; ?></div>
-                <div class="shakeflat-contents-body my-3">
+                <div class="shakeflat-contents-title"><i class="bi bi-caret-right-fill"></i> <?php if (isset($res) && $res->pageTitle) echo $res->pageTitle; else echo "{$router->module()}/{$router->fnc()}"; ?></div>
+                <div class="shakeflat-contents-body p-3">
                     <?= $contentBody ?>
                 </div>
             </div>

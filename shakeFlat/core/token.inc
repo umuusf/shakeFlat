@@ -1,6 +1,6 @@
 <?php
 /**
- * libs/token.inc
+ * core/token.inc
  *
  * Create a token for login processing in the application for API service.
  * Similar to jwt or the well-known token solution for authentication.
@@ -52,10 +52,23 @@ class Token
 
     // Read the payload data by interpreting the token.
     // Returns false if the token has expired or has been tampered with.
-    public static function read($token)
+    public static function payload($token)
     {
         $data = self::check($token);
         return $data["payload"] ?? false;
+    }
+
+    // with evi
+    public static function data($token)
+    {
+        return self::check($token);
+    }
+
+    public static function expireTime($token)
+    {
+        $data = self::check($token);
+        $expire = $data["evi"]["expire"] ?? 0;
+        return $expire;
     }
 
     // update the token. Reset the expire time.
@@ -63,10 +76,16 @@ class Token
     {
         $data = self::check($token);
         if ($data === false) return false;
-        $data["evi"]["expire"] = time() + $expire;
-        $data["evi"]["random"] = uniqid() . rand(1000,9999);
+        return self::refreshData($data, $expire);
+    }
 
-        return AES256::packObject($data);
+    // update the token(data:unpacked). Reset the expire time.
+    public static function refreshData($tokenData, $expire = 3600)
+    {
+        $tokenData["evi"]["expire"] = time() + $expire;
+        $tokenData["evi"]["random"] = uniqid() . rand(1000,9999);
+
+        return AES256::packObject($tokenData);
     }
 
     // Check if the token is correct.

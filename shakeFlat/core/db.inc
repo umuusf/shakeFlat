@@ -13,6 +13,7 @@ use \Exception;
 class DB extends L
 {
     private $dbh = null;
+    private $errInfo = array();
 
     public static function getInstance($connectionName = "default")
     {
@@ -35,8 +36,14 @@ class DB extends L
         return $this->_query($sql, $bindList, true);
     }
 
+    public function errorInfo()
+    {
+        return $this->errInfo;
+    }
+
     private function _query($sql, $bindList = null, $noExit = false)
     {
+        $this->errInfo = array();
         if (SHAKEFLAT_ENV["log"]["include_query"] ?? false) LogQuery::stack($sql, $bindList);  // log.inc
         try {
             if ($bindList === null) {
@@ -56,11 +63,17 @@ class DB extends L
                 return $statement;
             }
         } catch(Exception $e) {
-            $msg = $this->dbh->errorInfo()[2] ?? "query error";
+            $this->errInfo = array( $e->getCode(), $e->getMessage() );
+            if ($noExit) return false;
+
+            $errCode = $this->dbh->errorCode();
+            $errInfo = $this->dbh->errorInfo();
+
+            $msg = $errInfo[2] ?? "query error";
             $msg .= "({code2})";
             $context = array (
-                "code1" => $this->dbh->errorCode(),
-                "code2" => $this->dbh->errorInfo()[1] ?? "",
+                "code1" => $errCode,
+                "code2" => $errInfo[1] ?? "",
             );
 
             if (SHAKEFLAT_ENV["config"]["display_error"] ?? false) {
@@ -72,12 +85,7 @@ class DB extends L
                 }
             }
 
-            if ($noExit) {
-                $this->error($msg, $context);
-                return false;
-            } else {
-                $this->exit($msg, $context);
-            }
+            $this->exit($msg, $context);
         }
     }
 

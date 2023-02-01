@@ -58,21 +58,21 @@ function sfBlindOff()
 
 function sfLayoutFullsize()
 {
-    $(".shakeflat-content-wrapper").css("min-height", "calc(100% - 55px)");
+    $(".shakeflat-content-wrapper").css("min-height", "calc(100% - 57px)");
     $("#shakeflat-clock-date").css("display", "block");
     sfLeftMenuFullSize();
 }
 
 function sfLayoutMini()
 {
-    $(".shakeflat-content-wrapper").css("min-height", "calc(100% - 75px)");
+    $(".shakeflat-content-wrapper").css("min-height", "calc(100% - 77px)");
     $("#shakeflat-clock-date").css("display", "block");
     sfLeftMenuMini();
 }
 
 function sfLayoutTiny()
 {
-    $(".shakeflat-content-wrapper").css("min-height", "calc(100% - 75px)");
+    $(".shakeflat-content-wrapper").css("min-height", "calc(100% - 77px)");
     $("#shakeflat-clock-date").css("display", "none");
     sfLeftMenuHide();
 }

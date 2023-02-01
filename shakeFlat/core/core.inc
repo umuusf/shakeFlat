@@ -71,6 +71,11 @@ class App extends L
         return $this;
     }
 
+    public function setResponseAES256Key($key, $iv = null)
+    {
+        $this->template->setAES256Key($key, $iv);
+    }
+
     // Set the default value of response mode.
     // If you set it up again in an individual module, use it.
     public function setMode($mode)
@@ -93,6 +98,12 @@ class App extends L
     {
         $this->template->setTranslationLang($lang);
         if ($lang) $this->checkTranslation();
+        return $this;
+    }
+
+    public function setCharset($charset)
+    {
+        $this->template->setCharset($charset);
         return $this;
     }
 

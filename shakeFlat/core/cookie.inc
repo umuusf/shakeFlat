@@ -58,7 +58,7 @@ class Cookie
 
     public function save($expireAge = null)
     {
-        if ($expireAge === null) $expireAge = (SHAKEFLAT_ENV["cookie"]["expire_age"] ?? 1800);
+        if ($expireAge === null) $expireAge = (SHAKEFLAT_ENV["cookie"]["expire_age"] ?? 3600);
         if ($this->cookie) {
             if ($expireAge == 0) $time = 0; else $time = time() + $expireAge;
             setcookie($this->cookieName, AES256::packObject($this->cookie), $time, "/");
