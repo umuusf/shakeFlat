@@ -285,8 +285,9 @@ class Template
                 header("Access-Control-Allow-Headers: Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Auth-Token");
                 header("Content-Type: text/html; charset={$this->charset}");
                 $data = $this->translationOutput($data);
+                $data = json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
                 if (strtoupper($this->charset) != "UTF-8") $data = iconv("UTF-8", $this->charset, $data);
-                $data = AES256::packObject($data, $this->aes256key, $this->aes256iv, false);
+                $data = AES256::pack($data, $this->aes256key, $this->aes256iv, false);
                 ob_start();
                 echo $data;
                 $length=ob_get_length();
@@ -300,8 +301,9 @@ class Template
                 header("Access-Control-Allow-Headers: Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Auth-Token");
                 header("Content-Type: text/html; charset={$this->charset}");
                 $data = $this->translationOutput($data);
+                $data = json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
                 if (strtoupper($this->charset) != "UTF-8") $data = iconv("UTF-8", $this->charset, $data);
-                $data = AES256::packObject($data, $this->aes256key, $this->aes256iv);
+                $data = AES256::pack($data, $this->aes256key, $this->aes256iv);
                 ob_start();
                 echo $data;
                 $length=ob_get_length();

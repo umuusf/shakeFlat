@@ -9,95 +9,109 @@
 namespace shakeFlat;
 use shakeFlat\Cookie;
 use shakeFlat\AES256;
-use shakeFlat\L;
 
 // Manage authentication information using session.
-class AuthSession extends _Auth
+class AuthSession
 {
+    private $_auth;
+
+    public static function getInstance()
+    {
+        static $instance = null;
+        if ($instance) return $instance;
+        $instance = new AuthSession();
+        return $instance;
+    }
+
+    private function __construct()
+    {
+        $this->_auth = _Auth::getInstance();
+    }
+
     // for log-in.
     // authInfo is an array type containing authentication information.
     // Generally, the one with the result of querying the user table of the DB in the form of an array is used.
-    public static function setAuthInfo($authInfo, $isRemember = false)
+    public function setAuthInfo($authInfo, $isRemember = false)
     {
         ini_set('session.gc_maxlifetime', SHAKEFLAT_ENV["auth"]["expire_age"] ?? 3600);
-        parent::setAuthInfo($authInfo, $isRemember);
+        $this->_auth->setAuthInfo($authInfo, $isRemember);
         self::burn();
     }
 
-    public static function updateAuthInfo($authInfo)
+    public function updateAuthInfo($authInfo)
     {
-        parent::resetAuthInfo($authInfo);
+        $this->_auth->resetAuthInfo($authInfo);
         self::burn();
     }
 
     // for logout
-    public static function unsetAuthInfo()
+    public function unsetAuthInfo()
     {
-        parent::unsetAuthInfo();
+        $this->_auth->unsetAuthInfo();
         self::clear();
     }
 
     // Check whether you are logged in.
-    public static function check()
+    public function check()
     {
         self::load();
-        if (!parent::extend()) return false;
+        if (!$this->_auth->extend()) return false;
 
         self::burn();
         return true;
     }
 
-    public static function authInfo()
+    public function authInfo()
     {
-        if (self::check()) return parent::authInfo();
+        if (self::check()) return $this->_auth->authInfo;
         return null;
     }
 
     // Get each field(key) value of authInfo. The type of authInfo is array.
-    public static function get($field)
+    public function get($field)
     {
-        if (self::check()) return parent::authInfo()[$field] ?? null;
+        if (self::check()) return $this->_auth->authInfo[$field] ?? null;
         return null;
     }
 
-    private static function load()
+    private function load()
     {
-        if (parent::authInfo()) return;
+        if ($this->_auth->authInfo) return;
         self::initSession();
         $key = SHAKEFLAT_ENV["auth"]["session"]["session_name"] ?? "sfass";
         $sv = $_SESSION[$key] ?? false;
         if ($sv) {
             $authInfo = AES256::unpackObject($sv);
             if ($authInfo) {
-                parent::resetAuthInfo($authInfo);
+                $this->_auth->resetAuthInfo($authInfo);
             }
         }
         session_write_close();
 
         // for remember me
-        if (!parent::authInfo()) {
+        if (!$this->_auth->authInfo) {
             $info = self::rememberCookieInstance()->getAll();
-            if ($info) parent::resetAuthInfo($info);
+            if ($info) $this->_auth->resetAuthInfo($info);
         }
     }
 
-    private static function burn()
+    private function burn()
     {
-        if (parent::authInfo()) {
+        if ($this->_auth->authInfo) {
             self::initSession();
             $key = SHAKEFLAT_ENV["auth"]["session"]["session_name"] ?? "sfass";
-            $_SESSION[$key] = AES256::packObject(parent::authInfo());
+            $_SESSION[$key] = AES256::packObject($this->_auth->authInfo);
             session_write_close();
 
             // Session is automatically deleted by gc, so cookie is used for remember function.
-            if (parent::isRemember()) {
-                self::rememberCookieInstance()->setArray(parent::authInfo());
+            if ($this->_auth->isRemember()) {
+                self::rememberCookieInstance()->setArray($this->_auth->authInfo);
                 self::rememberCookieInstance()->save(365 * 24 * 60 * 60);
             }
         }
     }
 
-    private static function clear()
+    private function clear()
     {
         self::initSession();
         $key = SHAKEFLAT_ENV["auth"]["session"]["session_name"] ?? "sfass";
@@ -105,7 +119,7 @@ class AuthSession extends _Auth
         session_write_close();
     }
 
-    private static function initSession()
+    private function initSession()
     {
         try {
             session_name(SHAKEFLAT_ENV["auth"]["session"]["session_name"] ?? "sfass");
@@ -136,7 +150,7 @@ class AuthSession extends _Auth
     }
 
     // Get a Cookie instance.
-    private static function rememberCookieInstance()
+    private function rememberCookieInstance()
     {
         static $authCookie;
         if ($authCookie) return $authCookie;
@@ -148,38 +162,53 @@ class AuthSession extends _Auth
 }
 
 // Manage authentication information using cookies.
-class AuthCookie extends _Auth
+class AuthCookie
 {
+    private $_auth;
+
+    public static function getInstance()
+    {
+        static $instance = null;
+        if ($instance) return $instance;
+        $instance = new AuthCookie();
+        return $instance;
+    }
+
+    private function __construct()
+    {
+        $this->_auth = _Auth::getInstance();
+    }
+
     // for log-in.
     // authInfo is an array type containing authentication information.
     // Generally, the one with the result of querying the user table of the DB in the form of an array is used.
-    public static function setAuthInfo($authInfo, $isRemember = false)
+    public function setAuthInfo($authInfo, $isRemember = false)
     {
-        parent::setAuthInfo($authInfo, $isRemember);
+        $this->_auth->setAuthInfo($authInfo, $isRemember);
         self::burn();
     }
 
-    public static function updateAuthInfo($authInfo)
+    public function updateAuthInfo($authInfo)
     {
-        parent::resetAuthInfo($authInfo);
+        $this->_auth->resetAuthInfo($authInfo);
         self::burn();
     }
 
     // for logout
-    public static function unsetAuthInfo()
+    public function unsetAuthInfo()
     {
-        parent::unsetAuthInfo();
+        $this->_auth->unsetAuthInfo();
         self::cookieInstance()->clear();
     }
 
     // Check whether you are logged in.
-    public static function check()
+    public function check()
     {
         $info = self::cookieInstance()->getAll();
         if ($info) {
-            parent::resetAuthInfo($info);
-            // Call the parent::check() function inside the parent::extend() function.
-            if (parent::extend()) {
+            $this->_auth->resetAuthInfo($info);
+            // Call the $this->_auth->check() function inside the $this->_auth->extend() function.
+            if ($this->_auth->extend()) {
                 self::burn();       // Extend the expiration time to re-save the cookie.
                 return true;
             }
@@ -187,26 +216,26 @@ class AuthCookie extends _Auth
         return false;
     }
 
-    public static function authInfo()
+    public function authInfo()
     {
-        if (self::check()) return parent::authInfo();
+        if (self::check()) return $this->_auth->authInfo;
         return null;
     }
 
     // Get each field(key) value of authInfo. The type of authInfo is array.
-    public static function get($field)
+    public function get($field)
     {
-        if (self::check()) return parent::authInfo()[$field] ?? null;
+        if (self::check()) return $this->_auth->authInfo[$field] ?? null;
         return null;
     }
 
     // Save the cookie.
-    private static function burn()
+    private function burn()
     {
-        if (parent::authInfo()) {
-            self::cookieInstance()->setArray(parent::authInfo());
+        if ($this->_auth->authInfo) {
+            self::cookieInstance()->setArray($this->_auth->authInfo);
             $expireAge = 0;
-            if (parent::isRemember()) $expireAge = 365 * 24 * 60 * 60;      // 1 year...
+            if ($this->_auth->isRemember()) $expireAge = 365 * 24 * 60 * 60;      // 1 year...
             // If not remember, cookie retention time is until the web browser is closed. (expireAge = 0)
             // In the _Auth class, expire_time is managed according to the value set in config.ini.
             self::cookieInstance()->save($expireAge);
@@ -214,7 +243,7 @@ class AuthCookie extends _Auth
     }
 
     // Get a Cookie instance.
-    private static function cookieInstance()
+    private function cookieInstance()
     {
         static $authCookie;
         if ($authCookie) return $authCookie;
@@ -226,75 +255,90 @@ class AuthCookie extends _Auth
 
 // A class that stores and manages authentication information.
 // Used as a parent class.
-class _Auth extends L
+class _Auth
 {
-    private static $authInfo = array();
+    public $authInfo = array();
 
-    public static function authInfo()
+    public static function getInstance()
+    {
+        static $instance = null;
+        if ($instance) return $instance;
+        $instance = new _Auth();
+        return $instance;
+    }
+
+    private function __construct()
+    {
+        $this->authInfo = array();
+    }
+
+    /*
+    public function authInfo()
     {
         return self::$authInfo;
     }
+    */
 
-    public static function setRemember()
+    public function setRemember()
     {
-        self::$authInfo["sf_remember"] = true;
+        $this->authInfo["sf_remember"] = true;
     }
 
-    public static function isRemember()
+    public function isRemember()
     {
-        return self::$authInfo["sf_remember"] ?? false;
+        return $this->authInfo["sf_remember"] ?? false;
     }
 
-    public static function expireTime()
+    public function expireTime()
     {
-        return self::$authInfo["sf_expire_time"] ?? 0;
+        return $this->authInfo["sf_expire_time"] ?? 0;
     }
 
-    public static function isExpired()
+    public function isExpired()
     {
-        if (self::expireTime() < time() && self::$authInfo["sf_remember"] != true) return true;
+        if ($this->expireTime() < time() && $this->authInfo["sf_remember"] != true) return true;
         return false;
     }
 
-    protected static function extend()
+    public function extend()
     {
-        if (!self::$authInfo) return false;
-        if (self::$authInfo["sf_remember"] ?? false) return true;
-        if (self::isExpired()) return false;
+        if (!$this->authInfo) return false;
+        if ($this->authInfo["sf_remember"] ?? false) return true;
+        if ($this->isExpired()) return false;
 
         $expireAge = SHAKEFLAT_ENV["auth"]["expire_age"] ?? 3600;
-        self::$authInfo["sf_expire_time"] = time() + $expireAge;
+        $this->authInfo["sf_expire_time"] = time() + $expireAge;
         return true;
     }
 
-    protected static function resetAuthInfo($authInfo)
+    public function resetAuthInfo($authInfo)
     {
-        if (!self::checkValidAuthInfo($authInfo)) return;
-        self::$authInfo = $authInfo;
+        if (!$this->checkValidAuthInfo($authInfo)) return;
+        $this->authInfo = $authInfo;
         $expireAge = SHAKEFLAT_ENV["auth"]["expire_age"] ?? 3600;
-        self::$authInfo["sf_expire_time"] = time() + $expireAge;
+        $this->authInfo["sf_expire_time"] = time() + $expireAge;
     }
 
-    public static function setAuthInfo($authInfo, $isRemember = false)
+    public function setAuthInfo($authInfo, $isRemember = false)
     {
-        if (!self::checkValidAuthInfo($authInfo)) return;
-        self::$authInfo = $authInfo;
+        if (!$this->checkValidAuthInfo($authInfo)) return;
+        $this->authInfo = $authInfo;
         $expireAge = SHAKEFLAT_ENV["auth"]["expire_age"] ?? 3600;
-        self::$authInfo["sf_expire_time"] = time() + $expireAge;
-        self::$authInfo["sf_remember"] = $isRemember;
+        $this->authInfo["sf_expire_time"] = time() + $expireAge;
+        $this->authInfo["sf_remember"] = $isRemember;
     }
 
-    public static function updateAuthInfo($authInfo)
+    public function updateAuthInfo($authInfo)
     {
-        self::resetAuthInfo($authInfo);
+        $this->resetAuthInfo($authInfo);
     }
 
-    public static function unsetAuthInfo()
+    public function unsetAuthInfo()
     {
-        self::$authInfo = array();
+        $this->authInfo = array();
     }
 
-    private static function checkValidAuthInfo($authInfo)
+    private function checkValidAuthInfo($authInfo)
     {
         if (!is_array($authInfo)) return false;
         if (!$authInfo) return false;

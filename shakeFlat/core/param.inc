@@ -121,12 +121,12 @@ class Param extends L
     public function get($key, $default = "_+-=NO_VALUE=-+_")
     {
         if (array_key_exists($key, $this->params) !== false) {
-            if ($default != "_+-=NO_VALUE=-+_" && $this->params[$key] == "") return $default;
+            if ($default !== "_+-=NO_VALUE=-+_" && $this->params[$key] == "") return $default;
             return $this->params[$key];
         } elseif (substr($key, 0, 3) == "_d_") {
             if (array_key_exists(substr($key, 3), $this->params) !== false) {
                 if ($this->params[substr($key, 3)] != "") return $this->params[substr($key, 3)];
-                if ($default != "_+-=NO_VALUE=-+_") return $default;
+                if ($default !== "_+-=NO_VALUE=-+_") return $default;
                 return $this->_defaultValue(substr($key, 3));
             } elseif (array_key_exists(substr($key, 3), $this->typeInfo) !== false) {
                 return $this->_defaultValue(substr($key, 3));

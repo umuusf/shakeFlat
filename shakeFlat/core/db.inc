@@ -23,6 +23,60 @@ class DB extends L
         return $oInstance[$connectionName];
     }
 
+    private function __construct($connectionName)
+    {
+        if (!isset(SHAKEFLAT_ENV["database"]["connection"][$connectionName])) $this::system("DB connection information is not defined in config.ini.", array( "connection" => $connectionName ));
+        $connInfo = SHAKEFLAT_ENV["database"]["connection"][$connectionName][rand(0, count(SHAKEFLAT_ENV["database"]["connection"][$connectionName])-1)];
+
+        if(isset(SHAKEFLAT_ENV["database"]["common"])) {
+            foreach(SHAKEFLAT_ENV["database"]["common"] as $k => $v) {
+                if (!isset($connInfo[$k])) $connInfo[$k] = $v;
+            }
+        }
+
+        $this->dbh = $this->pdoConnection($connInfo);
+    }
+
+    private function pdoConnection($connInfo)
+    {
+        try {
+            $dsn    = trim($connInfo["dsn"], " ;");
+            $user   = $connInfo["user"];
+            $passwd = $connInfo["passwd"];
+
+            $options = array(
+                PDO::ATTR_ERRMODE           => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_TIMEOUT           => $connInfo["connect_timeout"] ?? 5,
+                PDO::ATTR_EMULATE_PREPARES  => false,
+                PDO::ATTR_STRINGIFY_FETCHES => false,
+            );
+
+            if (stripos($dsn, "mysql") !== false) {
+                $options[PDO::MYSQL_ATTR_LOCAL_INFILE] = false;
+
+                $initCommand = array();
+                if (isset($connInfo["timezone"])) $initCommand[] = "SET time_zone = '".$connInfo["timezone"]."'";
+                if (isset($connInfo["mysql_charset"])) {
+                    if (version_compare(PHP_VERSION, '5.3.6', '<')) {
+                        $initCommand[] = "SET NAMES ".$connInfo["mysql_charset"];
+                    } elseif (stripos($dsn, "charset") === false) {
+                        $dsn .= ";charset=".$connInfo["mysql_charset"];
+                    }
+                }
+                if ($initCommand) $options[PDO::MYSQL_ATTR_INIT_COMMAND] = implode(";", $initCommand);
+            }
+
+            return new PDO($dsn, $user, $passwd, $options);
+        } catch (Exception $e) {
+            self::exit($e->getMessage() . " ({code})", array("code"=>$e->getCode()));
+        }
+    }
+
+    public function quote($v)
+    {
+        return $this->dbh->quote($v);
+    }
+
     // $bind : [ $key => $value, $key => $value, ... ]
     public function query($sql, $bindList = null)
     {
@@ -121,64 +175,5 @@ class DB extends L
     public function commit()
     {
         return $this->dbh->commit();
-    }
-
-    private function __construct($connectionName)
-    {
-        if (!isset(SHAKEFLAT_ENV["database"]["connection"][$connectionName])) $this::system("DB connection information is not defined in config.ini.", array( "connection" => $connectionName ));
-        $connInfo = SHAKEFLAT_ENV["database"]["connection"][$connectionName][rand(0, count(SHAKEFLAT_ENV["database"]["connection"][$connectionName])-1)];
-
-        if(isset(SHAKEFLAT_ENV["database"]["common"])) {
-            foreach(SHAKEFLAT_ENV["database"]["common"] as $k => $v) {
-                if (!isset($connInfo[$k])) $connInfo[$k] = $v;
-            }
-        }
-
-        $this->dbh = PDOConnection::conn($connInfo);
-    }
-}
-
-class PDOConnection extends L
-{
-    private static $connList = array();
-
-    public static function conn($connInfo)
-    {
-        $uStr = serialize($connInfo);
-        if (isset(self::$connList[$uStr])) return self::$connList[$uStr];
-
-        try {
-            $dsn    = trim($connInfo["dsn"], " ;");
-            $user   = $connInfo["user"];
-            $passwd = $connInfo["passwd"];
-
-            $options = array(
-                PDO::ATTR_ERRMODE           => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_TIMEOUT           => $connInfo["connect_timeout"] ?? 5,
-                PDO::ATTR_EMULATE_PREPARES  => false,
-                PDO::ATTR_STRINGIFY_FETCHES => false,
-            );
-
-            if (stripos($dsn, "mysql") !== false) {
-                $options[PDO::MYSQL_ATTR_LOCAL_INFILE] = false;
-
-                $initCommand = array();
-                if (isset($connInfo["timezone"])) $initCommand[] = "SET time_zone = '".$connInfo["timezone"]."'";
-                if (isset($connInfo["mysql_charset"])) {
-                    if (version_compare(PHP_VERSION, '5.3.6', '<')) {
-                        $initCommand[] = "SET NAMES ".$connInfo["mysql_charset"];
-                    } elseif (stripos($dsn, "charset") === false) {
-                        $dsn .= ";charset=".$connInfo["mysql_charset"];
-                    }
-                }
-                if ($initCommand) $options[PDO::MYSQL_ATTR_INIT_COMMAND] = implode(";", $initCommand);
-            }
-
-            $dbh = new PDO($dsn, $user, $passwd, $options);
-            self::$connList[$uStr] = $dbh;
-            return self::$connList[$uStr];
-        } catch (Exception $e) {
-            self::exit($e->getMessage() . " ({code})", array("code"=>$e->getCode()));
-        }
     }
 }
