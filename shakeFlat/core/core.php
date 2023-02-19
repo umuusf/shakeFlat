@@ -1,6 +1,6 @@
 <?php
 /**
- * core/core.inc
+ * core/core.php
  *
  * shakeFlat main
  *

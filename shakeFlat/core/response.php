@@ -1,6 +1,6 @@
 <?php
 /**
- * core/response.inc
+ * core/response.php
  *
  * It stores the processed values in modules and delivers them to templates.
  */

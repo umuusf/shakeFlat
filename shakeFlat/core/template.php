@@ -1,6 +1,6 @@
 <?php
 /**
- * core/template.inc
+ * core/template.php
  *
  * The final output of the processing result of each module.
  * Depending on the output mode, the appropriate processing is performed.

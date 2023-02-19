@@ -1,6 +1,6 @@
 <?php
 /**
- * core/router.inc
+ * core/route.php
  *
  * By parsing URI, routing is processed for each module.
  *

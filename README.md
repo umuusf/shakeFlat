@@ -26,7 +26,7 @@ ln -s ../shakeFlat/assets/ .
 3. htdocs/index.php 예제 코드는 다음과 같습니다.
 ```php
 <?php
-require_once __DIR__ . "/../shakeFlat/core/autoloader.inc";
+require_once __DIR__ . "/../shakeFlat/core/autoloader.php";
 
 $app = new shakeFlat\App();
 $app->setTranslationLang("kr");

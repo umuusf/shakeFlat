@@ -1,6 +1,6 @@
 <?php
 /**
- * core/config.inc
+ * core/config.php
  *
  * configuration.
  * Reads config.ini to get the setting value.

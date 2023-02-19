@@ -1,6 +1,6 @@
 <?php
 /**
- * core/token.inc
+ * core/token.php
  *
  * Create a token for login processing in the application for API service.
  * Similar to jwt or the well-known token solution for authentication.

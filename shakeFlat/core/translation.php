@@ -1,6 +1,6 @@
 <?php
 /**
- * core/translation.inc
+ * core/translation.php
  *
  * A class that supports language translation when composing a website consisting of two or more languages.
  * Developers can select the language they want to output through the App class.

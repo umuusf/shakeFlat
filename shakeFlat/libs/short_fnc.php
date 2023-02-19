@@ -1,6 +1,6 @@
 <?php
 /**
- * libs\short_fnc.inc
+ * libs\short_fnc.php
  *
  * Define frequently used method (in class) as a global function.
  * It will mainly be used in templates.

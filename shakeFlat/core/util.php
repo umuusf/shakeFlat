@@ -1,6 +1,6 @@
 <?php
 /**
- * core/util.inc
+ * core/util.php
  *
  */
 

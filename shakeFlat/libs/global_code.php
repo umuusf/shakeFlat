@@ -1,6 +1,6 @@
 <?php
 /**
- * libs/global_code.inc
+ * libs/global_code.php
  *
  * The final output of the processing result of each module.
  * Depending on the output mode, the appropriate processing is performed.

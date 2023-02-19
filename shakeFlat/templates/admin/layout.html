@@ -131,7 +131,7 @@ $leftMenu = [
                             $ex = explode("/", trim($submenu["link"], "/"));
                             $m = $ex[0] ?? "welcome";   if ($m == "") $m = "welcome";
                             $f = $ex[1] ?? "main";
-                            if ($router->module() == $m && $router->fnc() == $f) { // $route at core/template.inc
+                            if ($router->module() == $m && $router->fnc() == $f) { // $route at core/%1.php
                                 $active = " active in";
                                 $menu["sub"][$idx]["active"] = " active";
                             }
@@ -140,7 +140,7 @@ $leftMenu = [
                         $ex = explode("/", trim($menu["link"], "/"));
                         $m = $ex[0] ?? "welcome";   if ($m == "") $m = "welcome";
                         $f = $ex[1] ?? "main";
-                        if ($router->module() == $m && $router->fnc() == $f) { // $route at core/template.inc
+                        if ($router->module() == $m && $router->fnc() == $f) { // $route at core/%1.php
                             $active = " active in";
                         }
                     }

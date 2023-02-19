@@ -1,6 +1,6 @@
 <?php
 /**
- * core/auth.inc
+ * core/auth.php
  *
  * Class for authentication management including login
  *

@@ -1,6 +1,6 @@
 <?php
 /**
- * core/param.inc
+ * core/param.php
  *
  * Class Param
  * Parses and analyzes GET and POST parameters.

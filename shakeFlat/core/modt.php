@@ -1,6 +1,6 @@
 <?php
 /**
- * core/modt.inc
+ * core/modt.php
  *
  * Manages objects that require DB transaction processing.
  * If DB transaction processing is required in a batch when the module execution is finished, use this.

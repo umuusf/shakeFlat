@@ -1,6 +1,6 @@
 <?php
 /**
- * core/log.inc
+ * core/log.php
  *
  * by shakeFlat design intent,
  * In most cases where an error occurs in the process of processing one web page, it is based on the fact that the process ends after outputting an appropriate error screen.

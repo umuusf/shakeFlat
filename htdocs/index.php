@@ -7,7 +7,7 @@
  * You can see how to make it work simply by using App(), which is the core class of shakeFlat .
  */
 
-require_once __DIR__ . "/../shakeFlat/libs/autoloader.inc";
+require_once __DIR__ . "/../shakeFlat/libs/autoloader.php";
 
 $app = new shakeFlat\App();
 $app->setTranslationLang("kr");

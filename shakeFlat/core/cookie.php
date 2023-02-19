@@ -1,6 +1,6 @@
 <?php
 /**
- * core/cookie.inc
+ * core/cookie.php
  *
  * cookie handling class
  * Cookie values are packed in one cookie variable and stored.

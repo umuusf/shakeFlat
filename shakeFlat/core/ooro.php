@@ -1,6 +1,6 @@
 <?php
 /**
- * core/ooro.inc
+ * core/ooro.php
  *
  * Only One Row ORM(Object Relational Mapping).
  *

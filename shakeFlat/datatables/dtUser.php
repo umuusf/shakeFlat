@@ -1,6 +1,6 @@
 <?php
 /**
- * datatable/dtUser.inc
+ * datatable/dtUser.php
  *
  * An example of using the DataTable class.
  * Manage the user table.

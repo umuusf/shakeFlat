@@ -1,6 +1,6 @@
 <?php
 /**
- * core/db.inc
+ * core/db.php
  *
  * database handling class
  */

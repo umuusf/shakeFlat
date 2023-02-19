@@ -1,6 +1,6 @@
 <?php
 /**
- * models/user.inc
+ * models/mUser.php
  *
  * An example of using the Ooro class.
  * Manage the user table.

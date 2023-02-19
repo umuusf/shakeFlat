@@ -1,6 +1,6 @@
 <?php
 /**
- * core/datatable.inc
+ * core/datatable.php
  *
  * When using DataTable.js, a standardized code set is provided.
  * You must include the /asset/js/shakeflat.js file.
