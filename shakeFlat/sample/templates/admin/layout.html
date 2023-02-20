@@ -1,25 +1,26 @@
 <?php
 $leftMenu = [
     [
-        "title" => "Item-1",
+        "title" => "welcome",
         "icon"  => '<i class="bi bi-chat-dots"></i>',
         "link"  => null,
         "sub"   => [
-            [ "title" => "Item 1-1", "link"  => "/welcome/main" ],
-            [ "title" => "Item 1-2", "link"  => "/welcome/sub2" ],
+            [ "title" => "main", "link"  => "/welcome/main" ],
+            [ "title" => "sample", "link"  => "/welcome/sample" ],
+            [ "title" => "datatable_sample", "link"  => "/welcome/datatable_sample" ],
+        ],
+    ],
+    [
+        "title" => "Item-1",
+        "icon"  => '<i class="bi bi-archive"></i>',
+        "link"  => null,
+        "sub"   => [
+            [ "title" => "Item 1-1", "link"  => "/member/sub1" ],
+            [ "title" => "Item 1-2", "link"  => "/member/sub2" ],
         ],
     ],
     [
         "title" => "Item-2",
-        "icon"  => '<i class="bi bi-archive"></i>',
-        "link"  => null,
-        "sub"   => [
-            [ "title" => "Item 2-1", "link"  => "/member/sub1" ],
-            [ "title" => "Item 2-2", "link"  => "/member/sub2" ],
-        ],
-    ],
-    [
-        "title" => "Item-3",
         "icon"  => '<i class="bi bi-bag-x"></i>',
         "link"  => "/company/main",
         "sub"   => null,

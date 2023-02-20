@@ -5,7 +5,7 @@
  * Create a token for login processing in the application for API service.
  * Similar to jwt or the well-known token solution for authentication.
  * The token created here cannot be decrypted by the client.
- * If you use the Cookie class(shakeFlat\libs\Cookie) to store authentication information in cookies,
+ * If you use the Cookie class(shakeFlat\core\Cookie) to store authentication information in cookies,
  * you do not need to use this class. Cookie class itself uses encryption packing.
  *
  */

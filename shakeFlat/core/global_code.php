@@ -1,6 +1,6 @@
 <?php
 /**
- * libs/global_code.php
+ * core/global_code.php
  *
  * The final output of the processing result of each module.
  * Depending on the output mode, the appropriate processing is performed.
@@ -17,7 +17,7 @@
  * In error.html, you can use $message(string) with error messages and $context(array) with debugging information.
  */
 
-namespace shakeFlat\libs;
+namespace shakeFlat;
 
 class GCode
 {

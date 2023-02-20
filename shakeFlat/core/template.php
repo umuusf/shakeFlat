@@ -34,7 +34,6 @@ class Template
     const MODE_API_ENCRYPT          = 5;
     const MODE_API_ENCRYPT_ZIP      = 6;
 
-    private $pathTemplate;
     private $template;
     private $layoutFile;
     private $layoutFileForError;
@@ -45,6 +44,7 @@ class Template
     private $charset;
     private $aes256key;
     private $aes256iv;
+    private $gpath;
 
     public static function getInstance()
     {
@@ -56,8 +56,8 @@ class Template
 
     private function __construct()
     {
-        $this->pathTemplate         = SHAKEFLAT_PATH . "templates/";
-        $this->template             = "default";
+        $this->gpath = GPath::getInstance();
+
         $this->layoutFile           = "layout.html";
         $this->layoutFileForError   = "layout.html";
         $this->mode                 = self::MODE_WEB;
@@ -70,16 +70,9 @@ class Template
     }
 
     // called from App class
-    public function setPathTemplate($pathTemplate)
+    public function setPathTemplates($pathTemplates)
     {
-        $this->pathTemplate = $pathTemplate;
-        return $this;
-    }
-
-    // called from App class
-    public function setTemplate($template)
-    {
-        $this->template = $template;
+        $this->gpath->TEMPLATES = rtrim($pathTemplates, " /") . "/";
         return $this;
     }
 
@@ -216,7 +209,7 @@ class Template
             case self::MODE_WEB :
                 header("Content-Type: text/html; charset={$this->charset}");
                 $router = Router::getInstance();
-                $p = rtrim($this->pathTemplate, " /") . "/" . trim($this->template, " /");
+                $p = rtrim($this->gpath->TEMPLATES, " /");
                 ob_start();
                 include("{$p}/{$router->module()}/{$router->fnc()}.html");  // You can get the value by referring to $res in the template.
                 $contentBody = ob_get_clean();
@@ -230,7 +223,7 @@ class Template
                 break;
             case self::MODE_WEB_REDIRECT :
                 if ($this->redirectMsg) {
-                    $cookie = shakeFlat\libs\Cookie::getInstance("_rm_");
+                    $cookie = shakeFlat\core\Cookie::getInstance("_rm_");
                     $cookie->msg = $this->redirectMsg;
                 }
                 header("Location: " . $this->redirectUrl);
@@ -314,7 +307,7 @@ class Template
                 header("Content-Type: text/html; charset={$this->charset}");
                 try {
                     $router = Router::getInstance();
-                    $p = rtrim($this->pathTemplate, " /") . "/" . trim($this->template, " /");
+                    $p = rtrim($this->gpath->TEMPLATES, " /");
                     ob_start();
                     include("{$p}/error.html");         // use $message, $code
                     $contentBody = ob_get_clean();
@@ -343,21 +336,20 @@ class Template
 
     private function translationOutput($output)
     {
+        $translation = Translation::getInstance();
         if ($this->translationLang) {
-            $router = Router::getInstance();
-            $translation = new Translation("{$router->module()}/{$router->fnc()}", $this->translationLang);
             if (is_array($output)) {
-                $output = json_decode($translation->convert(json_encode($output, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE)), true);
+                $output = json_decode($translation->convert(json_encode($output, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE), $this->translationLang), true);
             } else {
-                $output = $translation->convert($output);
+                $output = $translation->convert($output, $this->translationLang);
             }
-            $translation->updateCache();
+            $translation->updateCache($this->translationLang);
             return $output;
         }
         if (is_array($output)) {
-            return json_decode(Translation::passing(json_encode($output, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE)), true);
+            return json_decode($translation->passing(json_encode($output, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE)), true);
         } else {
-            return Translation::passing($output);
+            return $translation->passing($output);
         }
     }
 }

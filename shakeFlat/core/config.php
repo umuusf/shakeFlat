@@ -10,6 +10,8 @@
 
 namespace shakeFlat;
 
+require_once "gpath.php";
+
 __sfConfig__init();
 
 function __sfConfig__init()
@@ -21,7 +23,7 @@ function __sfConfig__init()
     if (isset(SHAKEFLAT_ENV["config"]["php_timezone"])) date_default_timezone_set(SHAKEFLAT_ENV["config"]["php_timezone"]);
 
     // shakeFlat dir
-    define("SHAKEFLAT_PATH", substr(__DIR__, 0, -4));        // -4 : "core"
+    define("SHAKEFLAT_PATH", substr(__DIR__, 0, -4));        // -4 : "core", include last /
 
     // debug mode
     define("IS_DEBUG", SHAKEFLAT_ENV["config"]["debug_mode"] ?? false);
@@ -35,52 +37,37 @@ function __sfConfig__init()
         ini_set("display_errors", "0");
     }
 
-    // storage
-    if (substr(SHAKEFLAT_ENV["storage"]["storage_path"], 0, 1) == "/") {
-        define("STORAGE_PATH", rtrim(SHAKEFLAT_ENV["storage"]["storage_path"], " /") . "/");
-    } else {
-        define("STORAGE_PATH", SHAKEFLAT_PATH . trim(SHAKEFLAT_ENV["storage"]["storage_path"], " /") . "/");
-    }
-    if (SHAKEFLAT_ENV["storage"]["check_storage"] ?? false) __sfConfig__checkStorage();
+    // path
+    $gpath = GPath::getInstance();
+    $gpath->MODULES     = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["modules"]     ?? "sample/modules", " /") . "/";
+    $gpath->TEMPLATES   = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["templates"]   ?? "sample/modules/admin", " /") . "/";
+    $gpath->MODELS      = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["models"]      ?? "sample/models", " /") . "/";
+    $gpath->DATATABLES  = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["datatables"]  ?? "sample/datatables", " /") . "/";
+    $gpath->TRANSLATION = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["translation"] ?? "sample/translation/trans.json", " /") . "/";
+    $gpath->STORAGE     = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["storage"]     ?? "sample/storage", " /") . "/";
 }
 
 // Check the storage path in the file system. Also check the upload and log folders located under storage.
 function __sfConfig__checkStorage()
 {
-    if (!is_dir(STORAGE_PATH)) if (!mkdir(STORAGE_PATH, 0775, true)) __sfConfig__error("Failed to create storage folder.");
-    if (!is_readable(STORAGE_PATH)) __sfConfig__error("You do not have read permission on the storage folder : " . STORAGE_PATH);
-    if (!is_writable(STORAGE_PATH)) __sfConfig__error("You do not have write access to the storage folder : " . STORAGE_PATH);
+    if (!(SHAKEFLAT_ENV["storage"]["check_storage"] ?? false)) return;
 
-    $uploadPath = STORAGE_PATH . trim(SHAKEFLAT_ENV["storage"]["upload_path"], " /") . "/";
-    if (!is_dir($uploadPath)) {
-        mkdir($uploadPath, 0775, true);
-    } else {
-        if (!is_readable($uploadPath)) __sfConfig__error("You do not have read permission on the upload folder : {$uploadPath}");
-        if (!is_writable($uploadPath)) __sfConfig__error("You do not have write access to the upload folder : {$uploadPath}");
+    $gpath = GPath::getInstance();
+
+    if (!is_dir($gpath->STORAGE)) if (!mkdir($gpath->STORAGE, 0775, true)) __sfConfig__error("Failed to create storage folder.");
+    if (!is_readable($gpath->STORAGE)) __sfConfig__error("You do not have read permission on the storage folder : " . $gpath->STORAGE);
+    if (!is_writable($gpath->STORAGE)) __sfConfig__error("You do not have write access to the storage folder : " . $gpath->STORAGE);
+
+    $list = array ( "upload" => "upload_path", "log" => "log_path", "translation_cache" => "translation_cache" );
+    foreach($list as $alias => $p) {
+        $subPath = $gpath->STORAGE . trim(SHAKEFLAT_ENV["storage"][$p], " /") . "/";
+        if (!is_dir($subPath)) {
+            mkdir($subPath, 0775, true);
+        } else {
+            if (!is_readable($subPath)) __sfConfig__error("You do not have read permission on the {$alias} folder : {$subPath}");
+            if (!is_writable($subPath)) __sfConfig__error("You do not have write access to the {$alias} folder : {$subPath}");
+        }
     }
-
-    $logPath = STORAGE_PATH . trim(SHAKEFLAT_ENV["storage"]["log_path"], " /") . "/";
-    if (!is_dir($logPath)) {
-        mkdir($logPath, 0775, true);
-    } else {
-        if (!is_readable($logPath)) __sfConfig__error("You do not have read permission on the log folder : {$logPath}");
-        if (!is_writable($logPath)) __sfConfig__error("You do not have write access to the log folder : {$logPath}");
-    }
-
-    $translationPath = trim(SHAKEFLAT_ENV["translation"]["path"], " /") . "/";
-    if (substr($translationPath, 0, 1) == "/") {
-        $translationPath = rtrim($translationPath, " /");
-    } else {
-        $translationPath = SHAKEFLAT_PATH . trim($translationPath, " /");
-    }
-    if (!is_dir($translationPath)) mkdir($translationPath, 0775, true);
-    if (!is_readable($translationPath)) __sfConfig__error("You do not have read permission on the translation folder : {$translationPath}");
-    if (!is_writable($translationPath)) __sfConfig__error("You do not have write access to the translation folder : {$translationPath}");
-
-    $translationCachePath = $translationPath . "/cache/";
-    if (!is_dir($translationCachePath)) mkdir($translationCachePath, 0775, true);
-    if (!is_readable($translationCachePath)) __sfConfig__error("You do not have read permission on the translation folder : {$translationCachePath}");
-    if (!is_writable($translationCachePath)) __sfConfig__error("You do not have write access to the translation folder : {$translationCachePath}");
 }
 
 // Read the config.ini file.

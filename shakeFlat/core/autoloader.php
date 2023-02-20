@@ -1,16 +1,17 @@
 <?php
 /**
- * libs/autoloader.php
+ * core/autoloader.php
  *
  * auto loader
  *
  */
 
-require_once __DIR__ . "/../core/config.php";
-require_once SHAKEFLAT_PATH . "/libs/short_fnc.php";
-require_once SHAKEFLAT_PATH . "/libs/global_code.php";
+require_once "config.php";
+require_once "short_fnc.php";
+require_once "global_code.php";
+require_once "gpath.php";
 
-use shakeFlat\libs\GCode;
+use shakeFlat\GCode;
 
 // autoloader
 spl_autoload_register(function($class) {
@@ -38,14 +39,13 @@ spl_autoload_register(function($class) {
         case "shakeFlat\Util" :         require_once SHAKEFLAT_PATH . "/core/util.php"; break;
 
         default :
+            $gpath = shakeFlat\GPath::getInstance();
             if (substr($class, 0, 16) == "shakeFlat\models") {
                 $modelName = substr($class, 17);
-                require_once __DIR__ . "/../models/{$modelName}.php";
+                require_once $gpath->MODELS . "{$modelName}.php";
             } elseif (substr($class, 0, 20) == "shakeFlat\datatables") {
                 $dataTableName = substr($class, 21);
-                require_once __DIR__ . "/../datatables/{$dataTableName}.php";
+                require_once $gpath->DATATABLES . "{$dataTableName}.php";
             }
     }
 });
-
-// Write your require and include code here...

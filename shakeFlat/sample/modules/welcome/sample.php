@@ -17,7 +17,6 @@ use shakeFlat\Token;
 use shakeFlat\AuthSession;
 use shakeFlat\DataTable;
 use shakeFlat\models\mUser;
-use shakeFlat\datatables\dtUser;
 
 function fnc_sample($app)
 {
@@ -47,8 +46,6 @@ function fnc_sample($app)
         $mUser->age = $param->_d_age;
     }
     */
-
-    $dtUser = dtUser::getInstance();
 
     // response
     $res = Response::getInstance();

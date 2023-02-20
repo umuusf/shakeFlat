@@ -15,20 +15,21 @@ use shakeFlat\Ooro;
 use shakeFlat\Modt;
 use shakeFlat\Response;
 use shakeFlat\Util;
+use shakeFlat\Translation;
+use shakeFlat\Path;
 
 use \Exception;
 
 class App extends L
 {
     private $transactionDB  = array();
-    private $pathModule     = "";
     private $template       = null;
+    private $gpath          = null;
 
     public function __construct()
     {
-        $this->transactionDB    = array();
-        $this->pathModule       = SHAKEFLAT_PATH . "modules/";
-
+        $this->transactionDB = array();
+        $this->gpath = GPath::getInstance();
         $this->template = Template::getInstance();
         $this->template->setMode(Template::MODE_WEB);
     }
@@ -40,21 +41,27 @@ class App extends L
         return $this;
     }
 
-    public function setPathModule($pathModule)
+    public function setPathModels($pathModels)
     {
-        $this->pathModule = $pathModule;
+        $this->gpath->MODELS = rtrim($pathModels, " /") . "/";
         return $this;
     }
 
-    public function setPathTemplate($pathTemplate)
+    public function setPathDatabases($pathDatabases)
     {
-        $this->template->setPathTemplate($pathTemplate);
+        $this->gpath->DATATABLES = rtrim($pathDatabases, " /") . "/";
         return $this;
     }
 
-    public function setTemplate($template)
+    public function setPathModules($pathModules)
     {
-        $this->template->setTemplate($template);
+        $this->gpath->MODULES = rtrim($pathModules . " /") . "/";
+        return $this;
+    }
+
+    public function setPathTemplates($pathTemplates)
+    {
+        $this->template->setPathTemplates($pathTemplates);
         return $this;
     }
 
@@ -92,12 +99,18 @@ class App extends L
         L::defaultErrorMessage($msg);
     }
 
+    public function setFilePathTranslation($filePath)
+    {
+        $translation = Translation::getInstance();
+        $translation->setFilePathTranslation($filePath);
+        return $this;
+    }
+
     // Select the language to use when outputting results.
     // You need a translation file defined in translation session in config.ini.
     public function setTranslationLang($lang = null)
     {
         $this->template->setTranslationLang($lang);
-        if ($lang) $this->checkTranslation();
         return $this;
     }
 
@@ -121,7 +134,7 @@ class App extends L
         }
 
         $router = Router::getInstance();
-        $moduleFile = rtrim($this->pathModule, " /") . "/{$router->module()}/{$router->fnc()}.php";
+        $moduleFile = rtrim($this->gpath->MODULES, " /") . "/{$router->module()}/{$router->fnc()}.php";
         if (!file_exists($moduleFile)) $this::system("The file corresponding to module/function does not exist.", array( "module" => $router->module(), "function" => $router->fnc() ));
         if (!include_once($moduleFile)) $this::system("The file corresponding to module/function cannot be included.", array( "module" => $router->module(), "function" => $router->fnc() ));
 
@@ -150,29 +163,5 @@ class App extends L
     public function redirect($url, $msg = null)
     {
         $this->template->setRedirect($url, $msg);
-    }
-
-    private function checkTranslation()
-    {
-        if (!isset(SHAKEFLAT_ENV["translation"]["path"])) $this::system("The path information for translation data does not exist in config.ini.");
-        if (substr(SHAKEFLAT_ENV["translation"]["path"], 0, 1) == "/") {
-            $path = rtrim(SHAKEFLAT_ENV["translation"]["path"], " /") . "/";
-        } else {
-            $path = SHAKEFLAT_PATH . trim(SHAKEFLAT_ENV["translation"]["path"], " /") . "/";
-        }
-        if (!is_dir($path)) if (!mkdir($path, 0775, true)) $this::system("Failed to create path to translation file.", array("path" => $path));
-
-        $cachePath = $path . "cache/";
-        if (!is_dir($cachePath)) if (!mkdir($cachePath, 0775, true)) $this::system("Failed to create translation cache data storage path.", array("path"=>$cachePath));
-        if (!is_writable($cachePath)) $this::system("You do not have write access to the translation data cache file.", array("path"=>$cachePath));
-
-        if (!isset(SHAKEFLAT_ENV["translation"]["translation_file"])) $this::system("There is no data file information for translation in config.ini.");
-        $allFile = $path . SHAKEFLAT_ENV["translation"]["translation_file"];
-        if (!file_exists($allFile)) $this::system("Unable to read data file for translation.");
-
-        //$json = file_get_contents($allFile);
-        //if ($json === false) $this::system("Unable to read data file for translation.");
-        //$arr = json_decode($json, true);
-        //if (!$arr || !is_array($arr)) $this::system("The data file for translation is malformed.");
     }
 }

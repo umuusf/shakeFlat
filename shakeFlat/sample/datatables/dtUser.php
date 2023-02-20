@@ -29,7 +29,7 @@ class dtUser extends DataTable
         parent::setTableClass("table table-sm table-hover");
         parent::setAjax("/welcome/datatable_sample_ajax/", "POST");
 
-        parent::setDBMainTable("user");
+        parent::setDBMainTable("user", "user_no");
         parent::setAnd("user_no >= :default_user_no", [":default_user_no" => 1]);
         parent::setSearchJoinDBTable("company", "company_no", "company_no");
 

@@ -158,14 +158,7 @@ class L
 
     private static function getTranslationLangSystem($msg)
     {
-        if (!isset(SHAKEFLAT_ENV["translation"]["path"])) return $msg;
-        if (!isset(SHAKEFLAT_ENV["translation"]["system_translation_file"])) return $msg;
-        if (substr(SHAKEFLAT_ENV["translation"]["path"], 0, 1) == "/") {
-            $path = rtrim(SHAKEFLAT_ENV["translation"]["path"], " /");
-        } else {
-            $path = SHAKEFLAT_PATH . trim(SHAKEFLAT_ENV["translation"]["path"], " /");
-        }
-        $path .= "/" . SHAKEFLAT_ENV["translation"]["system_translation_file"];
+        $path = __DIR__ . "/translation.json";
         if (!file_exists($path)) return $msg;
         $json = file_get_contents($path);
         if ($json === false) return $msg;
@@ -213,9 +206,13 @@ class Log
     // If an Exception object is passed to the context data, it must be in the 'exception' key
     private function _log($logLevel, $message, $context = array())
     {
-        $message = $this->interpolate($message, $context);
-        $logPath = STORAGE_PATH . trim(SHAKEFLAT_ENV["storage"]["log_path"], " /") . "/";
+        __sfConfig__checkStorage();
+
+        $gpath = GPath::getInstance();
+        $logPath = $gpath->STORAGE . trim(SHAKEFLAT_ENV["storage"]["log_path"], " /") . "/";
         $logFile = "log-".date("Ymd").".log";
+
+        $message = $this->interpolate($message, $context);
 
         $date = new DateTime('now', new DateTimeZone(SHAKEFLAT_ENV["log"]["timezone"] ?? SHAKEFLAT_ENV["config"]["php_timezone"]));
         $time = $date->format('Y-m-d\TH:i:sP');     // W3C style
@@ -288,7 +285,8 @@ class LogQuery
         }
 
         if (SHAKEFLAT_ENV["log"]["query_logging"] ?? false) {
-            $logPath = STORAGE_PATH . trim(SHAKEFLAT_ENV["storage"]["log_path"], " /") . "/";
+            $gpath = GPath::getInstance();
+            $logPath = $gpath->STORAGE . trim(SHAKEFLAT_ENV["storage"]["log_path"], " /") . "/";
             $logFile = "query-".date("Ymd").".log";
             $date = new DateTime('now', new DateTimeZone(SHAKEFLAT_ENV["log"]["timezone"] ?? SHAKEFLAT_ENV["config"]["php_timezone"]));
             $time = $date->format('Y-m-d\TH:i:sP');     // W3C style
