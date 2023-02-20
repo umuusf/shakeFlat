@@ -1,2 +1,4 @@
 .vscode
-shakeFlat/sample/storage/*
+shakeFlat/sample/storage/upload
+shakeFlat/sample/storage/logs
+shakeFlat/sample/storage/trans_cache
