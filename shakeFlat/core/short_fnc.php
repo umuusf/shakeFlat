@@ -64,10 +64,10 @@ function sfWebDump($p, $fontSize = 10)
 
 function sfDebug($p, $c = array())
 {
-    shakeFlat\core\L::debug($p, $c);
+    shakeFlat\L::debug($p, $c);
 }
 
-// The mode defined in shakeFlat\core\Response is provided as a simple function.
+// The mode defined in shakeFlat\Response is provided as a simple function.
 function sfModeWEB()
 {
     $template = shakeFlat\Template::getInstance();
@@ -113,7 +113,7 @@ function sfRedirect($url, $msg = null)
 // If there is a message delivered when redirecting from the previous page, it is returned.
 function sfRedirectMsg()
 {
-    $cookie = shakeFlat\core\Cookie::getInstance("_rm_");
+    $cookie = shakeFlat\Cookie::getInstance("_rm_");
     $msg = $cookie->msg;
     if ($msg) return $msg;
     return false;
