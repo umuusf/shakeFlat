@@ -75,7 +75,7 @@ function __sfConfig__checkStorage()
 function __sfConfig__parse_ini_file_extend()
 {
     $path = __DIR__ . "/../config/config.ini";
-    if (defined(SF_CONFIG_INI)) $path = SF_CONFIG_INI;
+    if (defined("SF_CONFIG_INI")) $path = SF_CONFIG_INI;
     $data = parse_ini_file($path, true);
     if (!$data) __sfConfig__error("Could not read config.ini");
 
