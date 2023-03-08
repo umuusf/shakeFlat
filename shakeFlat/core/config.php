@@ -74,7 +74,9 @@ function __sfConfig__checkStorage()
 // When : is used in the ini section, consider the case where a dot (.) is used in each variable name.
 function __sfConfig__parse_ini_file_extend()
 {
-    $data = parse_ini_file(__DIR__ . "/../config/config.ini", true);
+    $path = __DIR__ . "/../config/config.ini";
+    if (defined(SF_CONFIG_INI)) $path = SF_CONFIG_INI;
+    $data = parse_ini_file($path, true);
     if (!$data) __sfConfig__error("Could not read config.ini");
 
     $explode_str = '.';
