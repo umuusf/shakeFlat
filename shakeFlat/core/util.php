@@ -260,13 +260,12 @@ class Util
     }
 
     // Check if the format of $format(YYYY-MM-DD HH:II:SS) is correct
-    public static function validateDate($date, $format = "Y-m-d H:i:s")
+    public static function validateDate($dateStr, $format = "Y-m-d H:i:s")
     {
-        $date = trim($date);
-        if (!$date) return false;
-        $dateTime = DateTime::createFromFormat($format, $date);
-        $newDate = $dateTime->format($format);
-        return ($newDate == $date);
+        $dateStr = trim($dateStr);
+        if (!$dateStr) return false;
+        $dateTime = DateTime::createFromFormat($format, $dateStr);
+        return $dateTime && ($dateTime->format($format) === $dateStr);
     }
 
     // Returns a non Y-m-d H:i:s format as a Y-m-d H:i:s format.

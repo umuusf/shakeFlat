@@ -15,11 +15,19 @@ use shakeFlat\AES256;
 
 class Token
 {
+    private $token = "";
+
+    public function __construct($token = null)
+    {
+        if ($token !== null) $this->token = $token;
+    }
+
     // Create a token
     // Delivers the contents in the form of an array to $payload. $expire is the token expiration time, in seconds.
     // To use application-specific HTTP header values pass the header name to $extraHTTPHeader. (It will be useful when the mobile app is the client)
     // Set $useBasicHTTPHeader to true to enhance security by using several http header values delivered from the client.
-    public static function create($payload, $expire = 3600, $extraHTTPHeader = "", $useBasicHTTPHeader = false)
+    // If $expire is 0, the token does not expire.
+    public function create($payload, $expire = 3600, $extraHTTPHeader = "", $useBasicHTTPHeader = false)
     {
         if (!is_array($payload)) return false;
 
@@ -37,61 +45,66 @@ class Token
             );
         }
 
+        if ($expire != 0) $expire = time() + $expire;
         $data = array (
             "payload" => $payload,
             "evi" => array (
-                "expire"  => time() + $expire,
+                "expire"  => $expire,
                 "extra"   => array ( $extraHTTPHeader, $evi_extra ),
                 "header"  => $evi_header,
                 "random"  => uniqid() . rand(1000,9999),
             ),
         );
 
-        return AES256::packObject($data);
+        $this->token = AES256::packObject($data);
+        return $this->token;
     }
 
     // Read the payload data by interpreting the token.
     // Returns false if the token has expired or has been tampered with.
-    public static function payload($token)
+    public function payload()
     {
-        $data = self::check($token);
+        $data = self::check();
         return $data["payload"] ?? false;
     }
 
     // with evi
-    public static function data($token)
+    public function data()
     {
-        return self::check($token);
+        return self::check();
     }
 
-    public static function expireTime($token)
+    public function expireTime()
     {
-        $data = self::check($token);
+        $data = self::check();
         $expire = $data["evi"]["expire"] ?? 0;
         return $expire;
     }
 
     // update the token. Reset the expire time.
-    public static function refresh($token, $expire = 3600)
+    // If $expire is 0, the token does not expire.
+    public function refresh($expire = 3600)
     {
-        $data = self::check($token);
+        $data = self::check();
         if ($data === false) return false;
         return self::refreshData($data, $expire);
     }
 
     // update the token(data:unpacked). Reset the expire time.
-    public static function refreshData($tokenData, $expire = 3600)
+    // If $expire is 0, the token does not expire.
+    public function refreshData($tokenData, $expire = 3600)
     {
-        $tokenData["evi"]["expire"] = time() + $expire;
+        if ($expire != 0) $expire = time() + $expire;
+        $tokenData["evi"]["expire"] = $expire;
         $tokenData["evi"]["random"] = uniqid() . rand(1000,9999);
-
-        return AES256::packObject($tokenData);
+        $this->token = AES256::packObject($tokenData);
+        return $this->token;
     }
 
     // Check if the token is correct.
-    private static function check($token)
+    private function check()
     {
-        $data = AES256::unpackObject($token);
+        $data = AES256::unpackObject($this->token);
         if (!isset($data["payload"]) || !isset($data["evi"]["expire"]) || !isset($data["evi"]["extra"]) || !isset($data["evi"]["header"])) return false;
 
         if ($data["evi"]["expire"] < time()) return false;

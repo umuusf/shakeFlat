@@ -46,6 +46,8 @@ function fnc_sample($app)
         $mUser->age = $param->_d_age;
     }
     */
+    $token = new Token();
+    $newToken = $token->create( array( "name" => "David", "age" => 25, "login_id" => "david19" ) );
 
     // response
     $res = Response::getInstance();
@@ -53,4 +55,6 @@ function fnc_sample($app)
     $res->name = $param->name;
     $res->msg = "[0:This is a demo module.:]";
     //$res->row = $row;
+    $res->token = $newToken;
+    $res->payload = $token->payload();
 }
