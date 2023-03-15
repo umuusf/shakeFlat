@@ -132,7 +132,8 @@ class AuthSession
                     if (substr($path, 0, 1) === "/") {
                         session_save_path($path);
                     } else {
-                        $path = SHAKEFLAT_PATH . "/" . $path;
+                        $gpath = GPath::getInstance();
+                        $path = $gpath->STORAGE . $path;
                         if (SHAKEFLAT_ENV["auth"]["session"]["check_path"] ?? false) {
                             if (!is_dir($path)) mkdir($path);
                             if (!file_exists($path)) $this::system("The storage folder does not exist in the file system.", array( "path" => $path ));
