@@ -107,7 +107,7 @@ class Token
         $data = AES256::unpackObject($this->token);
         if (!isset($data["payload"]) || !isset($data["evi"]["expire"]) || !isset($data["evi"]["extra"]) || !isset($data["evi"]["header"])) return false;
 
-        if ($data["evi"]["expire"] < time()) return false;
+        if ($data["evi"]["expire"] != 0 && $data["evi"]["expire"] < time()) return false;
 
         $httpHeader = getallheaders();
         if (($data["evi"]["extra"][0] ?? "") != "") {
