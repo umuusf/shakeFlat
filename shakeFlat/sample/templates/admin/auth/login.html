@@ -39,7 +39,7 @@ body, html { width:100%; height:100%!important; font-family:'Nanum Gothic', sans
 $(document).ready(function() {
     $("#frm").on("submit", function() {
         callAjax(
-            "auth/login-ok",
+            "/auth/login-ok",
             {
                 login: $("#login").val(),
                 passwd: $("#passwd").val(),

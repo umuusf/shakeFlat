@@ -230,6 +230,8 @@ class DataTable extends L
         $this->modifyRecordReadAjaxUrl = $readAjaxUrl;
         $this->modifyRecordUpdateAjaxUrl = $updateAjaxUrl;
         $this->modifyRecord = array();
+        $this->modifyRecordLayout = array();
+        $tempLayoutAlias = array();
         foreach($list as $alias => $row) {
             $realColumn = null;
             if (!array_key_exists("realColumn", $row)) {
@@ -249,7 +251,7 @@ class DataTable extends L
             */
 
             $this->modifyRecord[$alias] = array (
-                "type"          => $row["type"] ?? "text",      // text, number, email, select, checkbox, radio
+                "type"          => $row["type"] ?? "text",      // text, number, email, select, checkbox, radio, hidden
                 "optionList"    => $row["optionList"] ?? [],    // select, checkbox, radio - [ "key" => "value", "key" => "value", ... ]
                 "placeholder"   => $row["placeholder"] ?? "",
                 "defaultValue"  => $row["defaultValue"] ?? "",
@@ -264,9 +266,14 @@ class DataTable extends L
                 "readonly"      => $row["readonly"] ?? false,
                 "comment"       => $row["comment"] ?? "",
             );
+
+            if (($row["type"] ?? "text") == "hidden") {
+                $this->modifyRecordLayout[] = $alias;
+            } else {
+                $tempLayoutAlias[$alias] = $this->modifyRecord[$alias];
+            }
         }
 
-        $tempLayoutAlias = $this->modifyRecord;
         foreach($layout as $arr) {
             if (!is_array($arr)) {
                 if (!isset($tempLayoutAlias[$arr])) self::system("layout has an unknown item definition.");
@@ -278,8 +285,9 @@ class DataTable extends L
                 }
             }
         }
+
         if ($tempLayoutAlias) self::system("Insufficient items defined in layout.");
-        $this->modifyRecordLayout = $layout;
+        $this->modifyRecordLayout = array_merge($this->modifyRecordLayout, $layout);
     }
 
     public function setDetailInfo($readAjaxUrl, $list, $layout)
@@ -1003,6 +1011,11 @@ class DataTable extends L
         $defaultValue = "";
 
         switch($recordInfo["type"]) {
+            case "hidden" :
+                return <<<EOD
+                                <input type="hidden" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}">\n
+                EOD;
+                break;
             case "text" :
             case "number" :
             case "email" :
@@ -1018,9 +1031,8 @@ class DataTable extends L
                                 <div class="mb-2{$divClass}"{$divStyle}>
                                     <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$recordInfo["label"]}{$requiredStar}:</label>
                                     <input type="{$recordInfo["type"]}" class="form-control{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$defaultValue}{$readonly}>
-                                    {$comment}\n
+                                    {$comment}
                                 </div>\n
-
                 EOD;
                 break;
             case "select" :
@@ -1031,12 +1043,12 @@ class DataTable extends L
                         if ($recordInfo["defaultValue"] == $k) { $defaultValue = $k; $defaultText = $v; break; }
                     }
                     return <<<EOD
-                                <div class="mb-2{$divClass}"{$divStyle}>
-                                    <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$recordInfo["label"]}{$requiredStar}:</label>
-                                    <input type="hidden" class="form-control{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}" value="{$defaultValue}">
-                                    <input type="text" class="form-control{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}-text" name="sf-{$this->setName}-{$prefix}-{$alias}-text"{$style} readonly value="{$defaultText}">
-                                    {$comment}\n
-                                </div>\n
+                                    <div class="mb-2{$divClass}"{$divStyle}>
+                                        <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$recordInfo["label"]}{$requiredStar}:</label>
+                                        <input type="hidden" class="form-control{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}" value="{$defaultValue}">
+                                        <input type="text" class="form-control{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}-text" name="sf-{$this->setName}-{$prefix}-{$alias}-text"{$style} readonly value="{$defaultText}">
+                                        {$comment}
+                                    </div>\n
                     EOD;
                 } else {
                     $options = "";
@@ -1050,13 +1062,13 @@ class DataTable extends L
                         $openScript .= "$(\"#sf-{$this->setName}-{$prefix}-{$alias}\").select2({theme: 'bootstrap-5',dropdownParent: $(\"#{$modalId}\")});";
                     }
                     return <<<EOD
-                                <div class="mb-2{$divClass}{$divStyle}">
-                                    <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$recordInfo["label"]}{$requiredStar}:</label>
-                                    <select class="form-select w-auto{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$readonly}>
-                                    {$options}
-                                    </select>
-                                    {$comment}\n
-                                </div>\n
+                                    <div class="mb-2{$divClass}{$divStyle}">
+                                        <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$recordInfo["label"]}{$requiredStar}:</label>
+                                        <select class="form-select w-auto{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$readonly}>
+                                        {$options}
+                                        </select>
+                                        {$comment}
+                                    </div>\n
                     EOD;
                 }
                 break;
@@ -1068,10 +1080,10 @@ class DataTable extends L
                     if (in_array($k, $defaultValueArr)) $checked = " checked"; else $checked = "";
                     $idx ++;
                     $input .= <<<EOD
-                                    <div class="form-check me-3">
-                                        <input type="checkbox" class="form-check-input{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}-{$idx}" name="sf-{$this->setName}-{$prefix}-{$alias}" value="{$k}"{$style}{$checked}{$readonly}>
-                                        <label class="form-check-label text-nowrap" for="sf-{$this->setName}-{$prefix}-{$alias}-{$idx}"{$labelStyle}>{$v}</label>
-                                    </div>\n
+                                            <div class="form-check me-3">
+                                                <input type="checkbox" class="form-check-input{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}-{$idx}" name="sf-{$this->setName}-{$prefix}-{$alias}" value="{$k}"{$style}{$checked}{$readonly}>
+                                                <label class="form-check-label text-nowrap" for="sf-{$this->setName}-{$prefix}-{$alias}-{$idx}"{$labelStyle}>{$v}</label>
+                                            </div>\n
                     EOD;
                 }
                 return <<<EOD
@@ -1080,7 +1092,7 @@ class DataTable extends L
                                     <div class="d-flex flex-wrap">
                                     {$input}
                                     </div>
-                                    {$comment}\n
+                                    {$comment}
                                 </div>\n
                 EOD;
                 break;
@@ -1091,10 +1103,10 @@ class DataTable extends L
                     if (($idx == 0 && !$recordInfo["defaultValue"]) || ($recordInfo["defaultValue"] && $recordInfo["defaultValue"] == $k)) $checked = " checked"; else $checked = "";
                     $idx ++;
                     $input .= <<<EOD
-                                    <div class="form-check me-3">
-                                        <input type="radio" class="form-radio-input{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}-{$idx}" name="sf-{$this->setName}-{$prefix}-{$alias}" value="{$k}"{$style}{$checked}{$readonly}>
-                                        <label class="form-radio-label text-nowrap" for="sf-{$this->setName}-{$prefix}-{$alias}-{$idx}"{$labelStyle}>{$v}</label>
-                                    </div>\n
+                                            <div class="form-check me-3">
+                                                <input type="radio" class="form-radio-input{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}-{$idx}" name="sf-{$this->setName}-{$prefix}-{$alias}" value="{$k}"{$style}{$checked}{$readonly}>
+                                                <label class="form-radio-label text-nowrap" for="sf-{$this->setName}-{$prefix}-{$alias}-{$idx}"{$labelStyle}>{$v}</label>
+                                            </div>\n
                     EOD;
                 }
                 return <<<EOD
@@ -1103,7 +1115,7 @@ class DataTable extends L
                                     <div class="d-flex flex-wrap">
                                     {$input}
                                     </div>
-                                    {$comment}\n
+                                    {$comment}
                                 </div>\n
                 EOD;
                 break;
