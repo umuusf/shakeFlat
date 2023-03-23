@@ -280,7 +280,11 @@ class LogQuery
         if ($bind) {
             foreach($bind as $k => $v) {
                 if (substr($k, 0, 1) != ":") $k = ":".$k;
-                $sql = str_replace($k, $v, $sql);
+                if (gettype($v) == "NULL") {
+                    $sql = str_replace($k, "NULL", $sql);
+                } else {
+                    $sql = str_replace($k, $v, $sql);
+                }
             }
         }
 
