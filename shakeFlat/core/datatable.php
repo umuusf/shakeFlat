@@ -265,6 +265,7 @@ class DataTable extends L
                 "required"      => $row["required"] ?? false,
                 "readonly"      => $row["readonly"] ?? false,
                 "comment"       => $row["comment"] ?? "",
+                "empty"         => $row["empty"] ?? false,
             );
 
             if (($row["type"] ?? "text") == "hidden") {
@@ -953,6 +954,7 @@ class DataTable extends L
 
     private function _modalRecordFill($alias, $recordInfo, $defaultValue, &$fillScript)
     {
+        if ($recordInfo["empty"]) return;
         switch($recordInfo["type"]) {
             case "select" :
                 if (($recordInfo["readonly"] ?? false)) {
@@ -1381,7 +1383,7 @@ class DataTable extends L
     {
         $columnArr = array();
         foreach($this->modifyRecord as $alias => $row) {
-            if (!$row["realColumn"]) continue;
+            if (!$row["realColumn"] || $row["empty"]) continue;
             $columnArr[] = "{$row["realColumn"]} as $alias";
         }
         $columns = implode(",", $columnArr);
