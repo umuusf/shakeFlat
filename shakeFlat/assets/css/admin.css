@@ -26,6 +26,7 @@ div.dataTables_wrapper .dataTables_length { padding-top:2px; }
 div.dataTables_wrapper .dataTables_length .form-select-sm { font-size: 0.75rem; padding-left:0.4rem; }
 div.dataTables_wrapper .pagination { --bs-pagination-font-size: 0.8rem; --bs-pagination-padding-x: 0.55rem; --bs-pagination-padding-y: 0.22rem; }
 div.dataTables_wrapper .sf-custom-search .form-control-sm, .dataTables_wrapper .sf-custom-search .form-select-sm { font-size: 0.75rem; padding-left:0.4rem; }
+div.dataTables_wrapper .sf-custom-search .form-select-sm~.select2-container--bootstrap-5 .select2-selection { font-size: 0.75rem; padding-left:0.4rem; }
 div.dataTables_wrapper div.dataTables_info { padding-top:0.3rem; }
 div.dataTables_wrapper .dataTables_filter input { margin-left:0px!important; }
 div.dataTables_wrapper .dt-buttons>.btn-sm { --bs-btn-padding-y: 0.197rem; --bs-btn-font-size:0.8rem; margin-top:1px; }
