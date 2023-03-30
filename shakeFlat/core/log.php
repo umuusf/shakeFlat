@@ -82,6 +82,7 @@ class L
 
     public static function debug($message, $context = array(), $exception = null)
     {
+        if (is_array($message)) $message = print_r($message, true);
         list($message, $context) = self::_shakeMsgContext($message, $context, $exception);
         return self::logInstance()->debug($message, $context);
     }
