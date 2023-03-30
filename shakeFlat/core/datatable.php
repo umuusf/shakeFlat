@@ -1037,6 +1037,16 @@ class DataTable extends L
                                 </div>\n
                 EOD;
                 break;
+            case "textarea" :
+                if ($recordInfo["defaultValue"]) $defaultValue = htmlspecialchars($recordInfo["defaultValue"]);
+                return <<<EOD
+                                <div class="mb-2{$divClass}"{$divStyle}>
+                                    <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$recordInfo["label"]}{$requiredStar}:</label>
+                                    <textarea class="form-control{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$readonly}>{$defaultValue}</textarea>
+                                    {$comment}
+                                </div>\n
+                EOD;
+                break;
             case "select" :
                 if ($readonly == " readonly") {
                     $defaultValue = $recordInfo["defaultValue"] ?? "";
@@ -1360,13 +1370,14 @@ class DataTable extends L
         $columns = implode(",", $columnArr);
 
         $db = DB::getInstance($this->connectionName);
+        $where = $this->whereSQL(1);
+        if ($where) $where .= "and"; else $where = "where";
         $rs = $db->query("
             select
             {$columns}
             from {$this->mainDBTable}
             " . $this->joinSQL(1) . "
-            " . $this->whereSQL(1) . "
-            where {$this->mainDBTable}.{$this->mainDBTablePK} = :pk
+            {$where} {$this->mainDBTable}.{$this->mainDBTablePK} = :pk
         ", [ ":pk" => $pk ]);
         $data = $db->fetch($rs);
         return $data;
@@ -1389,13 +1400,14 @@ class DataTable extends L
         $columns = implode(",", $columnArr);
 
         $db = DB::getInstance($this->connectionName);
+        $where = $this->whereSQL(1);
+        if ($where) $where .= "and"; else $where = "where";
         $rs = $db->query("
             select
             {$columns}
             from {$this->mainDBTable}
             " . $this->joinSQL(1) . "
-            " . $this->whereSQL(1) . "
-            where {$this->mainDBTable}.{$this->mainDBTablePK} = :pk
+            {$where} {$this->mainDBTable}.{$this->mainDBTablePK} = :pk
         ", [ ":pk" => $pk ]);
         $data = $db->fetch($rs);
         return $data;
