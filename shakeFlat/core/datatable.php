@@ -561,10 +561,11 @@ class DataTable extends L
                     $render = "render: function(data, type, row) { return \"" . implode(" &nbsp;", $rfnc) . "\" }";
                 }
             }
+            if ($render == "") $render = "render:$.fn.dataTable.render.text()";
 
             if ($row["className"])  $className = "className: \"{$row["className"]}\", ";
 
-            $columnsList[] = "{ name: \"{$alias}\", {$data}{$title}{$searchable}{$orderable}{$className}{$render}}";
+            $columnsList[] = "{ name: \"{$alias}\", type: \"html\", {$data}{$title}{$searchable}{$orderable}{$className}{$render}}";
             if ($row["realColumn"]) $excelColumnsList[] = $idx;
 
             $idx++;
@@ -938,7 +939,7 @@ class DataTable extends L
             }
         } else {
             $openScript .= <<<EOD
-                    $("#sf-{$this->setName}-detailinfo-{$alias}").html(result.data.info.{$alias});
+                    $("#sf-{$this->setName}-detailinfo-{$alias}").html(result.data.info.{$alias}.escapeHtml());
             EOD;
         }
 
