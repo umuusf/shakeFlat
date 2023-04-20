@@ -53,7 +53,12 @@ function valueForSelect(id, defaultValue) {
 
 // like htmlspecialchars for PHP
 String.prototype.escapeHtml = function() {
-    var str = this;
+    return escapeHtml(this);
+}
+
+function escapeHtml(str)
+{
+    if (!str) return '';
 	var map = {
 		'&': '&amp;',
 		'<': '&lt;',

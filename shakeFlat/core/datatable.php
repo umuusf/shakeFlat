@@ -869,7 +869,7 @@ class DataTable extends L
 
     private function setScriptDetailInfo()
     {
-        $openScript = "";
+        $openScript = "\n";
         $formHtml = "\n";
         foreach($this->detailInfoLayout as $arr) {
             if (is_array($arr)) {
@@ -934,12 +934,14 @@ class DataTable extends L
         if ($recordInfo["displayEnum"]) {
             foreach($recordInfo["displayEnum"] as $value => $displayText) {
                 $openScript .= <<<EOD
-                    if (result.data.info.{$alias} == '{$value}') $("#sf-{$this->setName}-detailinfo-{$alias}").html("{$displayText}");
+                                if (result.data.info.{$alias} == '{$value}') $("#sf-{$this->setName}-detailinfo-{$alias}").html("{$displayText}");
+
                 EOD;
             }
         } else {
             $openScript .= <<<EOD
-                    $("#sf-{$this->setName}-detailinfo-{$alias}").html(result.data.info.{$alias}.escapeHtml());
+                            $("#sf-{$this->setName}-detailinfo-{$alias}").html(escapeHtml(result.data.info.{$alias}));
+
             EOD;
         }
 

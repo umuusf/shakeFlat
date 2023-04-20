@@ -45,6 +45,8 @@ function __sfConfig__init()
     $gpath->DATATABLES  = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["datatables"]  ?? "sample/datatables", " /") . "/";
     $gpath->TRANSLATION = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["translation"] ?? "sample/translation/trans.json", " /") . "/";
     $gpath->STORAGE     = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["storage"]     ?? "sample/storage", " /") . "/";
+
+    __sfConfig__checkStorage();
 }
 
 // Check the storage path in the file system. Also check the upload and log folders located under storage.
