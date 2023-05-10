@@ -133,6 +133,7 @@ class Param extends L
             }
         }
 
+        if ($default !== "_+-=NO_VALUE=-+_") return $default;
         return null;
     }
 
@@ -159,6 +160,11 @@ class Param extends L
         if (!$this->_existKey($key, $type)) $this->exitCode("[:The parameter {$key} does not exist.:]", GCode::MISSING_PARAM);
         if (!$this->_existValue($key, $type)) $this->exitCode("[:The value of parameter {$key} is empty.:]", GCode::PARAM_EMPTY);
         $this->_checkType($key, $type, $enum);
+    }
+
+    public function exists($key)
+    {
+        return (array_key_exists($key, $this->params) === true || array_key_exists($key, $_FILES) === true);
     }
 
     private function _existKey($key, $type)
