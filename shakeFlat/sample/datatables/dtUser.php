@@ -64,6 +64,6 @@ class dtUser extends DataTable
             [ "value" => 2, "text" => "점검중" ],
         ]);
 
-        parent::setCustomSearchDateRange("create_date", "생성일", "width:290px!important;");
+        parent::setCustomSearchDateRange("create_date", "생성일", "width:250px!important;");
     }
 }
