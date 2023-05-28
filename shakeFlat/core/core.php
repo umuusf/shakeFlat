@@ -11,14 +11,9 @@ use shakeFlat\Template;
 use shakeFlat\Router;
 use shakeFlat\L;
 use shakeFlat\DB;
-use shakeFlat\Ooro;
 use shakeFlat\Modt;
-use shakeFlat\Response;
 use shakeFlat\Util;
 use shakeFlat\Translation;
-use shakeFlat\Path;
-
-use \Exception;
 
 class App extends L
 {
