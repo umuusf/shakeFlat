@@ -1,7 +1,11 @@
 *.js linguist-vendored
+*.map linguist-vendored
 *.css linguist-vendored
 *.scss linguist-vendored
 *.less linguist-vendored
 *.html linguist-vendored
+*.txt linguist-vendored
+*.png linguist-vendored
+*.jpg linguist-vendored
 *.php linguist-vendored=false
 *.inc linguist-vendored=false
