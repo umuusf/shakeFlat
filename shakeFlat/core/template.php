@@ -223,7 +223,7 @@ class Template
                 break;
             case self::MODE_WEB_REDIRECT :
                 if ($this->redirectMsg) {
-                    $cookie = shakeFlat\core\Cookie::getInstance("_rm_");
+                    $cookie = \shakeFlat\Cookie::getInstance("_rm_");
                     $cookie->msg = $this->redirectMsg;
                 }
                 header("Location: " . $this->redirectUrl);
@@ -239,6 +239,8 @@ class Template
             "error"  => array ( "errCode" => $code, "errMsg" => $message ),
             "data"   => array (),
         );
+
+        if (strtolower($_SERVER["HTTP_X_REQUESTED_WITH"] ?? "") == "xmlhttprequest") $this->mode = self::MODE_AJAX;
 
         switch($this->mode) {
             case self::MODE_AJAX :
@@ -318,7 +320,7 @@ class Template
                     $html = $this->translationOutput($html);
                     if (strtoupper($this->charset) != "UTF-8") $html = iconv("UTF-8", $this->charset, $html);
                     echo $html;
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
                     echo "
                         <div>
                         error message : {$message}

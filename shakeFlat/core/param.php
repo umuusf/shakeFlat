@@ -288,7 +288,7 @@ class Param extends L
      *                  fileType            파일 형식
      *                  fileSize            파일 크기(byte)
      */
-    public function saveFile($key, $subFolder = "", $rootFolder = UPLOAD_ROOT)
+    public function saveFile($key, $subFolder, $rootFolder)
     {
         try {
             if (($_FILES[$key]["error"] ?? 100) != 0) throw new Exception("upload failed.", GCode::PARAM_FILE_UPLOAD_FAILURE);
@@ -309,7 +309,7 @@ class Param extends L
             $idx = 0;
             while(1) {
                 $saveFilename = "{$path}{$filenamePrefix}_{$idx}.{$ext}";
-                if (!file_Needs($saveFilename)) break;
+                if (!file_exists($saveFilename)) break;
                 $idx++;
             }
 

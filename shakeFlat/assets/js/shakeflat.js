@@ -59,6 +59,7 @@ String.prototype.escapeHtml = function() {
 function escapeHtml(str)
 {
     if (!str) return '';
+    if (typeof(str) != "string") return str;
 	var map = {
 		'&': '&amp;',
 		'<': '&lt;',

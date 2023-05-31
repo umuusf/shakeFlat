@@ -29,10 +29,6 @@ class DataTable extends L
     private $searchJoinDBTable          = array();
     private $searchAndConditions        = array();
     private $searchOrConditions         = array();
-    private $listing                    = array();
-    private $detailInfo                 = array();      // View details of 1 row
-    private $detailInfoLayout           = array();
-    private $detailInfoReadAjaxUrl      = "";
 
     private $defaultOrder               = [];
     private $defaultOrderDirection      = [];
@@ -49,14 +45,26 @@ class DataTable extends L
     private $excelButtonText            = "Excel";
     private $excelButtonClassName       = "btn btn-sm btn-secondary";
 
+    private $columns                    = array();
+    private $listing                    = array();      // Column list of list screen
+
+    private $detailInfo                 = array();      // View details of 1 row
+    private $detailInfoLayout           = array();
+    private $detailInfoReadAjaxUrl      = "";
+    private $detailInfoModalTitle       = "상세보기";
+
     private $newRecord                  = array();
     private $newRecordLayout            = array();
     private $newRecordAjaxUrl           = "";
-    private $newRecordTitle             = "신규추가";
+    private $newRecordModalTitle        = "신규추가";
+    private $newRecordCallback          = null;
+
     private $modifyRecord               = array();
     private $modifyRecordLayout         = array();
     private $modifyRecordReadAjaxUrl    = "";
-    private $modifyRecordUpdateAjaxUrl  = "";
+    private $modifyRecordSubmitAjaxUrl  = "";
+    private $modifyRecordModalTitle     = "수정하기";
+    private $modifyRecordCallback       = null;
 
     private $javaScript                 = array();
     private $javaScriptReady            = array();         // on document ready
@@ -73,17 +81,26 @@ class DataTable extends L
         return self::$instance[$calledClass];
     }
 
-    protected function __construct($setName, $ajaxInfo = array(), $config = array())
+    protected function __construct($setName, $config = array())
     {
         $chk = preg_match("/^[a-z][a-z0-9]*$/", $setName);
         if (!$chk) self::system("It must be made only of alphabet(lower case) and numbers (the first letter is an alphabet).");
         $this->setName = $setName;
 
-        if (isset($ajaxInfo["url"])) $this->setAjax($ajaxInfo["url"]);
+        // Set the url of each ajax page to the current page.
+        // When not in one page mode, use each setting method to change.
+        $router = Router::getInstance();
+        $this->ajaxUrl                   = "/{$router->module()}/{$router->fnc()}/";
+        $this->detailInfoReadAjaxUrl     = "/{$router->module()}/{$router->fnc()}/";
+        $this->newRecordAjaxUrl          = "/{$router->module()}/{$router->fnc()}/";
+        $this->modifyRecordReadAjaxUrl   = "/{$router->module()}/{$router->fnc()}/";
+        $this->modifyRecordSubmitAjaxUrl = "/{$router->module()}/{$router->fnc()}/";
+
         if ($config) $this->setConfig($config);
     }
 
-    protected function setAjax($url)
+    // Required when not in one page mode.
+    public function setListAjax($url)
     {
         $this->ajaxUrl = $url;
     }
@@ -106,7 +123,7 @@ class DataTable extends L
         if (isset($config["tableClass"]))               $this->tableClass               = $config["tableClass"];
         if (isset($config["connectionName"]))           $this->connectionName           = $config["connectionName"];
         if (isset($config["mainDBTable"]))              $this->mainDBTable              = $config["mainDBTable"];
-        if (isset($config["listing"]))                  $this->listing                  = $config["listing"];
+        if (isset($config["columns"]))                  $this->columns                  = $config["columns"];
         if (isset($config["defaultOrder"]))             $this->defaultOrder[]           = $config["defaultOrder"];
         if (isset($config["defaultOrderDirection"]))    $this->defaultOrderDirection[]  = $config["defaultOrderDirection"];
         if (isset($config["paging"]))                   $this->paging                   = $config["paging"];
@@ -116,228 +133,166 @@ class DataTable extends L
         if (isset($config["searching"]))                $this->searching                = $config["searching"];
     }
 
-    // Defines the fields to be listed.
+    // Defines the columns(fields) to be listed.
     // alias : unique name (To distinguish when two or more tables have the same field name when used in a query statement.)
     // rendering : The javascript code of the "render" item described in columnDefs
-    protected function setListing($list)
+    protected function setAllColumns($columns)
     {
-        $this->listing = array();
-        foreach($list as $alias => $row) {
+        $this->columns = array();
+        foreach($columns as $alias => $attr) {
             // realColumn :
             //   If omitted, it is replaced with the alias value.
             //   If you want to output only the contents of render, set it to blank("") or null.
             $realColumn = null;
-            if (!($row["isModifyBtn"] ?? false) && !($row["isDetailInfoBtn"] ?? false)) {
-                if (!array_key_exists("realColumn", $row)) $realColumn = $alias;
-                elseif ($row["realColumn"] !== null) $realColumn = $row["realColumn"];
+            if (!($attr["isModifyBtn"] ?? false) && !($attr["isDetailInfoBtn"] ?? false)) {
+                if (!array_key_exists("realColumn", $attr)) $realColumn = $alias;
+                elseif ($attr["realColumn"] !== null) $realColumn = $attr["realColumn"];
             }
 
-            $this->listing[$alias] = array(
-                "display"           => $row["display"] ?? true,    // If omitted, it is recognized as true.
-                "title"             => $row["title"] ?? "",        // If omitted, it is recognized as blank.
+            $this->columns[$alias] = array(
+                "label"             => $attr["label"] ?? "",        // If omitted, it is recognized as blank.
                 "realColumn"        => $realColumn,
-                "orderable"         => $row["orderable"] ?? false,
-                "searchable"        => $row["searchable"] ?? false,
-                "className"         => $row["className"] ?? "text-center text-nowrap",
-                "rendering"         => $row["rendering"] ?? "",
-                "isModifyBtn"       => $row["isModifyBtn"] ?? false,
-                "isDetailInfoBtn"   => $row["isDetailInfoBtn"] ?? false,
+                "orderable"         => $attr["orderable"] ?? false,
+                "searchable"        => $attr["searchable"] ?? false,
+                "className"         => $attr["className"] ?? "",
+                "rendering"         => $attr["rendering"] ?? "",
+                "isModifyBtn"       => $attr["isModifyBtn"] ?? false,
+                "isDetailInfoBtn"   => $attr["isDetailInfoBtn"] ?? false,
             );
         }
     }
 
-    // Update/add one field defined in the list.
-    public function setListingOne($alias, $row)
+    // Update/add one column(field) defined in the list.
+    public function setColumn($alias, $attr)
     {
         $realColumn = null;
-        if (!($row["isModifyBtn"] ?? false) && !($row["isDetailInfoBtn"] ?? false)) {
-            if (!array_key_exists("realColumn", $row)) $realColumn = $alias;
-            elseif ($row["realColumn"] !== null) $realColumn = $row["realColumn"];
+        if (!($attr["isModifyBtn"] ?? false) && !($attr["isDetailInfoBtn"] ?? false)) {
+            if (!array_key_exists("realColumn", $attr)) $realColumn = $alias;
+            elseif ($attr["realColumn"] !== null) $realColumn = $attr["realColumn"];
         }
 
-        $this->listing[$alias] = array(
-            "display"           => $row["display"] ?? true,    // If omitted, it is recognized as true.
-            "title"             => $row["title"] ?? "",        // If omitted, it is recognized as blank.
+        $this->columns[$alias] = array(
+            "label"             => $attr["label"] ?? "",        // If omitted, it is recognized as blank.
             "realColumn"        => $realColumn,
-            "orderable"         => $row["orderable"] ?? false,
-            "searchable"        => $row["searchable"] ?? false,
-            "className"         => $row["className"] ?? "text-center text-nowrap",
-            "rendering"         => $row["rendering"] ?? "",
-            "isModifyBtn"       => $row["isModifyBtn"] ?? false,
-            "isDetailInfoBtn"   => $row["isDetailInfoBtn"] ?? false,
+            "orderable"         => $attr["orderable"] ?? false,
+            "searchable"        => $attr["searchable"] ?? false,
+            "className"         => $attr["className"] ?? "",
+            "rendering"         => $attr["rendering"] ?? "",
+            "isModifyBtn"       => $attr["isModifyBtn"] ?? false,
+            "isDetailInfoBtn"   => $attr["isDetailInfoBtn"] ?? false,
         );
     }
 
-    public function setNewRecord($ajaxUrl, $list, $layout, $title="신규추가")
+    // Defines the column list and order of the list screen
+    public function setListing($aliasList, $attrList = null)
     {
-        $this->newRecordAjaxUrl = $ajaxUrl;
-        $this->newRecord = array();
-        $this->newRecordTitle = $title;
-        foreach($list as $alias => $row) {
-            $realColumn = null;
-            if (!array_key_exists("realColumn", $row)) {
-                if (isset($this->listing[$alias]["realColumn"]) && $this->listing[$alias]["realColumn"]) {
-                    $realColumn = $this->listing[$alias]["realColumn"];
-                } else {
-                    $realColumn = $alias;
-                }
-            } elseif ($row["realColumn"] !== null) $realColumn = $row["realColumn"];
-            /*
-            if (strpos($realColumn, ".") !== false) {
-                $e = explode(".", $realColumn);
-                if ($e[0] != $this->mainDBTable && !in_array($e[0], array_column($this->joinDBTable, "tableName")) && !in_array($e[0], array_column($this->searchJoinDBTable, "tableName"))) {
-                    self::system("Only tables set as join table can be used.");
-                }
-            }
-            */
+        $this->listing = $aliasList;
+    }
 
-            $this->newRecord[$alias] = array (
-                "type"          => $row["type"] ?? "text",      // text, number, email, select, checkbox, radio
-                "optionList"    => $row["optionList"] ?? [],    // select, checkbox, radio - [ "key" => "value", "key" => "value", ... ]
-                "placeholder"   => $row["placeholder"] ?? "",
-                "defaultValue"  => $row["defaultValue"] ?? "",
-                "label"         => $row["label"] ?? ($this->listing[$alias]["title"] ?? $alias),
-                "className"     => $row["className"] ?? "",
-                "divClassName"  => $row["divClassName"] ?? "",
-                "style"         => $row["style"] ?? "",
-                "divStyle"      => $row["divStyle"] ?? "",
-                "labelStyle"    => $row["labelStyle"] ?? "",
-                "realColumn"    => $realColumn,
-                "required"      => $row["required"] ?? false,
-                "comment"       => $row["comment"] ?? "",
-                "readonly"      => $row["readonly"] ?? false,
-            );
-        }
+    // Required when not in one page mode.
+    public function setNewRecordAjax($submitUrl)
+    {
+        $this->newRecordAjaxUrl = $submitUrl;
+    }
 
-        $tempLayoutAlias = $this->newRecord;
+    public function setSubmitForNewCallback($callback)
+    {
+        $this->newRecordCallback = $callback;
+    }
+
+    public function setNewRecord($layout, $attrList = null, $modalTitle="신규추가")
+    {
+        $this->newRecordModalTitle = $modalTitle;
+
         foreach($layout as $arr) {
             if (!is_array($arr)) {
-                if (!isset($tempLayoutAlias[$arr])) self::system("layout has an unknown item definition.");
-                unset($tempLayoutAlias[$arr]);
+                if (!isset($this->columns[$arr])) self::system("This is an undefined alias: " . $arr);
+                $this->newRecord[$arr] = $this->columns[$arr];
             } else {
                 foreach($arr as $arr2) {
-                    if (!isset($tempLayoutAlias[$arr2])) self::system("layout has an unknown item definition.");
-                    unset($tempLayoutAlias[$arr2]);
+                    if (!isset($this->columns[$arr2])) self::system("This is an undefined alias: " . $arr2);
+                    $this->newRecord[$arr2] = $this->columns[$arr2];
                 }
             }
         }
-        if ($tempLayoutAlias) self::system("Insufficient items defined in layout.");
         $this->newRecordLayout = $layout;
+
+        if ($attrList) {
+            foreach($attrList as $alias => $attr) {
+                foreach($attr as $key => $data) {
+                    $this->newRecord[$alias][$key] = $data;
+                }
+            }
+        }
     }
 
-    public function setModifyRecord($readAjaxUrl, $updateAjaxUrl, $list, $layout)
+    // Required when not in one page mode.
+    public function setModifyAjax($readUrl, $submitUrl)
     {
-        $this->modifyRecordReadAjaxUrl = $readAjaxUrl;
-        $this->modifyRecordUpdateAjaxUrl = $updateAjaxUrl;
-        $this->modifyRecord = array();
-        $this->modifyRecordLayout = array();
-        $tempLayoutAlias = array();
-        foreach($list as $alias => $row) {
-            $realColumn = null;
-            if (!array_key_exists("realColumn", $row)) {
-                if (isset($this->listing[$alias]["realColumn"]) && $this->listing[$alias]["realColumn"]) {
-                    $realColumn = $this->listing[$alias]["realColumn"];
-                } else {
-                    $realColumn = $alias;
-                }
-            } elseif ($row["realColumn"] !== null) $realColumn = $row["realColumn"];
-            /*
-            if (strpos($realColumn, ".") !== false) {
-                $e = explode(".", $realColumn);
-                if ($e[0] != $this->mainDBTable && !in_array($e[0], array_column($this->joinDBTable, "tableName")) && !in_array($e[0], array_column($this->searchJoinDBTable, "tableName"))) {
-                    self::system("Only tables set as join table can be used.");
-                }
-            }
-            */
-
-            $this->modifyRecord[$alias] = array (
-                "type"          => $row["type"] ?? "text",      // text, number, email, select, checkbox, radio, hidden
-                "optionList"    => $row["optionList"] ?? [],    // select, checkbox, radio - [ "key" => "value", "key" => "value", ... ]
-                "placeholder"   => $row["placeholder"] ?? "",
-                "defaultValue"  => $row["defaultValue"] ?? "",
-                "label"         => $row["label"] ?? ($this->listing[$alias]["title"] ?? $alias),
-                "className"     => $row["className"] ?? "",
-                "divClassName"  => $row["divClassName"] ?? "",
-                "style"         => $row["style"] ?? "",
-                "divStyle"      => $row["divStyle"] ?? "",
-                "labelStyle"    => $row["labelStyle"] ?? "",
-                "realColumn"    => $realColumn,
-                "required"      => $row["required"] ?? false,
-                "readonly"      => $row["readonly"] ?? false,
-                "comment"       => $row["comment"] ?? "",
-                "empty"         => $row["empty"] ?? false,
-            );
-
-            if (($row["type"] ?? "text") == "hidden") {
-                $this->modifyRecordLayout[] = $alias;
-            } else {
-                $tempLayoutAlias[$alias] = $this->modifyRecord[$alias];
-            }
-        }
-
-        foreach($layout as $arr) {
-            if (!is_array($arr)) {
-                if (!isset($tempLayoutAlias[$arr])) self::system("layout has an unknown item definition.");
-                unset($tempLayoutAlias[$arr]);
-            } else {
-                foreach($arr as $arr2) {
-                    if (!isset($tempLayoutAlias[$arr2])) self::system("layout has an unknown item definition.");
-                    unset($tempLayoutAlias[$arr2]);
-                }
-            }
-        }
-
-        if ($tempLayoutAlias) self::system("Insufficient items defined in layout.");
-        $this->modifyRecordLayout = array_merge($this->modifyRecordLayout, $layout);
+        $this->modifyRecordReadAjaxUrl = $readUrl;
+        $this->modifyRecordSubmitAjaxUrl = $submitUrl;
     }
 
-    public function setDetailInfo($readAjaxUrl, $list, $layout)
+    public function setSubmitForModifyCallback($callback)
     {
-        $this->detailInfoReadAjaxUrl = $readAjaxUrl;
-        $this->detailInfo = array();
-        foreach($list as $alias => $row) {
-            $realColumn = null;
-            if (!array_key_exists("realColumn", $row)) {
-                if (isset($this->listing[$alias]["realColumn"]) && $this->listing[$alias]["realColumn"]) {
-                    $realColumn = $this->listing[$alias]["realColumn"];
-                } else {
-                    $realColumn = $alias;
-                }
-            } elseif ($row["realColumn"] !== null) $realColumn = $row["realColumn"];
-            /*
-            if (strpos($realColumn, ".") !== false && strpos($realColumn, "select") === false) {
-                $e = explode(".", $realColumn);
-                if ($e[0] != $this->mainDBTable && !in_array($e[0], array_column($this->joinDBTable, "tableName")) && !in_array($e[0], array_column($this->searchJoinDBTable, "tableName"))) {
-                    self::system("Only tables set as join table can be used.");
-                }
-            }
-            */
+        $this->modifyRecordCallback = $callback;
+    }
 
-            $this->detailInfo[$alias] = array (
-                "label"         => $row["label"] ?? ($this->listing[$alias]["title"] ?? $alias),
-                "className"     => $row["className"] ?? "",
-                "divClassName"  => $row["divClassName"] ?? "",
-                "style"         => $row["style"] ?? "",
-                "divStyle"      => $row["divStyle"] ?? "",
-                "realColumn"    => $realColumn,
-                "displayEnum"   => $row["displayEnum"] ?? null,
-            );
-        }
-
-        $tempLayoutAlias = $this->detailInfo;
+    public function setModifyRecord($layout, $attrList = null, $modalTitle = "수정하기")
+    {
+        $this->modifyRecordModalTitle = $modalTitle;
         foreach($layout as $arr) {
             if (!is_array($arr)) {
-                if (!isset($tempLayoutAlias[$arr])) self::system("layout has an unknown item definition.");
-                unset($tempLayoutAlias[$arr]);
+                if (!isset($this->columns[$arr])) self::system("This is an undefined alias: " . $arr);
+                $this->modifyRecord[$arr] = $this->columns[$arr];
             } else {
                 foreach($arr as $arr2) {
-                    if (!isset($tempLayoutAlias[$arr2])) self::system("layout has an unknown item definition.");
-                    unset($tempLayoutAlias[$arr2]);
+                    if (!isset($this->columns[$arr2])) self::system("This is an undefined alias: " . $arr2);
+                    $this->modifyRecord[$arr2] = $this->columns[$arr2];
                 }
             }
         }
-        //if ($tempLayoutAlias) self::system("Insufficient items defined in layout.");
+        $this->modifyRecordLayout = $layout;
+
+        if ($attrList) {
+            foreach($attrList as $alias => $attr) {
+                foreach($attr as $key => $data) {
+                    $this->modifyRecord[$alias][$key] = $data;
+                }
+            }
+        }
+    }
+
+    // Required when not in one page mode.
+    public function setDetailInfoAjax($url)
+    {
+        $this->detailInfoReadAjaxUrl = $url;
+    }
+
+    public function setDetailInfo($layout, $attrList = null, $modalTitle = "상세보기")
+    {
+        $this->detailInfoModalTitle = $modalTitle;
+        foreach($layout as $arr) {
+            if (!is_array($arr)) {
+                if (!isset($this->columns[$arr])) self::system("This is an undefined alias: " . $arr);
+                $this->detailInfo[$arr] = $this->columns[$arr];
+
+            } else {
+                foreach($arr as $arr2) {
+                    if (!isset($this->columns[$arr2])) self::system("This is an undefined alias: " . $arr2);
+                    $this->detailInfo[$arr2] = $this->columns[$arr2];
+                }
+            }
+        }
         $this->detailInfoLayout = $layout;
+
+        if ($attrList) {
+            foreach($attrList as $alias => $attr) {
+                foreach($attr as $key => $data) {
+                    $this->detailInfo[$alias][$key] = $data;
+                }
+            }
+        }
     }
 
     protected function setDBConnectionName($connectionName)
@@ -422,22 +377,22 @@ class DataTable extends L
         $this->defaultOrderDirection[] = $direction;
     }
 
-    public function setCustomSearchSelectBox($alias, $title, $list, $isSelect2 = false, $style = null)
+    public function setCustomSearchSelectBox($alias, $label, $list, $isSelect2 = false, $style = null)
     {
         $this->customSearch[$alias] = array(
             "type"      => "select",
-            "title"     => $title,
+            "label"     => $label,
             "list"      => $list,
             "isSelect2" => $isSelect2,
             "style"     => $style,
         );
     }
 
-    public function setCustomSearchDateRange($alias, $title, $style = null, $compareDateFormat = "Y-m-d H:i:s")
+    public function setCustomSearchDateRange($alias, $label, $style = null, $compareDateFormat = "Y-m-d H:i:s")
     {
         $this->customSearch[$alias] = array(
             "type"      => "dateRange",
-            "title"     => $title,
+            "label"     => $label,
             "style"     => $style,
             "compareDateFormat" => $compareDateFormat,
         );
@@ -500,7 +455,7 @@ class DataTable extends L
     private function check()
     {
         if (!$this->ajaxUrl) self::system("DataTable setting value is missing: ajaxURL");
-        if (!$this->listing) self::system("DataTable setting value is missing: listing");
+        if (!$this->columns) self::system("DataTable setting value is missing: listing");
         if (!$this->mainDBTable) self::system("DataTable setting value is missing: mainDBTable");
     }
 
@@ -520,7 +475,7 @@ class DataTable extends L
         $order = "[]";
         $orderArr = array();
         foreach($this->defaultOrder as $ii => $defaultOrder) {
-            $idx = array_search($defaultOrder, array_keys($this->listing));
+            $idx = array_search($defaultOrder, array_keys($this->columns));
             if ($idx !== false) $orderArr[] = [ $idx, "{$this->defaultOrderDirection[$ii]}" ];
         }
         if ($orderArr) $order = json_encode($orderArr, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
@@ -528,33 +483,35 @@ class DataTable extends L
         $columnsList = array();
         $excelColumnsList = array();
         $idx = 0;
-        foreach($this->listing as $alias => $row) {
-            if (!$row["display"]) continue;
+
+        foreach($this->listing as $alias) {
+            $attr = $this->columns[$alias] ?? false;
+            if ($attr === false) self::system("This is an undefined alias: " . $alias);;
 
             $searchable = "searchable: false, ";
             $orderable  = "orderable: false, ";
-            $title      = "";
+            $label      = "";
             $data       = "";
             $className  = "";
             $render     = "";
 
-            if (!$row["isModifyBtn"] && !$row["isDetailInfoBtn"]) {
-                if ($row["realColumn"]) $data = "data: \"{$alias}\", ";
-                if ($row["searchable"] && $data) $searchable = "searchable: true, ";
-                if ($row["orderable"] && $data)  $orderable = "orderable: true, ";
-                if ($row["title"]) $title = "title: \"{$row["title"]}\", ";
-                if ($row["rendering"]) $render = "render: {$row["rendering"]}, ";
+            if (!$attr["isModifyBtn"] && !$attr["isDetailInfoBtn"]) {
+                if ($attr["realColumn"]) $data = "data: \"{$alias}\", ";
+                if ($attr["searchable"] && $data) $searchable = "searchable: true, ";
+                if ($attr["orderable"] && $data)  $orderable = "orderable: true, ";
+                if ($attr["label"]) $label = "title: \"{$attr["label"]}\", ";
+                if ($attr["rendering"]) $render = "render: {$attr["rendering"]}, ";
             } else {
                 $data = "data: \"\", ";
-                if ($row["rendering"]) {
-                    $render = "render: {$row["rendering"]}, ";
+                if ($attr["rendering"]) {
+                    $render = "render: {$attr["rendering"]}, ";
                 } else {
                     $rfnc = array();
-                    if($row["isDetailInfoBtn"]) {
+                    if($attr["isDetailInfoBtn"]) {
                         $rfnc[] = "<button data-pk='\"+row['{$this->mainDBTablePK}']+\"' class=\'btn btn-xs btn-detail btn-{$this->setName}-detailinfo\'>상세보기</button>";
                         $this->setScriptDetailInfo();
                     }
-                    if ($row["isModifyBtn"]) {
+                    if ($attr["isModifyBtn"]) {
                         $rfnc[] = "<button data-pk='\"+row['{$this->mainDBTablePK}']+\"' class=\'btn btn-xs btn-modify btn-{$this->setName}-modify\'>수정</button>";
                         $this->setScriptModify();
                     }
@@ -563,10 +520,10 @@ class DataTable extends L
             }
             if ($render == "") $render = "render:$.fn.dataTable.render.text()";
 
-            if ($row["className"])  $className = "className: \"{$row["className"]}\", ";
+            if ($attr["className"])  $className = "className: \"{$attr["className"]}\", ";
 
-            $columnsList[] = "{ name: \"{$alias}\", type: \"html\", {$data}{$title}{$searchable}{$orderable}{$className}{$render}}";
-            if ($row["realColumn"]) $excelColumnsList[] = $idx;
+            $columnsList[] = "{ name: \"{$alias}\", type: \"html\", {$data}{$label}{$searchable}{$orderable}{$className}{$render}}";
+            if ($attr["realColumn"]) $excelColumnsList[] = $idx;
 
             $idx++;
         }
@@ -592,16 +549,16 @@ class DataTable extends L
                 $default = null;
                 $html = "";
                 $style = "";
-                if (isset($info["title"]) && $info["title"]) $html .= "\t\t\t\t<label class='ms-3 me-1' for='sf_search_{$alias}'>{$info["title"]}: </label>\\\n";
+                if (isset($info["label"]) && $info["label"]) $html .= "\t\t\t\t<label class='ms-3 me-1' for='sf_search_{$alias}'>{$info["label"]}: </label>\\\n";
                 if (isset($info["style"]) && $info["style"]) $style = "style='{$info["style"]}' ";
                 switch($info["type"]) {
                     case "select" :
                         $html .= "\t\t\t\t<select class='form-select form-select-sm w-auto sf-custom-search-{$this->jsTableName}' {$style}name='sf_search_{$alias}' id='sf_search_{$alias}'>\\\n";
-                        foreach($info["list"] as $row) {
-                            if ($default === null) $default = $row["value"];
+                        foreach($info["list"] as $attr) {
+                            if ($default === null) $default = $attr["value"];
                             $selected = "";
-                            if (isset($row["selected"]) && $row["selected"]) { $selected = " selected"; $default = $row["value"]; }
-                            $html .= "\t\t\t\t\t<option value='{$row["value"]}'{$selected}>{$row["text"]}\\\n";
+                            if (isset($attr["selected"]) && $attr["selected"]) { $selected = " selected"; $default = $attr["value"]; }
+                            $html .= "\t\t\t\t\t<option value='{$attr["value"]}'{$selected}>{$attr["text"]}\\\n";
                         }
                         $html .= "\t\t\t\t</select>\\\n";
                         if ($info["isSelect2"]) $customSearchSelect2 .= "$(\"#sf_search_{$alias}\").select2({theme: 'bootstrap-5'});\n";
@@ -623,7 +580,7 @@ class DataTable extends L
 
         $btnNewRecord = "";
         if ($this->newRecord) {
-            $btnNewRecord = "{ title: 'New', text: '{$this->newRecordTitle}', action: sf_open_add_form_{$this->setName}, {$excelButtonClassName} },";
+            $btnNewRecord = "{ title: 'New', text: '{$this->newRecordModalTitle}', action: sf_open_add_form_{$this->setName}, {$excelButtonClassName} },";
             $this->setScriptNewRecord();
         }
 
@@ -646,6 +603,7 @@ class DataTable extends L
                         retrieve    : true,
                         ajax        : function(data, callback, settings) {
                             {$customSearchAjaxData}
+                            data.sfdtmode = 'listAjax';
                             $.ajax({
                                 url: "{$this->ajaxUrl}",
                                 type: "POST",
@@ -724,7 +682,7 @@ class DataTable extends L
                 <div class="modal-dialog modal-dialog-scrollable modal-mg">
                     <div class="modal-content">
                         <div class="modal-header bg-add">
-                            <h5 class="modal-title">{$this->newRecordTitle}</h5>
+                            <h5 class="modal-title">{$this->newRecordModalTitle}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body" id="sf-add-form-{$this->setName}">
@@ -757,6 +715,7 @@ class DataTable extends L
                         return false;
                     }
                     var formData = new FormData($("#sf-frm-add-{$this->setName}")[0]);
+                    formData.append("sfdtmode", "submitForNewAjax");
                     callAjax(
                         "{$this->newRecordAjaxUrl}",
                         Object.fromEntries(formData),
@@ -801,7 +760,7 @@ class DataTable extends L
                 <div class="modal-dialog modal-dialog-scrollable modal-mg">
                     <div class="modal-content">
                         <div class="modal-header bg-modify">
-                            <h5 class="modal-title">수정하기</h5>
+                            <h5 class="modal-title">{$this->modifyRecordModalTitle}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body" id="sf-modify-form-{$this->setName}">
@@ -828,7 +787,7 @@ class DataTable extends L
                 var pk = $(this).data("pk");
                 callAjax(
                     "{$this->modifyRecordReadAjaxUrl}",
-                    { pk : pk },
+                    { pk : pk, sfdtmode : 'detailForModifyAjax' },
                     function(result) {
                         if (!result.data.info) {
                             alert("오류가 발생하였습니다. 잠시 후 다시 시도해주세요.");
@@ -849,8 +808,9 @@ class DataTable extends L
                     return false;
                 }
                 var formData = new FormData($("#sf-frm-modify-{$this->setName}")[0]);
+                formData.append("sfdtmode", "submitForModifyAjax");
                 callAjax(
-                    "{$this->modifyRecordUpdateAjaxUrl}",
+                    "{$this->modifyRecordSubmitAjaxUrl}",
                     Object.fromEntries(formData),
                     function(result) {
                         if (result.data.result != true) {
@@ -887,7 +847,7 @@ class DataTable extends L
                 <div class="modal-dialog modal-dialog-scrollable modal-mg">
                     <div class="modal-content">
                         <div class="modal-header bg-detail">
-                            <h5 class="modal-title">상세보기</h5>
+                            <h5 class="modal-title">{$this->detailInfoModalTitle}</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body" id="sf-detailinfo-{$this->setName}">
@@ -906,7 +866,7 @@ class DataTable extends L
                 var pk = $(this).data("pk");
                 callAjax(
                     "{$this->detailInfoReadAjaxUrl}",
-                    { pk : pk },
+                    { pk : pk, sfdtmode : 'detailAjax' },
                     function(result) {
                         if (!result.data.info) {
                             alert("오류가 발생하였습니다. 잠시 후 다시 시도해주세요.");
@@ -923,21 +883,23 @@ class DataTable extends L
     private function _modalDetailInfoUnit($alias, $recordInfo, &$openScript, $divClass = "")
     {
         if ($divClass) $divClass = " {$divClass}";
-        if ($recordInfo["divClassName"]) $divClass = " {$recordInfo["divClassName"]}";
+        if (isset($recordInfo["divClassName"])) $divClass = " {$recordInfo["divClassName"]}";
         $class = "";
-        if ($recordInfo["className"]) $class .= " " . $recordInfo["className"];
+        if (isset($recordInfo["className"])) $class .= " " . $recordInfo["className"];
         $style = "";
-        if ($recordInfo["style"]) $style = " style=\"{$recordInfo["style"]}\"";
+        if (isset($recordInfo["style"])) $style = " style=\"{$recordInfo["style"]}\"";
         $divStyle = "";
-        if ($recordInfo["divStyle"]) $divStyle = " style=\"{$recordInfo["divStyle"]}\"";
+        if (isset($recordInfo["divStyle"])) $divStyle = " style=\"{$recordInfo["divStyle"]}\"";
 
-        if ($recordInfo["displayEnum"]) {
+        if (isset($recordInfo["displayEnum"])) {
+            $scp = "";
             foreach($recordInfo["displayEnum"] as $value => $displayText) {
-                $openScript .= <<<EOD
-                                if (result.data.info.{$alias} == '{$value}') $("#sf-{$this->setName}-detailinfo-{$alias}").html("{$displayText}");
-
-                EOD;
+                if ($scp) $scp .= "else ";
+                $scp .= "if (result.data.info.{$alias} == '{$value}') $(\"#sf-{$this->setName}-detailinfo-{$alias}\").html(\"{$displayText}\");\n";
             }
+            if ($scp) $scp .= "else ";
+            $scp .= "$(\"#sf-{$this->setName}-detailinfo-{$alias}\").html(escapeHtml(result.data.info.{$alias}));\n";
+            $openScript .= "\t\t\t\t" . str_replace("\n", "\n\t\t\t\t", $scp) . "\n";
         } else {
             $openScript .= <<<EOD
                             $("#sf-{$this->setName}-detailinfo-{$alias}").html(escapeHtml(result.data.info.{$alias}));
@@ -957,8 +919,8 @@ class DataTable extends L
 
     private function _modalRecordFill($alias, $recordInfo, $defaultValue, &$fillScript)
     {
-        if ($recordInfo["empty"]) return;
-        switch($recordInfo["type"]) {
+        if (isset($recordInfo["empty"])) return;
+        switch(($recordInfo["type"] ?? "text")) {
             case "select" :
                 if (($recordInfo["readonly"] ?? false)) {
                     foreach($recordInfo["optionList"] as $k => $v) {
@@ -992,30 +954,33 @@ class DataTable extends L
 
     private function _modalRecordUnit($alias, $recordInfo, $prefix, &$openScript, $modalId, $divClass = "")
     {
+        $label = $recordInfo["label"] ?? $alias;
+        $type = $recordInfo["type"] ?? "text";
+
         if ($divClass) $divClass = " {$divClass}";
-        if ($recordInfo["divClassName"]) $divClass = " {$recordInfo["divClassName"]}";
+        if (isset($recordInfo["divClassName"])) $divClass = " {$recordInfo["divClassName"]}";
         $class = "";
-        if ($recordInfo["className"]) $class .= " " . $recordInfo["className"];
+        if (isset($recordInfo["className"])) $class .= " " . $recordInfo["className"];
         $style = "";
-        if ($recordInfo["style"]) $style = " style=\"{$recordInfo["style"]}\"";
+        if (isset($recordInfo["style"])) $style = " style=\"{$recordInfo["style"]}\"";
         $divStyle = "";
-        if ($recordInfo["divStyle"]) $divStyle = " style=\"{$recordInfo["divStyle"]}\"";
+        if (isset($recordInfo["divStyle"])) $divStyle = " style=\"{$recordInfo["divStyle"]}\"";
         $labelStyle = "";
-        if ($recordInfo["labelStyle"]) $labelStyle = " style=\"{$recordInfo["labelStyle"]}\"";
+        if (isset($recordInfo["labelStyle"])) $labelStyle = " style=\"{$recordInfo["labelStyle"]}\"";
         $readonly = "";
         if ($recordInfo["readonly"] ?? false) $readonly = " readonly";
         $comment = "";
-        if ($recordInfo["comment"]) $comment = "<small class=\"mute\">* {$recordInfo["comment"]}</small>";
+        if (isset($recordInfo["comment"])) $comment = "<small class=\"mute\">* {$recordInfo["comment"]}</small>";
 
         $requiredStar = "";
         $required = "";
-        if ($recordInfo["required"]) {
+        if (isset($recordInfo["required"])) {
             $requiredStar = "(<i class=\"bi bi-asterisk text-danger\" style=\"font-size:0.5rem;\"></i>)";
             $required = " required";
         }
         $defaultValue = "";
 
-        switch($recordInfo["type"]) {
+        switch($type) {
             case "hidden" :
                 return <<<EOD
                                 <input type="hidden" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}">\n
@@ -1031,35 +996,37 @@ class DataTable extends L
             case "month" :
             case "password" :
             case "tel" :
-                if ($recordInfo["defaultValue"]) $defaultValue = " value=\"" . htmlspecialchars($recordInfo["defaultValue"]) . "\"";
+                if (isset($recordInfo["defaultValue"])) $defaultValue = " value=\"" . htmlspecialchars($recordInfo["defaultValue"]) . "\"";
                 return <<<EOD
                                 <div class="mb-2{$divClass}"{$divStyle}>
-                                    <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$recordInfo["label"]}{$requiredStar}:</label>
-                                    <input type="{$recordInfo["type"]}" class="form-control{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$defaultValue}{$readonly}>
+                                    <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}{$requiredStar}:</label>
+                                    <input type="{$type}" class="form-control{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$defaultValue}{$readonly}>
                                     {$comment}
                                 </div>\n
                 EOD;
                 break;
             case "textarea" :
-                if ($recordInfo["defaultValue"]) $defaultValue = htmlspecialchars($recordInfo["defaultValue"]);
+                if (isset($recordInfo["defaultValue"])) $defaultValue = htmlspecialchars($recordInfo["defaultValue"]);
                 return <<<EOD
                                 <div class="mb-2{$divClass}"{$divStyle}>
-                                    <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$recordInfo["label"]}{$requiredStar}:</label>
+                                    <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}{$requiredStar}:</label>
                                     <textarea class="form-control{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$readonly}>{$defaultValue}</textarea>
                                     {$comment}
                                 </div>\n
                 EOD;
                 break;
             case "select" :
+                if (!isset($recordInfo["optionList"])) self::system("A definition is required for the attribute: optionList");
+
                 if ($readonly == " readonly") {
                     $defaultValue = $recordInfo["defaultValue"] ?? "";
                     $defaultText = $recordInfo["defaultValue"] ?? "";
                     foreach($recordInfo["optionList"] as $k => $v) {
-                        if ($recordInfo["defaultValue"] == $k) { $defaultValue = $k; $defaultText = $v; break; }
+                        if (isset($recordInfo["defaultValue"]) && $recordInfo["defaultValue"] == $k) { $defaultValue = $k; $defaultText = $v; break; }
                     }
                     return <<<EOD
                                     <div class="mb-2{$divClass}"{$divStyle}>
-                                        <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$recordInfo["label"]}{$requiredStar}:</label>
+                                        <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}{$requiredStar}:</label>
                                         <input type="hidden" class="form-control{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}" value="{$defaultValue}">
                                         <input type="text" class="form-control{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}-text" name="sf-{$this->setName}-{$prefix}-{$alias}-text"{$style} readonly value="{$defaultText}">
                                         {$comment}
@@ -1069,7 +1036,7 @@ class DataTable extends L
                     $options = "";
                     foreach($recordInfo["optionList"] as $k => $v) {
                         if ($options) $options .= "\n\t\t\t\t\t";
-                        if ($recordInfo["defaultValue"] && $recordInfo["defaultValue"] == $k) $selected = " selected"; else $selected = "";
+                        if (isset($recordInfo["defaultValue"]) && $recordInfo["defaultValue"] == $k) $selected = " selected"; else $selected = "";
                         $options .= "<option value=\"{$k}\"{$selected}>{$v}</option>";
                     }
                     if (count($recordInfo["optionList"]) >= 10) {
@@ -1078,7 +1045,7 @@ class DataTable extends L
                     }
                     return <<<EOD
                                     <div class="mb-2{$divClass}{$divStyle}">
-                                        <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$recordInfo["label"]}{$requiredStar}:</label>
+                                        <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}{$requiredStar}:</label>
                                         <select class="form-select w-auto{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$readonly}>
                                         {$options}
                                         </select>
@@ -1088,9 +1055,11 @@ class DataTable extends L
                 }
                 break;
             case "checkbox" :
+                if (!isset($recordInfo["optionList"])) self::system("A definition is required for the attribute: optionList");
+
                 $input = "\n";
                 $idx = 0;
-                $defaultValueArr = explode(",", $recordInfo["defaultValue"]);
+                $defaultValueArr = explode(",", ($recordInfo["defaultValue"] ?? ""));
                 foreach($recordInfo["optionList"] as $k => $v) {
                     if (in_array($k, $defaultValueArr)) $checked = " checked"; else $checked = "";
                     $idx ++;
@@ -1103,7 +1072,7 @@ class DataTable extends L
                 }
                 return <<<EOD
                                 <div class="mb-2{$divClass}"{$divStyle}>
-                                    <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$recordInfo["label"]}:</label>
+                                    <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}:</label>
                                     <div class="d-flex flex-wrap">
                                     {$input}
                                     </div>
@@ -1112,10 +1081,13 @@ class DataTable extends L
                 EOD;
                 break;
             case "radio" :
+                if (!isset($recordInfo["optionList"])) self::system("A definition is required for the attribute: optionList");
+
                 $input = "\n";
                 $idx = 0;
+                $defaultValue = $recordInfo["defaultValue"] ?? null;
                 foreach($recordInfo["optionList"] as $k => $v) {
-                    if (($idx == 0 && !$recordInfo["defaultValue"]) || ($recordInfo["defaultValue"] && $recordInfo["defaultValue"] == $k)) $checked = " checked"; else $checked = "";
+                    if (($idx == 0 && !$defaultValue) || ($defaultValue == $k)) $checked = " checked"; else $checked = "";
                     $idx ++;
                     $input .= <<<EOD
                                             <div class="form-check me-3">
@@ -1126,7 +1098,7 @@ class DataTable extends L
                 }
                 return <<<EOD
                                 <div class="mb-2{$divClass}"{$divStyle}>
-                                    <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$recordInfo["label"]}:</label>
+                                    <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}:</label>
                                     <div class="d-flex flex-wrap">
                                     {$input}
                                     </div>
@@ -1176,8 +1148,10 @@ class DataTable extends L
     public function echoModal()
     {
         $this->build();
-        $htmlModal = implode("\n", $this->htmlModal);
-        echo $htmlModal . "\n";
+        if ($this->htmlModal) {
+            $htmlModal = implode("\n", $this->htmlModal);
+            echo $htmlModal . "\n";
+        }
     }
 
 
@@ -1263,8 +1237,8 @@ class DataTable extends L
         $param = $this->ajaxParam();
         if ($param->search["value"] ?? false) {
             foreach($param->columns as $idx => $col) {
-                if (($col["searchable"] ?? "false") == "true" && $this->listing[$col["name"]]["realColumn"]) {
-                    $this->setSearchOr("{$this->listing[$col["name"]]["realColumn"]} like :sf_search_{$idx}", array(":sf_search_{$idx}" => "%{$param->search["value"]}%"));
+                if (($col["searchable"] ?? "false") == "true" && $this->columns[$col["name"]]["realColumn"]) {
+                    $this->setSearchOr("{$this->columns[$col["name"]]["realColumn"]} like :sf_search_{$idx}", array(":sf_search_{$idx}" => "%{$param->search["value"]}%"));
                 }
             }
         }
@@ -1272,12 +1246,12 @@ class DataTable extends L
         // custom search
         if ($this->customSearch) {
             foreach($this->customSearch as $alias => $info) {
-                if (!isset($this->listing[$alias])) continue;
+                if (!isset($this->columns[$alias])) continue;
                 $val = $param->get("sf_search_{$alias}", null);
                 if($val !== null) {
                     switch($info["type"]) {
                         case "select" :
-                            $this->setSearchAnd("{$this->listing[$alias]["realColumn"]} = :sf_custom_search_{$alias}", array(":sf_custom_search_{$alias}" => $val));
+                            $this->setSearchAnd("{$this->columns[$alias]["realColumn"]} = :sf_custom_search_{$alias}", array(":sf_custom_search_{$alias}" => $val));
                             break;
                         case "dateRange" :
                             $val = trim($val);
@@ -1286,12 +1260,12 @@ class DataTable extends L
 
                             if (sfValidateDate($valStart, "Y-m-d H:i")) {
                                 $dateTime = \DateTime::createFromFormat("Y-m-d H:i:s", "{$valStart}:00");
-                                $this->setSearchAnd("{$this->listing[$alias]["realColumn"]} >= :sf_custom_search_{$alias}_start", array(":sf_custom_search_{$alias}_start" => $dateTime->format($info["compareDateFormat"])));
+                                $this->setSearchAnd("{$this->columns[$alias]["realColumn"]} >= :sf_custom_search_{$alias}_start", array(":sf_custom_search_{$alias}_start" => $dateTime->format($info["compareDateFormat"])));
                                 $val = $valStart . " - " . substr($val, 19);
                             }
                             if (sfValidateDate($valEnd, "Y-m-d H:i")) {
                                 $dateTime = \DateTime::createFromFormat("Y-m-d H:i:s", "{$valEnd}:59");
-                                $this->setSearchAnd("{$this->listing[$alias]["realColumn"]} <= :sf_custom_search_{$alias}_end", array(":sf_custom_search_{$alias}_end" => $dateTime->format($info["compareDateFormat"])));
+                                $this->setSearchAnd("{$this->columns[$alias]["realColumn"]} <= :sf_custom_search_{$alias}_end", array(":sf_custom_search_{$alias}_end" => $dateTime->format($info["compareDateFormat"])));
                                 $val = substr($val, 0, 16) . " - " . $valEnd;
                             }
                             break;
@@ -1325,14 +1299,14 @@ class DataTable extends L
         $param = $this->ajaxParam();
 
         $order = "";
-        if($param->order && isset($param->columns[$param->order[0]["column"]]) && $param->columns[$param->order[0]["column"]]["orderable"] == true && $this->listing[$param->columns[$param->order[0]["column"]]["data"]]["realColumn"]) {
-            $order = "order by {$this->listing[$param->columns[$param->order[0]["column"]]["data"]]["realColumn"]} {$param->order[0]["dir"]}";
+        if($param->order && isset($param->columns[$param->order[0]["column"]]) && $param->columns[$param->order[0]["column"]]["orderable"] == true && $this->columns[$param->columns[$param->order[0]["column"]]["data"]]["realColumn"]) {
+            $order = "order by {$this->columns[$param->columns[$param->order[0]["column"]]["data"]]["realColumn"]} {$param->order[0]["dir"]}";
         }
 
         $columnArr = array();
-        foreach($this->listing as $alias => $row) {
-            if (!$row["realColumn"]) continue;
-            $columnArr[] = "{$row["realColumn"]} as $alias";
+        foreach($this->columns as $alias => $attr) {
+            if (!$attr["realColumn"]) continue;
+            $columnArr[] = "{$attr["realColumn"]} as $alias";
         }
         $columns = implode(",", $columnArr);
 
@@ -1347,8 +1321,8 @@ class DataTable extends L
             limit {$param->start}, {$param->length}
         ", $this->bind);
         $data = array();
-        while($row = $db->fetch($rs)) {
-            $data[] = $row;
+        while($attr = $db->fetch($rs)) {
+            $data[] = $attr;
         }
 
         return $data;
@@ -1366,28 +1340,30 @@ class DataTable extends L
     public function recordData($pk)
     {
         $columnArr = array();
-        foreach($this->detailInfo as $alias => $row) {
-            if (!$row["realColumn"]) continue;
-            $columnArr[] = "{$row["realColumn"]} as $alias";
+        foreach($this->detailInfo as $alias => $attr) {
+            if (!isset($attr["realColumn"])) continue;
+            $columnArr[] = "{$attr["realColumn"]} as $alias";
         }
         $columns = implode(",", $columnArr);
 
         $db = DB::getInstance($this->connectionName);
         $where = $this->whereSQL(1);
-        if ($where) $where .= "and"; else $where = "where";
+        if ($where) $where .= " and"; else $where = " where";
+
+        $this->bind[":pk"] = $pk;
         $rs = $db->query("
             select
             {$columns}
             from {$this->mainDBTable}
             " . $this->joinSQL(1) . "
             {$where} {$this->mainDBTable}.{$this->mainDBTablePK} = :pk
-        ", [ ":pk" => $pk ]);
+        ", $this->bind);
         $data = $db->fetch($rs);
         return $data;
     }
 
     // for 1 record info ajax
-    public function ajaxInfoResponse($pk)
+    public function ajaxDetailInfoResponse($pk)
     {
         $res = Response::getInstance();
         $res->info = $this->recordData($pk);
@@ -1396,30 +1372,82 @@ class DataTable extends L
     public function recordDataForModify($pk)
     {
         $columnArr = array();
-        foreach($this->modifyRecord as $alias => $row) {
-            if (!$row["realColumn"] || $row["empty"]) continue;
-            $columnArr[] = "{$row["realColumn"]} as $alias";
+        foreach($this->modifyRecord as $alias => $attr) {
+            if (!isset($attr["realColumn"]) || isset($attr["empty"])) continue;
+            $columnArr[] = "{$attr["realColumn"]} as $alias";
         }
         $columns = implode(",", $columnArr);
 
         $db = DB::getInstance($this->connectionName);
         $where = $this->whereSQL(1);
-        if ($where) $where .= "and"; else $where = "where";
+        if ($where) $where .= " and"; else $where = " where";
+
+        $this->bind[":pk"] = $pk;
         $rs = $db->query("
             select
             {$columns}
             from {$this->mainDBTable}
             " . $this->joinSQL(1) . "
             {$where} {$this->mainDBTable}.{$this->mainDBTablePK} = :pk
-        ", [ ":pk" => $pk ]);
+        ", $this->bind);
         $data = $db->fetch($rs);
         return $data;
     }
 
     // for 1 record info ajax
-    public function ajaxInfoForModifyResponse($pk)
+    public function ajaxDetailForModifyResponse($pk)
     {
         $res = Response::getInstance();
         $res->info = $this->recordDataForModify($pk);
+    }
+
+
+
+    //
+    // When code is automatically generated and each page is automatically implemented to operate as one page
+    //
+    public function onePageExec()
+    {
+        $param = Param::getInstance();
+        $param->check("sfdtmode", Param::TYPE_STRING, array("main", "listAjax", "detailAjax", "detailForModifyAjax", "submitForNewAjax", "submitForModifyAjax"));
+        $mode = $param->get("sfdtmode", "main");
+
+        switch($mode) {
+            case "main":
+                sfModeWeb();
+                break;
+            case "listAjax":
+                sfModeAjaxForDatatable();
+                $this->ajaxResponse();
+                break;
+            case "detailAjax":
+                sfModeAjax();
+                $param->checkKeyValue("pk", Param::TYPE_INT);
+                $this->ajaxDetailInfoResponse($param->pk);
+                break;
+            case "detailForModifyAjax":
+                sfModeAjax();
+                $param->checkKeyValue("pk", Param::TYPE_INT);
+                $this->ajaxDetailForModifyResponse($param->pk);
+                break;
+            case "submitForNewAjax":
+                sfModeAjax();
+                if (!$this->newRecordCallback) self::system("A callback function to handle new submit must be defined(setSubmitForNewCallback)");
+                call_user_func($this->newRecordCallback);
+                break;
+            case "submitForModifyAjax":
+                sfModeAjax();
+                if (!$this->modifyRecordCallback) self::system("A callback function to handle modify submit must be defined(setSubmitForModifyCallback)");
+                call_user_func($this->modifyRecordCallback);
+                break;
+        }
+    }
+
+    // A function called by (main)templates.
+    public function onePageEcho()
+    {
+        $this->echoJS();
+        $this->echoTable();
+        $this->echoModal();
     }
 }

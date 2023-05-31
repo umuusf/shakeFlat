@@ -95,9 +95,17 @@ class L
             if (SHAKEFLAT_ENV["config"]["debug_mode"] ?? false) {
                 $message = $logMsg["message"];
                 $context = $logMsg["context"];
+                $inPos = "";
                 if (isset($context["trace"][0]["file"]) && isset($context["trace"][0]["line"])) {
-                    $message .= ", passed in {$context["trace"][0]["file"]} on line {$context["trace"][0]["line"]}";
+                    $inPos = ", passed in {$context["trace"][0]["file"]} on line {$context["trace"][0]["line"]}";
                 }
+                foreach($context["trace"] as $errInfo) {
+                    if (strpos($errInfo["file"], SHAKEFLAT_PATH . "core") === false) {                        
+                        $inPos = ", passed in {$errInfo["file"]} on line {$errInfo["line"]}";
+                        break;
+                    }
+                }
+                if ($inPos) $message .= $inPos;
             } else {
                 $message = $logMsg["message"];
                 $context = null;

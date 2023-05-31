@@ -27,7 +27,7 @@ class dtUser extends DataTable
         parent::__construct("userlist");
 
         parent::setTableClass("table table-sm table-hover");
-        parent::setAjax("/welcome/datatable_sample_ajax/", "POST");
+        parent::setListAjax("/welcome/datatable_sample_ajax/");
 
         parent::setDBMainTable("user", "user_no");
         parent::setAnd("user_no >= :default_user_no", [":default_user_no" => 1]);
@@ -40,16 +40,18 @@ class dtUser extends DataTable
             "searching"    => true,
         ]);
 
-        parent::setListing([
-            "user_no"      => [ "title" => "번호",     "orderable" => true ],
-            "status"       => [ "title" => "상태",     "realColumn"=> "user.status", "className" => "text-center", "rendering" => "function(data, type, row) { switch(data) { case 0:return '사용중지';break; case 1:return '정상';break; case 2:return '점검중';break; } }" ],
-            "company_name" => [ "title" => "회사",     "realColumn" => "company.name", "orderable" => false, "searchable" => true ],
-            "nickname"     => [ "title" => "닉네임",   "orderable" => true, "searchable" => true ],
-            "login_id"     => [ "title" => "로그인ID", "orderable" => true, "searchable" => true ],
-            "price"        => [ "title" => "가격",     "orderable" => true, "className" => "text-amount", "rendering" => "$.fn.dataTable.render.number(',')" ],
-            "create_date"  => [ "title" => "생성일",   "realColumn" => "user.create_date", "orderable" => true ],
+        parent::setAllColumns([
+            "user_no"      => [ "label" => "번호",     "orderable" => true ],
+            "status"       => [ "label" => "상태",     "realColumn"=> "user.status", "className" => "text-center", "rendering" => "function(data, type, row) { switch(data) { case 0:return '사용중지';break; case 1:return '정상';break; case 2:return '점검중';break; } }" ],
+            "company_name" => [ "label" => "회사",     "realColumn" => "company.name", "orderable" => false, "searchable" => true ],
+            "nickname"     => [ "label" => "닉네임",   "orderable" => true, "searchable" => true ],
+            "login_id"     => [ "label" => "로그인ID", "orderable" => true, "searchable" => true ],
+            "price"        => [ "label" => "가격",     "orderable" => true, "className" => "text-amount", "rendering" => "$.fn.dataTable.render.number(',')" ],
+            "create_date"  => [ "label" => "생성일",   "realColumn" => "user.create_date", "orderable" => true ],
             "modify_btn"   => [ "realColumn"=> null,   "rendering" => "function(data, type, row) { return '<button class=\'btn btn-xs btn-primary\'>버튼</button>'; }" ],
         ]);
+
+        parent::setListing([ "user_no", "status", "company_name", "nickname", "login_id", "price", "create_date", "modify_btn" ]);
 
         parent::setDefaultOrder("user_no", "desc");
 
