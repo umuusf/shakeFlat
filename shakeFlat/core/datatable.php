@@ -187,6 +187,14 @@ class DataTable extends L
     public function setListing($aliasList, $attrList = null)
     {
         $this->listing = $aliasList;
+
+        if ($attrList && is_array($attrList)) {
+            foreach($attrList as $alias => $attr) {
+                foreach($attr as $key => $data) {
+                    $this->columns[$alias][$key] = $data;
+                }
+            }
+        }
     }
 
     // Required when not in one page mode.
