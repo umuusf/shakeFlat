@@ -148,5 +148,10 @@
         "0": {
             "kr": "layout이 정의되지 않았습니다."
         }
+    },
+    "This is an unknown attribute: $1": {
+        "0": {
+            "kr": "알수 없는 attribute 입니다 : $1"
+        }
     }
 }

@@ -13,6 +13,31 @@ use shakeFlat\Param;
 
 class DataTable extends L
 {
+    // for list
+    const ATTR_SEARCHABLE       = 9001;
+    const ATTR_ORDERABLE        = 9002;
+    const ATTR_BTN_DETAIL       = 9003;
+    const ATTR_BTN_MODIFY       = 9004;
+
+    // for new, modify
+    const ATTR_REQUIRED         = 9101;
+    const ATTR_READONLY         = 9102;
+    const ATTR_TYPE_TEXT        = 9201;
+    const ATTR_TYPE_TEXTAREA    = 9202;
+    const ATTR_TYPE_HIDDEN      = 9203;
+    const ATTR_TYPE_SELECT      = 9204;
+    const ATTR_TYPE_RADIO       = 9205;
+    const ATTR_TYPE_CHECKBOX    = 9206;
+    const ATTR_TYPE_PASSWORD    = 9207;
+    const ATTR_TYPE_NUMBER      = 9208;
+    const ATTR_TYPE_EMAIL       = 9209;
+    const ATTR_TYPE_URL         = 9210;
+    const ATTR_TYPE_DATETIME    = 9211;
+    const ATTR_TYPE_DATE        = 9212;
+    const ATTR_TYPE_TIME        = 9213;
+    const ATTR_TYPE_MONTH       = 9214;
+    const ATTR_TYPE_TEL         = 9215;
+
     private static $instance            = array();
 
     private $htmlTableId                = "";
@@ -173,14 +198,19 @@ class DataTable extends L
 
         $this->columns[$alias] = array(
             "label"             => $attr["label"] ?? "",        // If omitted, it is recognized as blank.
-            "realColumn"        => $realColumn,
-            "orderable"         => $attr["orderable"] ?? false,
-            "searchable"        => $attr["searchable"] ?? false,
             "className"         => $attr["className"] ?? "",
             "rendering"         => $attr["rendering"] ?? "",
-            "isModifyBtn"       => $attr["isModifyBtn"] ?? false,
-            "isDetailInfoBtn"   => $attr["isDetailInfoBtn"] ?? false,
+            "realColumn"        => $realColumn,
+            "isDetailInfoBtn"   => false,
+            "isModifyBtn"       => false,
+            "searchable"        => false,
+            "orderable"         => false,
         );
+
+        if (isset($attr[self::ATTR_BTN_DETAIL])) $this->columns[$alias]["isDetailInfoBtn"] = true;
+        if (isset($attr[self::ATTR_BTN_MODIFY])) $this->columns[$alias]["isModifyBtn"] = true;
+        if (isset($attr[self::ATTR_SEARCHABLE])) $this->columns[$alias]["searchable"] = true;
+        if (isset($attr[self::ATTR_ORDERABLE])) $this->columns[$alias]["orderable"] = true;
     }
 
     // Defines the column list and order of the list screen
@@ -191,7 +221,18 @@ class DataTable extends L
         if ($attrList && is_array($attrList)) {
             foreach($attrList as $alias => $attr) {
                 foreach($attr as $key => $data) {
-                    $this->columns[$alias][$key] = $data;
+                    switch($data) {
+                        case self::ATTR_BTN_DETAIL : $this->columns[$alias]["isDetailInfoBtn"] = true;  break;
+                        case self::ATTR_BTN_MODIFY : $this->columns[$alias]["isModifyBtn"] = true;      break;
+
+                        case self::ATTR_SEARCHABLE : $this->columns[$alias]["searchable"] = true;       break;
+                        case self::ATTR_ORDERABLE  : $this->columns[$alias]["orderable"] = true;        break;
+
+                        default :
+                            if (!isset($this->columns[$alias][$key])) self::system("This is an unknown attribute: " . $key);
+                            $this->columns[$alias][$key] = $data;
+                            break;
+                    }
                 }
             }
         }
@@ -228,7 +269,29 @@ class DataTable extends L
         if ($attrList && is_array($attrList)) {
             foreach($attrList as $alias => $attr) {
                 foreach($attr as $key => $data) {
-                    $this->newRecord[$alias][$key] = $data;
+                    switch($data) {
+                        case self::ATTR_REQUIRED      : $this->newRecord[$alias]["required"] = true;    break;
+                        case self::ATTR_READONLY      : $this->newRecord[$alias]["readonly"] = true;    break;
+
+                        case self::ATTR_TYPE_TEXT     : $this->newRecord[$alias]["type"] = "text";      break;
+                        case self::ATTR_TYPE_TEXTAREA : $this->newRecord[$alias]["type"] = "textarea";  break;
+                        case self::ATTR_TYPE_HIDDEN   : $this->newRecord[$alias]["type"] = "hidden";    break;
+                        case self::ATTR_TYPE_SELECT   : $this->newRecord[$alias]["type"] = "select";    break;
+                        case self::ATTR_TYPE_RADIO    : $this->newRecord[$alias]["type"] = "radio";     break;
+                        case self::ATTR_TYPE_CHECKBOX : $this->newRecord[$alias]["type"] = "checkbox";  break;
+                        case self::ATTR_TYPE_PASSWORD : $this->newRecord[$alias]["type"] = "password";  break;
+                        case self::ATTR_TYPE_NUMBER   : $this->newRecord[$alias]["type"] = "number";    break;
+                        case self::ATTR_TYPE_EMAIL    : $this->newRecord[$alias]["type"] = "email";     break;
+                        case self::ATTR_TYPE_URL      : $this->newRecord[$alias]["type"] = "url";       break;
+                        case self::ATTR_TYPE_DATETIME : $this->newRecord[$alias]["type"] = "datetime";  break;
+                        case self::ATTR_TYPE_DATE     : $this->newRecord[$alias]["type"] = "date";      break;
+                        case self::ATTR_TYPE_TIME     : $this->newRecord[$alias]["type"] = "time";      break;
+                        case self::ATTR_TYPE_MONTH    : $this->newRecord[$alias]["type"] = "month";     break;
+                        case self::ATTR_TYPE_TEL      : $this->newRecord[$alias]["type"] = "tel";       break;
+                        default :
+                            $this->newRecord[$alias][$key] = $data;
+                            break;
+                    }
                 }
             }
         }
@@ -266,7 +329,29 @@ class DataTable extends L
         if ($attrList && is_array($attrList)) {
             foreach($attrList as $alias => $attr) {
                 foreach($attr as $key => $data) {
-                    $this->modifyRecord[$alias][$key] = $data;
+                    switch($data) {
+                        case self::ATTR_REQUIRED      : $this->modifyRecord[$alias]["required"] = true;    break;
+                        case self::ATTR_READONLY      : $this->modifyRecord[$alias]["readonly"] = true;    break;
+
+                        case self::ATTR_TYPE_TEXT     : $this->modifyRecord[$alias]["type"] = "text";      break;
+                        case self::ATTR_TYPE_TEXTAREA : $this->modifyRecord[$alias]["type"] = "textarea";  break;
+                        case self::ATTR_TYPE_HIDDEN   : $this->modifyRecord[$alias]["type"] = "hidden";    break;
+                        case self::ATTR_TYPE_SELECT   : $this->modifyRecord[$alias]["type"] = "select";    break;
+                        case self::ATTR_TYPE_RADIO    : $this->modifyRecord[$alias]["type"] = "radio";     break;
+                        case self::ATTR_TYPE_CHECKBOX : $this->modifyRecord[$alias]["type"] = "checkbox";  break;
+                        case self::ATTR_TYPE_PASSWORD : $this->modifyRecord[$alias]["type"] = "password";  break;
+                        case self::ATTR_TYPE_NUMBER   : $this->modifyRecord[$alias]["type"] = "number";    break;
+                        case self::ATTR_TYPE_EMAIL    : $this->modifyRecord[$alias]["type"] = "email";     break;
+                        case self::ATTR_TYPE_URL      : $this->modifyRecord[$alias]["type"] = "url";       break;
+                        case self::ATTR_TYPE_DATETIME : $this->modifyRecord[$alias]["type"] = "datetime";  break;
+                        case self::ATTR_TYPE_DATE     : $this->modifyRecord[$alias]["type"] = "date";      break;
+                        case self::ATTR_TYPE_TIME     : $this->modifyRecord[$alias]["type"] = "time";      break;
+                        case self::ATTR_TYPE_MONTH    : $this->modifyRecord[$alias]["type"] = "month";     break;
+                        case self::ATTR_TYPE_TEL      : $this->modifyRecord[$alias]["type"] = "tel";       break;
+                        default :
+                            $this->modifyRecord[$alias][$key] = $data;
+                            break;
+                    }
                 }
             }
         }
