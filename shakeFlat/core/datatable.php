@@ -202,8 +202,8 @@ class DataTable extends L
 
     public function setNewRecord($layout, $attrList = null, $modalTitle="신규추가")
     {
+        if (!is_array($layout)) self::system("layout is not defined.");
         $this->newRecordModalTitle = $modalTitle;
-
         foreach($layout as $arr) {
             if (!is_array($arr)) {
                 if (!isset($this->columns[$arr])) self::system("This is an undefined alias: " . $arr);
@@ -217,7 +217,7 @@ class DataTable extends L
         }
         $this->newRecordLayout = $layout;
 
-        if ($attrList) {
+        if ($attrList && is_array($attrList)) {
             foreach($attrList as $alias => $attr) {
                 foreach($attr as $key => $data) {
                     $this->newRecord[$alias][$key] = $data;
@@ -240,6 +240,7 @@ class DataTable extends L
 
     public function setModifyRecord($layout, $attrList = null, $modalTitle = "수정하기")
     {
+        if (!is_array($layout)) self::system("layout is not defined.");
         $this->modifyRecordModalTitle = $modalTitle;
         foreach($layout as $arr) {
             if (!is_array($arr)) {
@@ -254,7 +255,7 @@ class DataTable extends L
         }
         $this->modifyRecordLayout = $layout;
 
-        if ($attrList) {
+        if ($attrList && is_array($attrList)) {
             foreach($attrList as $alias => $attr) {
                 foreach($attr as $key => $data) {
                     $this->modifyRecord[$alias][$key] = $data;
@@ -271,6 +272,7 @@ class DataTable extends L
 
     public function setDetailInfo($layout, $attrList = null, $modalTitle = "상세보기")
     {
+        if (!is_array($layout)) self::system("layout is not defined.");
         $this->detailInfoModalTitle = $modalTitle;
         foreach($layout as $arr) {
             if (!is_array($arr)) {
@@ -286,7 +288,7 @@ class DataTable extends L
         }
         $this->detailInfoLayout = $layout;
 
-        if ($attrList) {
+        if ($attrList && is_array($attrList)) {
             foreach($attrList as $alias => $attr) {
                 foreach($attr as $key => $data) {
                     $this->detailInfo[$alias][$key] = $data;

@@ -143,5 +143,10 @@
         "0": {
             "kr": "수정하기 submit 을 처리할 callback 함수가 정의되어야 합니다(setSubmitForModifyCallback)"
         }
+    },
+    "layout is not defined.": {
+        "0": {
+            "kr": "layout이 정의되지 않았습니다."
+        }
     }
 }
