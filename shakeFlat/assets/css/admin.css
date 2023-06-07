@@ -111,7 +111,7 @@ div.modal input.form-control:read-only { background-color: #efefef; }
  */
 .shakeflat-contents { margin-top:60px!important; background-color:#fdfdfd; color:#000000; overflow:auto; }
 .shakeflat-contents-title { font-size:1.2rem; font-weight:600; padding-left:12px!important; padding-bottom:10px; border-bottom: 3px solid transparent; border-image: linear-gradient(0.49turn, #343434, #ffffff);border-image-slice: 1; }
-.shakeflat-contents-title>i { font-size:1.0rem;  }
+.shakeflat-contents-title>i,svg { font-size:1.0rem; }
 .shakeflat-contents-body { font-size:0.80rem; }
 
 /*
