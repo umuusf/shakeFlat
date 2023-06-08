@@ -674,10 +674,18 @@ class DataTable extends L
                 }
             }
             if ($render == "") {
-                if ($attr["textAmount"]) {
-                    $render = "render:$.fn.dataTable.render.number(',')";       // If you want to handle numbers below the decimal point, you must define it separately. Only integer types are handled here.
+                if ($attr["displayEnum"]) {
+                    $context = "";
+                    foreach($attr["displayEnum"] as $k => $v) {
+                        $context .= "if (data == '{$k}') return '{$v}';";
+                    }
+                    $render = "render: function(data, type, row) { {$context} }";
                 } else {
-                    $render = "render:$.fn.dataTable.render.text()";
+                    if ($attr["textAmount"]) {
+                        $render = "render:$.fn.dataTable.render.number(',')";       // If you want to handle numbers below the decimal point, you must define it separately. Only integer types are handled here.
+                    } else {
+                        $render = "render:$.fn.dataTable.render.text()";
+                    }
                 }
             }
 
