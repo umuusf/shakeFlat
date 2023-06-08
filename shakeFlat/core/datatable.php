@@ -38,6 +38,11 @@ class DataTable extends L
     const ATTR_TYPE_MONTH       = 9214;
     const ATTR_TYPE_TEL         = 9215;
 
+    // common
+    const ATTR_TEXT_CENTER      = 9901;
+    const ATTR_TEXT_AMOUNT      = 9902;
+
+
     private static $instance            = array();
 
     private $htmlTableId                = "";
@@ -165,6 +170,8 @@ class DataTable extends L
     {
         $this->columns = array();
         foreach($columns as $alias => $attr) {
+            $attr = $this->constToAttr($attr);
+
             // realColumn :
             //   If omitted, it is replaced with the alias value.
             //   If you want to output only the contents of render, set it to blank("") or null.
@@ -175,14 +182,36 @@ class DataTable extends L
             }
 
             $this->columns[$alias] = array(
-                "label"             => $attr["label"] ?? "",        // If omitted, it is recognized as blank.
-                "realColumn"        => $realColumn,
-                "orderable"         => $attr["orderable"] ?? false,
-                "searchable"        => $attr["searchable"] ?? false,
+                "label"             => $attr["label"] ?? "",
+                "divClassName"      => $attr["divClassName"] ?? "",
                 "className"         => $attr["className"] ?? "",
+
+                "labelStyle"        => $attr["labelStyle"] ?? "",
+                "divStyle"          => $attr["divStyle"] ?? "",
+                "style"             => $attr["style"] ?? "",
+
+                "displayEnum"       => $attr["displayEnum"] ?? [],
                 "rendering"         => $attr["rendering"] ?? "",
-                "isModifyBtn"       => $attr["isModifyBtn"] ?? false,
+
+                "realColumn"        => $realColumn,
+
                 "isDetailInfoBtn"   => $attr["isDetailInfoBtn"] ?? false,
+                "isModifyBtn"       => $attr["isModifyBtn"] ?? false,
+                "searchable"        => $attr["searchable"] ?? false,
+                "orderable"         => $attr["orderable"] ?? false,
+
+                "required"          => $attr["required"] ?? false,
+                "readonly"          => $attr["readonly"] ?? false,
+                "notfill"           => $attr["notfill"] ?? false,             // Do not fill in the value. Example: password
+
+                "type"              => $attr["type"] ?? "text",
+                "optionList"        => $attr["optionList"] ?? [],
+                "placeholder"       => $attr["placeholder"] ?? "",
+                "defaultValue"      => $attr["defaultValue"] ?? "",
+                "comment"           => $attr["comment"] ?? "",
+
+                "textCenter"        => $attr["textCenter"] ?? false,
+                "textAmount"        => $attr["textAmount"] ?? false,
             );
         }
     }
@@ -190,49 +219,122 @@ class DataTable extends L
     // Update/add one column(field) defined in the list.
     public function setColumn($alias, $attr)
     {
-        $realColumn = null;
-        if (!($attr["isModifyBtn"] ?? false) && !($attr["isDetailInfoBtn"] ?? false)) {
-            if (!array_key_exists("realColumn", $attr)) $realColumn = $alias;
-            elseif ($attr["realColumn"] !== null) $realColumn = $attr["realColumn"];
+        if (!isset($this->columns[$alias])) {
+            $this->columns[$alias] = array(
+                "label"             => "",
+                "divClassName"      => "",
+                "className"         => "",
+
+                "labelStyle"        => "",
+                "divStyle"          => "",
+                "style"             => "",
+
+                "displayEnum"       => [],
+                "rendering"         => "",
+
+                "realColumn"        => null,
+
+                "isDetailInfoBtn"   => false,
+                "isModifyBtn"       => false,
+                "searchable"        => false,
+                "orderable"         => false,
+
+                "required"          => false,
+                "readonly"          => false,
+                "notfill"           => false,
+
+                "type"              => "text",
+                "optionList"        => [],
+                "placeholder"       => "",
+                "defaultValue"      => "",
+                "comment"           => "",
+
+                "textCenter"        => false,
+                "textAmount"        => false,
+            );
         }
 
-        $this->columns[$alias] = array(
-            "label"             => $attr["label"] ?? "",        // If omitted, it is recognized as blank.
-            "className"         => $attr["className"] ?? "",
-            "rendering"         => $attr["rendering"] ?? "",
-            "realColumn"        => $realColumn,
-            "isDetailInfoBtn"   => false,
-            "isModifyBtn"       => false,
-            "searchable"        => false,
-            "orderable"         => false,
-        );
+        $attr = $this->constToAttr($attr);
 
-        if (isset($attr[self::ATTR_BTN_DETAIL])) $this->columns[$alias]["isDetailInfoBtn"] = true;
-        if (isset($attr[self::ATTR_BTN_MODIFY])) $this->columns[$alias]["isModifyBtn"] = true;
-        if (isset($attr[self::ATTR_SEARCHABLE])) $this->columns[$alias]["searchable"] = true;
-        if (isset($attr[self::ATTR_ORDERABLE])) $this->columns[$alias]["orderable"] = true;
+        foreach($attr as $key => $val) {
+            switch($key) {
+                case "label" :
+                case "className" :
+                case "rendering" :
+                    $this->columns[$alias][$key] = $val;
+                    break;
+
+                case "isDetailInfoBtn" :
+                case "isModifyBtn" :
+                case "searchable" :
+                case "orderable" :
+                    $this->columns[$alias][$key] = $val;
+                    break;
+
+                case "realColumn" :
+                    $realColumn = null;
+                    if (!($attr["isModifyBtn"] ?? false) && !($attr["isDetailInfoBtn"] ?? false)) {
+                        if (!array_key_exists("realColumn", $attr)) $realColumn = $alias;
+                        elseif ($attr["realColumn"] !== null) $realColumn = $attr["realColumn"];
+                    }
+                    $this->columns[$alias]["realColumn"] = $realColumn;
+                    break;
+            }
+        }
+    }
+
+    private function constToAttr($attr)
+    {
+        $attr2 = $attr;
+        foreach($attr2 as $idx => $val) {
+            switch($val) {
+                case self::ATTR_BTN_DETAIL      : $attr["isDetailInfoBtn"] = true;  unset($attr[$idx]); break;
+                case self::ATTR_BTN_MODIFY      : $attr["isModifyBtn"] = true;      unset($attr[$idx]); break;
+                case self::ATTR_SEARCHABLE      : $attr["searchable"] = true;       unset($attr[$idx]); break;
+                case self::ATTR_ORDERABLE       : $attr["orderable"] = true;        unset($attr[$idx]); break;
+
+                case self::ATTR_REQUIRED        : $attr["required"] = true;         unset($attr[$idx]); break;
+                case self::ATTR_READONLY        : $attr["readonly"] = true;         unset($attr[$idx]); break;
+
+                case self::ATTR_TYPE_TEXT       : $attr["type"] = "text";           unset($attr[$idx]); break;
+                case self::ATTR_TYPE_TEXTAREA   : $attr["type"] = "textarea";       unset($attr[$idx]); break;
+                case self::ATTR_TYPE_HIDDEN     : $attr["type"] = "hidden";         unset($attr[$idx]); break;
+                case self::ATTR_TYPE_SELECT     : $attr["type"] = "select";         unset($attr[$idx]); break;
+                case self::ATTR_TYPE_RADIO      : $attr["type"] = "radio";          unset($attr[$idx]); break;
+                case self::ATTR_TYPE_CHECKBOX   : $attr["type"] = "checkbox";       unset($attr[$idx]); break;
+                case self::ATTR_TYPE_NUMBER     : $attr["type"] = "number";         unset($attr[$idx]); break;
+                case self::ATTR_TYPE_EMAIL      : $attr["type"] = "email";          unset($attr[$idx]); break;
+                case self::ATTR_TYPE_URL        : $attr["type"] = "url";            unset($attr[$idx]); break;
+                case self::ATTR_TYPE_DATETIME   : $attr["type"] = "datetime";       unset($attr[$idx]); break;
+                case self::ATTR_TYPE_DATE       : $attr["type"] = "date";           unset($attr[$idx]); break;
+                case self::ATTR_TYPE_TIME       : $attr["type"] = "time";           unset($attr[$idx]); break;
+                case self::ATTR_TYPE_MONTH      : $attr["type"] = "month";          unset($attr[$idx]); break;
+                case self::ATTR_TYPE_TEL        : $attr["type"] = "tel";            unset($attr[$idx]); break;
+                case self::ATTR_TYPE_PASSWORD   : $attr["type"] = "password"; $attr["notfill"] = true; unset($attr[$idx]); break;
+
+                case self::ATTR_TEXT_CENTER     : $attr["textCenter"] = true;       unset($attr[$idx]); break;
+                case self::ATTR_TEXT_AMOUNT     : $attr["textAmount"] = true;       unset($attr[$idx]); break;
+            }
+        }
+        return $attr;
     }
 
     // Defines the column list and order of the list screen
-    public function setListing($aliasList, $attrList = null)
+    public function setListing($layout, $attrList = null)
     {
-        $this->listing = $aliasList;
+        if (!is_array($layout)) self::system("layout is not defined.");
+        $this->listing = array();
+        foreach($layout as $alias) {
+            if (!isset($this->columns[$alias])) self::system("This is an undefined alias: " . $alias);
+            $this->listing[$alias] = $this->columns[$alias];
+        }
 
         if ($attrList && is_array($attrList)) {
             foreach($attrList as $alias => $attr) {
+                $attr = $this->constToAttr($attr);
                 foreach($attr as $key => $data) {
-                    switch($data) {
-                        case self::ATTR_BTN_DETAIL : $this->columns[$alias]["isDetailInfoBtn"] = true;  break;
-                        case self::ATTR_BTN_MODIFY : $this->columns[$alias]["isModifyBtn"] = true;      break;
-
-                        case self::ATTR_SEARCHABLE : $this->columns[$alias]["searchable"] = true;       break;
-                        case self::ATTR_ORDERABLE  : $this->columns[$alias]["orderable"] = true;        break;
-
-                        default :
-                            if (!isset($this->columns[$alias][$key])) self::system("This is an unknown attribute: " . $key);
-                            $this->columns[$alias][$key] = $data;
-                            break;
-                    }
+                    if (!isset($this->columns[$alias][$key])) self::system("This is an unknown attribute: " . $key);
+                    $this->listing[$alias][$key] = $data;
                 }
             }
         }
@@ -268,30 +370,10 @@ class DataTable extends L
 
         if ($attrList && is_array($attrList)) {
             foreach($attrList as $alias => $attr) {
+                $attr = $this->constToAttr($attr);
                 foreach($attr as $key => $data) {
-                    switch($data) {
-                        case self::ATTR_REQUIRED      : $this->newRecord[$alias]["required"] = true;    break;
-                        case self::ATTR_READONLY      : $this->newRecord[$alias]["readonly"] = true;    break;
-
-                        case self::ATTR_TYPE_TEXT     : $this->newRecord[$alias]["type"] = "text";      break;
-                        case self::ATTR_TYPE_TEXTAREA : $this->newRecord[$alias]["type"] = "textarea";  break;
-                        case self::ATTR_TYPE_HIDDEN   : $this->newRecord[$alias]["type"] = "hidden";    break;
-                        case self::ATTR_TYPE_SELECT   : $this->newRecord[$alias]["type"] = "select";    break;
-                        case self::ATTR_TYPE_RADIO    : $this->newRecord[$alias]["type"] = "radio";     break;
-                        case self::ATTR_TYPE_CHECKBOX : $this->newRecord[$alias]["type"] = "checkbox";  break;
-                        case self::ATTR_TYPE_PASSWORD : $this->newRecord[$alias]["type"] = "password";  break;
-                        case self::ATTR_TYPE_NUMBER   : $this->newRecord[$alias]["type"] = "number";    break;
-                        case self::ATTR_TYPE_EMAIL    : $this->newRecord[$alias]["type"] = "email";     break;
-                        case self::ATTR_TYPE_URL      : $this->newRecord[$alias]["type"] = "url";       break;
-                        case self::ATTR_TYPE_DATETIME : $this->newRecord[$alias]["type"] = "datetime";  break;
-                        case self::ATTR_TYPE_DATE     : $this->newRecord[$alias]["type"] = "date";      break;
-                        case self::ATTR_TYPE_TIME     : $this->newRecord[$alias]["type"] = "time";      break;
-                        case self::ATTR_TYPE_MONTH    : $this->newRecord[$alias]["type"] = "month";     break;
-                        case self::ATTR_TYPE_TEL      : $this->newRecord[$alias]["type"] = "tel";       break;
-                        default :
-                            $this->newRecord[$alias][$key] = $data;
-                            break;
-                    }
+                    if (!isset($this->columns[$alias][$key])) self::system("This is an unknown attribute: " . $key);
+                    $this->newRecord[$alias][$key] = $data;
                 }
             }
         }
@@ -328,30 +410,10 @@ class DataTable extends L
 
         if ($attrList && is_array($attrList)) {
             foreach($attrList as $alias => $attr) {
+                $attr = $this->constToAttr($attr);
                 foreach($attr as $key => $data) {
-                    switch($data) {
-                        case self::ATTR_REQUIRED      : $this->modifyRecord[$alias]["required"] = true;    break;
-                        case self::ATTR_READONLY      : $this->modifyRecord[$alias]["readonly"] = true;    break;
-
-                        case self::ATTR_TYPE_TEXT     : $this->modifyRecord[$alias]["type"] = "text";      break;
-                        case self::ATTR_TYPE_TEXTAREA : $this->modifyRecord[$alias]["type"] = "textarea";  break;
-                        case self::ATTR_TYPE_HIDDEN   : $this->modifyRecord[$alias]["type"] = "hidden";    break;
-                        case self::ATTR_TYPE_SELECT   : $this->modifyRecord[$alias]["type"] = "select";    break;
-                        case self::ATTR_TYPE_RADIO    : $this->modifyRecord[$alias]["type"] = "radio";     break;
-                        case self::ATTR_TYPE_CHECKBOX : $this->modifyRecord[$alias]["type"] = "checkbox";  break;
-                        case self::ATTR_TYPE_PASSWORD : $this->modifyRecord[$alias]["type"] = "password";  break;
-                        case self::ATTR_TYPE_NUMBER   : $this->modifyRecord[$alias]["type"] = "number";    break;
-                        case self::ATTR_TYPE_EMAIL    : $this->modifyRecord[$alias]["type"] = "email";     break;
-                        case self::ATTR_TYPE_URL      : $this->modifyRecord[$alias]["type"] = "url";       break;
-                        case self::ATTR_TYPE_DATETIME : $this->modifyRecord[$alias]["type"] = "datetime";  break;
-                        case self::ATTR_TYPE_DATE     : $this->modifyRecord[$alias]["type"] = "date";      break;
-                        case self::ATTR_TYPE_TIME     : $this->modifyRecord[$alias]["type"] = "time";      break;
-                        case self::ATTR_TYPE_MONTH    : $this->modifyRecord[$alias]["type"] = "month";     break;
-                        case self::ATTR_TYPE_TEL      : $this->modifyRecord[$alias]["type"] = "tel";       break;
-                        default :
-                            $this->modifyRecord[$alias][$key] = $data;
-                            break;
-                    }
+                    if (!isset($this->columns[$alias][$key])) self::system("This is an unknown attribute: " . $key);
+                    $this->modifyRecord[$alias][$key] = $data;
                 }
             }
         }
@@ -383,6 +445,7 @@ class DataTable extends L
 
         if ($attrList && is_array($attrList)) {
             foreach($attrList as $alias => $attr) {
+                $attr = $this->constToAttr($attr);
                 foreach($attr as $key => $data) {
                     $this->detailInfo[$alias][$key] = $data;
                 }
@@ -579,10 +642,7 @@ class DataTable extends L
         $excelColumnsList = array();
         $idx = 0;
 
-        foreach($this->listing as $alias) {
-            $attr = $this->columns[$alias] ?? false;
-            if ($attr === false) self::system("This is an undefined alias: " . $alias);;
-
+        foreach($this->listing as $alias => $attr) {
             $searchable = "searchable: false, ";
             $orderable  = "orderable: false, ";
             $label      = "";
@@ -613,15 +673,23 @@ class DataTable extends L
                     $render = "render: function(data, type, row) { return \"" . implode(" &nbsp;", $rfnc) . "\" }";
                 }
             }
-            if ($render == "") $render = "render:$.fn.dataTable.render.text()";
+            if ($render == "") {
+                if ($attr["textAmount"]) {
+                    $render = "render:$.fn.dataTable.render.number(',')";       // If you want to handle numbers below the decimal point, you must define it separately. Only integer types are handled here.
+                } else {
+                    $render = "render:$.fn.dataTable.render.text()";
+                }
+            }
 
-            if ($attr["className"])  $className = "className: \"{$attr["className"]}\", ";
+            $attr["className"] = join(" ", array_filter([ $attr["className"], ($attr["textCenter"] ? "text-center" : ""), ($attr["textAmount"] ? "text-amount" : "") ]));
+            if ($attr["className"]) $className = "className: \"{$attr["className"]}\", ";
 
             $columnsList[] = "{ name: \"{$alias}\", type: \"html\", {$data}{$label}{$searchable}{$orderable}{$className}{$render}}";
             if ($attr["realColumn"]) $excelColumnsList[] = $idx;
 
             $idx++;
         }
+
         $columns = "[\n\t\t\t\t\t".implode(",\n\t\t\t\t\t", $columnsList)."\n\t\t\t\t]";
         $excelColumns = json_encode($excelColumnsList, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
 
@@ -977,16 +1045,16 @@ class DataTable extends L
 
     private function _modalDetailInfoUnit($alias, $recordInfo, &$openScript, $divClass = "")
     {
-        if ($divClass) $divClass = " {$divClass}";
-        if (isset($recordInfo["divClassName"])) $divClass = " {$recordInfo["divClassName"]}";
-        $class = "";
-        if (isset($recordInfo["className"])) $class .= " " . $recordInfo["className"];
-        $style = "";
-        if (isset($recordInfo["style"])) $style = " style=\"{$recordInfo["style"]}\"";
-        $divStyle = "";
-        if (isset($recordInfo["divStyle"])) $divStyle = " style=\"{$recordInfo["divStyle"]}\"";
+        $label = $recordInfo["label"] ?? $alias;
 
-        if (isset($recordInfo["displayEnum"])) {
+        $divClass = join(" ", array_filter([ "mb-2", $divClass, $recordInfo["divClassName"] ]));
+        $class = join(" ", array_filter([ "data-modal-detailinfo", $recordInfo["className"], (($recordInfo["textCenter"]) ? "text-center" : "") ]));
+
+        $style = "";      if ($recordInfo["style"])       $style = " style=\"{$recordInfo["style"]}\"";
+        $divStyle = "";   if ($recordInfo["divStyle"])    $divStyle = " style=\"{$recordInfo["divStyle"]}\"";
+        $labelStyle = ""; if ($recordInfo["labelStyle"])  $labelStyle = " style=\"{$recordInfo["labelStyle"]}\"";
+
+        if ($recordInfo["displayEnum"]) {
             $scp = "";
             foreach($recordInfo["displayEnum"] as $value => $displayText) {
                 if ($scp) $scp .= "else ";
@@ -1002,11 +1070,19 @@ class DataTable extends L
             EOD;
         }
 
+        if ($recordInfo["textAmount"]) {
+            $openScript .= <<<EOD
+                            var v = parseFloat($("#sf-{$this->setName}-detailinfo-{$alias}").html());
+                            if (typeof v == "number") $("#sf-{$this->setName}-detailinfo-{$alias}").html(v.numberFormat());
+
+            EOD;
+        }
+
         return <<<EOD
-                        <div class="mb-2{$divClass}"{$divStyle}>
+                        <div class="{$divClass}"{$divStyle}>
                             <div class="d-inline-flex flex-column">
-                                <div class="label-modal-detailinfo">{$recordInfo["label"]}</div>
-                                <div class="data-modal-detailinfo{$class}" id="sf-{$this->setName}-detailinfo-{$alias}"{$style}></div>
+                                <div class="label-modal-detailinfo"{$labelStyle}>{$label}</div>
+                                <div class="{$class}" id="sf-{$this->setName}-detailinfo-{$alias}"{$style}></div>
                             </div>
                         </div>\n
         EOD;
@@ -1014,10 +1090,10 @@ class DataTable extends L
 
     private function _modalRecordFill($alias, $recordInfo, $defaultValue, &$fillScript)
     {
-        if (isset($recordInfo["empty"])) return;
-        switch(($recordInfo["type"] ?? "text")) {
+        if ($recordInfo["notfill"]) return;
+        switch($recordInfo["type"]) {
             case "select" :
-                if (($recordInfo["readonly"] ?? false)) {
+                if ($recordInfo["readonly"]) {
                     foreach($recordInfo["optionList"] as $k => $v) {
                         $fillScript .= "if ({$defaultValue} == '{$k}') $(\"#sf-{$this->setName}-modify-{$alias}-text\").val('{$v}');";
                     }
@@ -1052,24 +1128,18 @@ class DataTable extends L
         $label = $recordInfo["label"] ?? $alias;
         $type = $recordInfo["type"] ?? "text";
 
-        if ($divClass) $divClass = " {$divClass}";
-        if (isset($recordInfo["divClassName"])) $divClass = " {$recordInfo["divClassName"]}";
-        $class = "";
-        if (isset($recordInfo["className"])) $class .= " " . $recordInfo["className"];
-        $style = "";
-        if (isset($recordInfo["style"])) $style = " style=\"{$recordInfo["style"]}\"";
-        $divStyle = "";
-        if (isset($recordInfo["divStyle"])) $divStyle = " style=\"{$recordInfo["divStyle"]}\"";
-        $labelStyle = "";
-        if (isset($recordInfo["labelStyle"])) $labelStyle = " style=\"{$recordInfo["labelStyle"]}\"";
-        $readonly = "";
-        if ($recordInfo["readonly"] ?? false) $readonly = " readonly";
-        $comment = "";
-        if (isset($recordInfo["comment"])) $comment = "<small class=\"mute\">* {$recordInfo["comment"]}</small>";
+        $divClass = join(" ", array_filter([ "mb-2", $divClass, $recordInfo["divClassName"] ]));
+        $class = join(" ", array_filter([ $recordInfo["className"], (($recordInfo["textCenter"]) ? "text-center" : "") ]));
+
+        $style = "";      if ($recordInfo["style"])       $style = " style=\"{$recordInfo["style"]}\"";
+        $divStyle = "";   if ($recordInfo["divStyle"])    $divStyle = " style=\"{$recordInfo["divStyle"]}\"";
+        $labelStyle = ""; if ($recordInfo["labelStyle"])  $labelStyle = " style=\"{$recordInfo["labelStyle"]}\"";
+        $readonly = "";   if ($recordInfo["readonly"])    $readonly = " readonly";
+        $comment = "";    if ($recordInfo["comment"])     $comment = "<small class=\"mute\">* {$recordInfo["comment"]}</small>";
 
         $requiredStar = "";
         $required = "";
-        if (isset($recordInfo["required"])) {
+        if ($recordInfo["required"]) {
             $requiredStar = "(<i class=\"bi bi-asterisk text-danger\" style=\"font-size:0.5rem;\"></i>)";
             $required = " required";
         }
@@ -1091,9 +1161,9 @@ class DataTable extends L
             case "month" :
             case "password" :
             case "tel" :
-                if (isset($recordInfo["defaultValue"])) $defaultValue = " value=\"" . htmlspecialchars($recordInfo["defaultValue"]) . "\"";
+                if ($recordInfo["defaultValue"]) $defaultValue = " value=\"" . htmlspecialchars($recordInfo["defaultValue"]) . "\"";
                 return <<<EOD
-                                <div class="mb-2{$divClass}"{$divStyle}>
+                                <div class="{$divClass}"{$divStyle}>
                                     <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}{$requiredStar}:</label>
                                     <input type="{$type}" class="form-control{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$defaultValue}{$readonly}>
                                     {$comment}
@@ -1101,9 +1171,9 @@ class DataTable extends L
                 EOD;
                 break;
             case "textarea" :
-                if (isset($recordInfo["defaultValue"])) $defaultValue = htmlspecialchars($recordInfo["defaultValue"]);
+                if ($recordInfo["defaultValue"]) $defaultValue = htmlspecialchars($recordInfo["defaultValue"]);
                 return <<<EOD
-                                <div class="mb-2{$divClass}"{$divStyle}>
+                                <div class="{$divClass}"{$divStyle}>
                                     <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}{$requiredStar}:</label>
                                     <textarea class="form-control{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$readonly}>{$defaultValue}</textarea>
                                     {$comment}
@@ -1111,7 +1181,7 @@ class DataTable extends L
                 EOD;
                 break;
             case "select" :
-                if (!isset($recordInfo["optionList"])) self::system("A definition is required for the attribute: optionList");
+                if (!$recordInfo["optionList"]) self::system("A definition is required for the attribute: optionList");
 
                 if ($readonly == " readonly") {
                     $defaultValue = $recordInfo["defaultValue"] ?? "";
@@ -1120,7 +1190,7 @@ class DataTable extends L
                         if (isset($recordInfo["defaultValue"]) && $recordInfo["defaultValue"] == $k) { $defaultValue = $k; $defaultText = $v; break; }
                     }
                     return <<<EOD
-                                    <div class="mb-2{$divClass}"{$divStyle}>
+                                    <div class="{$divClass}"{$divStyle}>
                                         <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}{$requiredStar}:</label>
                                         <input type="hidden" class="form-control{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}" value="{$defaultValue}">
                                         <input type="text" class="form-control{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}-text" name="sf-{$this->setName}-{$prefix}-{$alias}-text"{$style} readonly value="{$defaultText}">
@@ -1139,7 +1209,7 @@ class DataTable extends L
                         $openScript .= "$(\"#sf-{$this->setName}-{$prefix}-{$alias}\").select2({theme: 'bootstrap-5',dropdownParent: $(\"#{$modalId}\")});";
                     }
                     return <<<EOD
-                                    <div class="mb-2{$divClass}{$divStyle}">
+                                    <div class="{$divClass}{$divStyle}">
                                         <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}{$requiredStar}:</label>
                                         <select class="form-select w-auto{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$readonly}>
                                         {$options}
@@ -1150,7 +1220,7 @@ class DataTable extends L
                 }
                 break;
             case "checkbox" :
-                if (!isset($recordInfo["optionList"])) self::system("A definition is required for the attribute: optionList");
+                if (!$recordInfo["optionList"]) self::system("A definition is required for the attribute: optionList");
 
                 $input = "\n";
                 $idx = 0;
@@ -1166,7 +1236,7 @@ class DataTable extends L
                     EOD;
                 }
                 return <<<EOD
-                                <div class="mb-2{$divClass}"{$divStyle}>
+                                <div class="{$divClass}"{$divStyle}>
                                     <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}:</label>
                                     <div class="d-flex flex-wrap">
                                     {$input}
@@ -1176,7 +1246,7 @@ class DataTable extends L
                 EOD;
                 break;
             case "radio" :
-                if (!isset($recordInfo["optionList"])) self::system("A definition is required for the attribute: optionList");
+                if (!$recordInfo["optionList"]) self::system("A definition is required for the attribute: optionList");
 
                 $input = "\n";
                 $idx = 0;
@@ -1192,7 +1262,7 @@ class DataTable extends L
                     EOD;
                 }
                 return <<<EOD
-                                <div class="mb-2{$divClass}"{$divStyle}>
+                                <div class="{$divClass}"{$divStyle}>
                                     <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}:</label>
                                     <div class="d-flex flex-wrap">
                                     {$input}
@@ -1468,7 +1538,7 @@ class DataTable extends L
     {
         $columnArr = array();
         foreach($this->modifyRecord as $alias => $attr) {
-            if (!isset($attr["realColumn"]) || isset($attr["empty"])) continue;
+            if (!$attr["realColumn"] || $attr["notfill"]) continue;
             $columnArr[] = "{$attr["realColumn"]} as $alias";
         }
         $columns = implode(",", $columnArr);
