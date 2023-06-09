@@ -29,6 +29,12 @@ class App extends L
         $this->template->setMode(Template::MODE_WEB);
     }
 
+    public function setWelcomePage($module = "welcome", $fnc = "main")
+    {
+        $router = Router::getInstance();
+        $router->setWelcomePage($module, $fnc);
+    }
+
     public function setTransaction($connectionName = "default")
     {
         if (!isset(SHAKEFLAT_ENV["database"]["connection"][$connectionName])) $this::system("DB connection information is not defined in config.ini.", array( "connection" => $connectionName ));

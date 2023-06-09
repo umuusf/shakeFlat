@@ -12,6 +12,7 @@ class Router
 {
     private $moduleName     = "";
     private $functionName   = "";
+    private $welcomePage    = "welcome/page";
 
     public static function getInstance()
     {
@@ -23,14 +24,20 @@ class Router
 
     private function __construct()
     {
+        $this->welcomePage = SHAKEFLAT_ENV["config"]["main_page"] ?? "welcome/main";
         $this->parseUrl();
+    }
+
+    public function setWelcomePage($module = "welcome", $fnc = "main")
+    {
+        $this->welcomePage = "{$module}/{$fnc}";
     }
 
     private function parseUrl()
     {
         $parseUrl = parse_url($_SERVER["REQUEST_URI"]);
         if (!isset($parseUrl["path"]) || $parseUrl["path"] == "/" || $parseUrl["path"] == "/index.php") {
-            $mainPage = SHAKEFLAT_ENV["config"]["main_page"] ?? "welcome/main";
+            $mainPage = $this->welcomePage;
             $ml = explode("/", $mainPage);
             $this->moduleName      = $ml[0] ?? "welcome";
             $this->functionName    = $ml[1] ?? "main";
