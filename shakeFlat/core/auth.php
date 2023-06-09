@@ -113,6 +113,8 @@ class AuthSession
 
     private function clear()
     {
+        self::rememberCookieInstance()->clear();
+
         self::initSession();
         $key = SHAKEFLAT_ENV["auth"]["session"]["session_name"] ?? "sfass";
         unset($_SESSION[$key]);
