@@ -33,6 +33,7 @@ class App extends L
     {
         $router = Router::getInstance();
         $router->setWelcomePage($module, $fnc);
+        return $this;
     }
 
     public function setTransaction($connectionName = "default")
