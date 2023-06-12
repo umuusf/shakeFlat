@@ -379,6 +379,17 @@ class DataTable extends L
         }
     }
 
+    public function setNewRecordAttr($alias, $attr)
+    {
+        if (!isset($this->newRecord[$alias])) self::system("This is an undefined alias: " . $alias);
+
+        $attr = $this->constToAttr($attr);
+        foreach($attr as $key => $data) {
+            if (!isset($this->columns[$alias][$key])) self::system("This is an unknown attribute: " . $key);
+            $this->newRecord[$alias][$key] = $data;
+        }
+    }
+
     // Required when not in one page mode.
     public function setModifyAjax($readUrl, $submitUrl)
     {
@@ -416,6 +427,17 @@ class DataTable extends L
                     $this->modifyRecord[$alias][$key] = $data;
                 }
             }
+        }
+    }
+
+    public function setModifyRecordAttr($alias, $attr)
+    {
+        if (!isset($this->modifyRecord[$alias])) self::system("This is an undefined alias: " . $alias);
+
+        $attr = $this->constToAttr($attr);
+        foreach($attr as $key => $data) {
+            if (!isset($this->columns[$alias][$key])) self::system("This is an unknown attribute: " . $key);
+            $this->modifyRecord[$alias][$key] = $data;
         }
     }
 
@@ -1189,7 +1211,7 @@ class DataTable extends L
                 EOD;
                 break;
             case "select" :
-                if (!$recordInfo["optionList"]) self::system("A definition is required for the attribute: optionList");
+                //if (!$recordInfo["optionList"]) self::system("A definition is required for the attribute: optionList");
 
                 if ($readonly == " readonly") {
                     $defaultValue = $recordInfo["defaultValue"] ?? "";
@@ -1207,14 +1229,16 @@ class DataTable extends L
                     EOD;
                 } else {
                     $options = "";
-                    foreach($recordInfo["optionList"] as $k => $v) {
-                        if ($options) $options .= "\n\t\t\t\t\t";
-                        if (isset($recordInfo["defaultValue"]) && $recordInfo["defaultValue"] == $k) $selected = " selected"; else $selected = "";
-                        $options .= "<option value=\"{$k}\"{$selected}>{$v}</option>";
-                    }
-                    if (count($recordInfo["optionList"]) >= 10) {
-                        if ($openScript) $openScript .= "\n\t";
-                        $openScript .= "$(\"#sf-{$this->setName}-{$prefix}-{$alias}\").select2({theme: 'bootstrap-5',dropdownParent: $(\"#{$modalId}\")});";
+                    if ($recordInfo["optionList"]) {
+                        foreach($recordInfo["optionList"] as $k => $v) {
+                            if ($options) $options .= "\n\t\t\t\t\t";
+                            if (isset($recordInfo["defaultValue"]) && $recordInfo["defaultValue"] == $k) $selected = " selected"; else $selected = "";
+                            $options .= "<option value=\"{$k}\"{$selected}>{$v}</option>";
+                        }
+                        if (count($recordInfo["optionList"]) >= 10) {
+                            if ($openScript) $openScript .= "\n\t";
+                            $openScript .= "$(\"#sf-{$this->setName}-{$prefix}-{$alias}\").select2({theme: 'bootstrap-5',dropdownParent: $(\"#{$modalId}\")});";
+                        }
                     }
                     return <<<EOD
                                     <div class="{$divClass}{$divStyle}">
