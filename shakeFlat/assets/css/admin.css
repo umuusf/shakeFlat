@@ -27,12 +27,11 @@ div.dataTables_wrapper .dataTables_length { padding-top:0.45rem; }
 div.dataTables_wrapper .dataTables_length .form-select-sm { font-size: 0.75rem; padding-left:0.3rem; }
 div.dataTables_wrapper .dataTables_paginate .page-link { font-size: 0.75rem; padding-left:1rem; --bs-pagination-font-size: 0.75rem; --bs-pagination-padding-x: 0.55rem; --bs-pagination-padding-y: 0.23rem; }
 div.dataTables_wrapper .dataTables_paginate { padding-top:0.35rem; }
-div.dataTables_wrapper .sf-custom-search .form-control-sm,
-div.dataTables_wrapper .sf-custom-search .form-select-sm,
-.form-select-sm~.select2-container--bootstrap-5 .select2-selection,
+div.dataTables_wrapper .form-control-sm,
+div.dataTables_wrapper .form-select-sm,
+.select2-container--bootstrap-5 .select2-selection,
 .select2-container--bootstrap-5 .select2-dropdown .select2-results__options .select2-results__option,
 .select2-container--bootstrap-5 .select2-dropdown .select2-search__field  { font-size: 0.75rem!important; }
-
 
 div.dataTables_wrapper .dataTables_filter input { margin-left:0px!important; }
 div.dataTables_wrapper .dt-buttons>.btn-sm { --bs-btn-padding-y: 0.197rem; --bs-btn-font-size:0.8rem; margin-top:1px; }
@@ -47,7 +46,7 @@ div.modal input.form-control:read-only { background-color: #efefef; }
  * modal
  */
 .modal-header .btn-close { margin-top:-22px!important; }
-.modal-body { font-size:0.9rem; }
+.modal-body { font-size:0.75rem; }
 
 /*
  * topbar
