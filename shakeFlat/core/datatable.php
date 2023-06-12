@@ -212,6 +212,8 @@ class DataTable extends L
 
                 "textCenter"        => $attr["textCenter"] ?? false,
                 "textAmount"        => $attr["textAmount"] ?? false,
+
+                "custom"            => $attr["custom"] ?? "",
             );
         }
     }
@@ -251,6 +253,8 @@ class DataTable extends L
 
                 "textCenter"        => false,
                 "textAmount"        => false,
+
+                "custom"            => $attr["custom"] ?? "",
             );
         }
 
@@ -1175,10 +1179,12 @@ class DataTable extends L
         }
         $defaultValue = "";
 
+        $custom = ""; if($recordInfo["custom"]) $custom = " {$recordInfo["custom"]}";
+
         switch($type) {
             case "hidden" :
                 return <<<EOD
-                                <input type="hidden" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}">\n
+                                <input type="hidden" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$custom}>\n
                 EOD;
                 break;
             case "text" :
@@ -1195,7 +1201,7 @@ class DataTable extends L
                 return <<<EOD
                                 <div class="{$divClass}"{$divStyle}>
                                     <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}{$requiredStar}:</label>
-                                    <input type="{$type}" class="form-control{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$defaultValue}{$readonly}>
+                                    <input type="{$type}" class="form-control{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$defaultValue}{$readonly}{$custom}>
                                     {$comment}
                                 </div>\n
                 EOD;
@@ -1205,7 +1211,7 @@ class DataTable extends L
                 return <<<EOD
                                 <div class="{$divClass}"{$divStyle}>
                                     <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}{$requiredStar}:</label>
-                                    <textarea class="form-control{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$readonly}>{$defaultValue}</textarea>
+                                    <textarea class="form-control{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$readonly}{$custom}>{$defaultValue}</textarea>
                                     {$comment}
                                 </div>\n
                 EOD;
@@ -1223,7 +1229,7 @@ class DataTable extends L
                                     <div class="{$divClass}"{$divStyle}>
                                         <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}{$requiredStar}:</label>
                                         <input type="hidden" class="form-control{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}" value="{$defaultValue}">
-                                        <input type="text" class="form-control{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}-text" name="sf-{$this->setName}-{$prefix}-{$alias}-text"{$style} readonly value="{$defaultText}">
+                                        <input type="text" class="form-control{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}-text" name="sf-{$this->setName}-{$prefix}-{$alias}-text"{$style} readonly value="{$defaultText}"{$custom}>
                                         {$comment}
                                     </div>\n
                     EOD;
@@ -1243,7 +1249,7 @@ class DataTable extends L
                     return <<<EOD
                                     <div class="{$divClass}{$divStyle}">
                                         <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}{$requiredStar}:</label>
-                                        <select class="form-select w-auto{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$readonly}>
+                                        <select class="form-select w-auto{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$readonly}{$custom}>
                                         {$options}
                                         </select>
                                         {$comment}
@@ -1262,7 +1268,7 @@ class DataTable extends L
                     $idx ++;
                     $input .= <<<EOD
                                             <div class="form-check me-3">
-                                                <input type="checkbox" class="form-check-input{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}-{$idx}" name="sf-{$this->setName}-{$prefix}-{$alias}" value="{$k}"{$style}{$checked}{$readonly}>
+                                                <input type="checkbox" class="form-check-input{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}-{$idx}" name="sf-{$this->setName}-{$prefix}-{$alias}" value="{$k}"{$style}{$checked}{$readonly}{$custom}>
                                                 <label class="form-check-label text-nowrap" for="sf-{$this->setName}-{$prefix}-{$alias}-{$idx}"{$labelStyle}>{$v}</label>
                                             </div>\n
                     EOD;
@@ -1289,7 +1295,7 @@ class DataTable extends L
                     $input .= <<<EOD
                                             <div class="form-check me-3">
                                                 <input type="radio" class="form-radio-input{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}-{$idx}" name="sf-{$this->setName}-{$prefix}-{$alias}" value="{$k}"{$style}{$checked}{$readonly}>
-                                                <label class="form-radio-label text-nowrap" for="sf-{$this->setName}-{$prefix}-{$alias}-{$idx}"{$labelStyle}>{$v}</label>
+                                                <label class="form-radio-label text-nowrap" for="sf-{$this->setName}-{$prefix}-{$alias}-{$idx}"{$labelStyle}{$custom}>{$v}</label>
                                             </div>\n
                     EOD;
                 }
@@ -1496,12 +1502,12 @@ class DataTable extends L
         $param = $this->ajaxParam();
 
         $order = "";
-        if($param->order && isset($param->columns[$param->order[0]["column"]]) && $param->columns[$param->order[0]["column"]]["orderable"] == true && $this->columns[$param->columns[$param->order[0]["column"]]["data"]]["realColumn"]) {
-            $order = "order by {$this->columns[$param->columns[$param->order[0]["column"]]["data"]]["realColumn"]} {$param->order[0]["dir"]}";
+        if($param->order && isset($param->columns[$param->order[0]["column"]]) && $param->columns[$param->order[0]["column"]]["orderable"] == true && $this->listing[$param->columns[$param->order[0]["column"]]["data"]]["realColumn"]) {
+            $order = "order by {$this->listing[$param->columns[$param->order[0]["column"]]["data"]]["realColumn"]} {$param->order[0]["dir"]}";
         }
 
         $columnArr = array();
-        foreach($this->columns as $alias => $attr) {
+        foreach($this->listing as $alias => $attr) {
             if (!$attr["realColumn"]) continue;
             $columnArr[] = "{$attr["realColumn"]} as $alias";
         }
