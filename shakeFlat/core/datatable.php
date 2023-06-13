@@ -853,6 +853,7 @@ class DataTable extends L
 
         $this->javaScriptReady[] = <<<EOD
                 {$this->jsTableName}_init();
+                $("#{$this->htmlTableId}_filter > label > input[type='search']").attr("id", "{$this->htmlTableId}-searchbox");
                 {$customSearchReload}
             EOD;
     }
@@ -1227,7 +1228,7 @@ class DataTable extends L
                     }
                     return <<<EOD
                                     <div class="{$divClass}"{$divStyle}>
-                                        <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}{$requiredStar}:</label>
+                                        <label for="sf-{$this->setName}-{$prefix}-{$alias}-text" class="col-form-label"{$labelStyle}>{$label}{$requiredStar}:</label>
                                         <input type="hidden" class="{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}" value="{$defaultValue}">
                                         <input type="text" class="form-control form-control-sm{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}-text" name="sf-{$this->setName}-{$prefix}-{$alias}-text"{$style} readonly value="{$defaultText}"{$custom}>
                                         {$comment}
