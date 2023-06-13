@@ -1275,7 +1275,7 @@ class DataTable extends L
                 }
                 return <<<EOD
                                 <div class="{$divClass}"{$divStyle}>
-                                    <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}:</label>
+                                    <label for="sf-{$this->setName}-{$prefix}-{$alias}-1" class="col-form-label"{$labelStyle}>{$label}:</label>
                                     <div class="d-flex flex-wrap">
                                     {$input}
                                     </div>
@@ -1301,7 +1301,7 @@ class DataTable extends L
                 }
                 return <<<EOD
                                 <div class="{$divClass}"{$divStyle}>
-                                    <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}:</label>
+                                    <label for="sf-{$this->setName}-{$prefix}-{$alias}-1" class="col-form-label"{$labelStyle}>{$label}:</label>
                                     <div class="d-flex flex-wrap">
                                     {$input}
                                     </div>
