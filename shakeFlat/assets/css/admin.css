@@ -46,7 +46,8 @@ div.modal input.form-control:read-only { background-color: #efefef; }
  * modal
  */
 .modal-header .btn-close { margin-top:-22px!important; }
-.modal-body { font-size:0.75rem; }
+.modal-body .label-modal-detailinfo { color:#666666; }
+.modal-body .data-modal-detailinfo { font-size:0.80rem; }
 
 /*
  * topbar

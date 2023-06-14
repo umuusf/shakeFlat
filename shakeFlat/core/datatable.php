@@ -18,6 +18,7 @@ class DataTable extends L
     const ATTR_ORDERABLE        = 9002;
     const ATTR_BTN_DETAIL       = 9003;
     const ATTR_BTN_MODIFY       = 9004;
+    const ATTR_INVISIBLE        = 9005;
 
     // for new, modify
     const ATTR_REQUIRED         = 9101;
@@ -199,6 +200,7 @@ class DataTable extends L
                 "isModifyBtn"       => $attr["isModifyBtn"] ?? false,
                 "searchable"        => $attr["searchable"] ?? false,
                 "orderable"         => $attr["orderable"] ?? false,
+                "invisible"         => $attr["invisible"] ?? false,
 
                 "required"          => $attr["required"] ?? false,
                 "readonly"          => $attr["readonly"] ?? false,
@@ -240,6 +242,7 @@ class DataTable extends L
                 "isModifyBtn"       => false,
                 "searchable"        => false,
                 "orderable"         => false,
+                "invisible"         => false,
 
                 "required"          => false,
                 "readonly"          => false,
@@ -296,6 +299,7 @@ class DataTable extends L
                 case self::ATTR_BTN_MODIFY      : $attr["isModifyBtn"] = true;      unset($attr[$idx]); break;
                 case self::ATTR_SEARCHABLE      : $attr["searchable"] = true;       unset($attr[$idx]); break;
                 case self::ATTR_ORDERABLE       : $attr["orderable"] = true;        unset($attr[$idx]); break;
+                case self::ATTR_INVISIBLE       : $attr["invisible"] = true;        unset($attr[$idx]); break;
 
                 case self::ATTR_REQUIRED        : $attr["required"] = true;         unset($attr[$idx]); break;
                 case self::ATTR_READONLY        : $attr["readonly"] = true;         unset($attr[$idx]); break;
@@ -659,7 +663,7 @@ class DataTable extends L
         $order = "[]";
         $orderArr = array();
         foreach($this->defaultOrder as $ii => $defaultOrder) {
-            $idx = array_search($defaultOrder, array_keys($this->columns));
+            $idx = array_search($defaultOrder, array_keys($this->listing));
             if ($idx !== false) $orderArr[] = [ $idx, "{$this->defaultOrderDirection[$ii]}" ];
         }
         if ($orderArr) $order = json_encode($orderArr, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
@@ -675,6 +679,8 @@ class DataTable extends L
             $data       = "";
             $className  = "";
             $render     = "";
+            $visible    = "";
+            if ($attr["invisible"]) $visible = "visible: false, ";
 
             if (!$attr["isModifyBtn"] && !$attr["isDetailInfoBtn"]) {
                 if ($attr["realColumn"]) $data = "data: \"{$alias}\", ";
@@ -718,7 +724,7 @@ class DataTable extends L
             $attr["className"] = join(" ", array_filter([ $attr["className"], ($attr["textCenter"] ? "text-center" : ""), ($attr["textAmount"] ? "text-amount" : "") ]));
             if ($attr["className"]) $className = "className: \"{$attr["className"]}\", ";
 
-            $columnsList[] = "{ name: \"{$alias}\", type: \"html\", {$data}{$label}{$searchable}{$orderable}{$className}{$render}}";
+            $columnsList[] = "{ name: \"{$alias}\", type: \"html\", {$data}{$label}{$searchable}{$orderable}{$className}{$visible}{$render}}";
             if ($attr["realColumn"]) $excelColumnsList[] = $idx;
 
             $idx++;
@@ -816,7 +822,7 @@ class DataTable extends L
                                     console.log(json);
                                 }
                             }).fail(function(jqXHR, textStatus, errorThrown) {
-                                console.log("ajax fail:", textStatus);
+                                console.log("ajax fail:", jqXHR, textStatus);
                             });
                         },
                         columns     : {$columns},
@@ -1502,9 +1508,14 @@ class DataTable extends L
         $this->procSearching();
         $param = $this->ajaxParam();
 
-        $order = "";
-        if($param->order && isset($param->columns[$param->order[0]["column"]]) && $param->columns[$param->order[0]["column"]]["orderable"] == true && $this->listing[$param->columns[$param->order[0]["column"]]["data"]]["realColumn"]) {
-            $order = "order by {$this->listing[$param->columns[$param->order[0]["column"]]["data"]]["realColumn"]} {$param->order[0]["dir"]}";
+        if($param->order) {
+            $ol = array();
+            foreach($param->order as $order) {
+                $alias = $param->columns[$order["column"]]["name"];
+                $dir = $order["dir"];
+                $ol[] = "{$this->listing[$alias]["realColumn"]} {$dir}";
+            }
+            $order = "order by " . implode(",", $ol);
         }
 
         $columnArr = array();
@@ -1512,6 +1523,7 @@ class DataTable extends L
             if (!$attr["realColumn"]) continue;
             $columnArr[] = "{$attr["realColumn"]} as $alias";
         }
+
         $columns = implode(",", $columnArr);
 
         $db = DB::getInstance($this->connectionName);
