@@ -99,8 +99,8 @@ class L
                 if (isset($context["trace"][0]["file"]) && isset($context["trace"][0]["line"])) {
                     $inPos = ", passed in {$context["trace"][0]["file"]} on line {$context["trace"][0]["line"]}";
                 }
-                foreach($context["trace"] as $errInfo) {
-                    if (strpos($errInfo["file"], SHAKEFLAT_PATH . "core") === false) {                        
+                foreach(($context["trace"] ?? array()) as $errInfo) {
+                    if (strpos($errInfo["file"], SHAKEFLAT_PATH . "core") === false) {
                         $inPos = ", passed in {$errInfo["file"]} on line {$errInfo["line"]}";
                         break;
                     }
