@@ -73,6 +73,12 @@ class App extends L
         return $this;
     }
 
+    public function setCustomTemplateFile($templateFile)
+    {
+        $this->template->setCustomTemplateFile($templateFile);
+        return $this;
+    }
+
     // Set the file to be used as layout on the screen where the error will be displayed. (default is layout.html)
     public function setLayoutFileForError($layoutFileForError)
     {

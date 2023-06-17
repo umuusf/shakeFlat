@@ -37,6 +37,7 @@ class Template
     private $template;
     private $layoutFile;
     private $layoutFileForError;
+    private $templateFile;
     private $mode;
     private $translationLang;
     private $redirectUrl;
@@ -67,6 +68,9 @@ class Template
         $this->charset              = "UTF-8";
         $this->aes256key            = SHAKEFLAT_ENV["aes256"]["key_with_client"] ?? "00000000000000000000000000000000";
         $this->aes256iv             = SHAKEFLAT_ENV["aes256"]["iv_with_client"] ?? "0000000000000000";
+
+        $router = Router::getInstance();
+        $this->templateFile = "{$router->module()}/{$router->fnc()}";
     }
 
     // called from App class
@@ -80,6 +84,12 @@ class Template
     public function setLayoutFile($layoutFile)
     {
         $this->layoutFile = $layoutFile;
+        return $this;
+    }
+
+    public function setCustomTemplateFile($templateFile)
+    {
+        $this->templateFile = $templateFile;
         return $this;
     }
 
@@ -208,10 +218,9 @@ class Template
                 break;
             case self::MODE_WEB :
                 header("Content-Type: text/html; charset={$this->charset}");
-                $router = Router::getInstance();
                 $p = rtrim($this->gpath->TEMPLATES, " /");
                 ob_start();
-                include("{$p}/{$router->module()}/{$router->fnc()}.html");  // You can get the value by referring to $res in the template.
+                include("{$p}/{$this->templateFile}.html");  // You can get the value by referring to $res in the template.
                 $contentBody = ob_get_clean();
                 ob_start();
                 include("{$p}/{$this->layoutFile}");        // Insert $contentBody inside layout.html and use it.
