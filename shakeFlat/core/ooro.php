@@ -23,6 +23,7 @@ class Ooro extends Modt
     private $pkFieldNameList    = array();
     private $excludeFieldsList  = array();
     private $preloadDataList    = null;
+    private $isNoUpdate         = false;
 
     private $sourceDataList     = array();
     private $dataList           = array();
@@ -61,6 +62,7 @@ class Ooro extends Modt
         $this->pkList               = $modelsInfo["pk_value"];
         $this->excludeFieldsList    = $modelsInfo["exclude_fields"];
         $this->preloadDataList      = $modelsInfo["preload_data"] ?? null;
+        $this->isNoUpdate           = $modelsInfo["no_update"] ?? false;
 
         if (is_string($this->pkFieldNameList)) $this->pkFieldNameList = array( $this->pkFieldNameList );
 
@@ -94,6 +96,11 @@ class Ooro extends Modt
         }
     }
 
+    public function setNoUpdate()
+    {
+        $this->isNoUpdate = true;
+    }
+
     public function isNoData()
     {
         if (!$this->sourceDataList) return true;
@@ -120,6 +127,7 @@ class Ooro extends Modt
     // Compare the original data with the modified data to update only the updated field values.
     public function update()
     {
+        if ($this->isNoUpdate) return;
         if ($this->sourceDataList === $this->dataList) return;
 
         $db = DB::getInstance($this->connectionName);
