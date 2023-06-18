@@ -709,7 +709,8 @@ class DataTable extends L
                 if ($attr["displayEnum"]) {
                     $context = "";
                     foreach($attr["displayEnum"] as $k => $v) {
-                        $context .= "if (data == '{$k}') return '{$v}';";
+                        $vq = str_replace("'", "\'", $v);
+                        $context .= "if (data == '{$k}') return '{$vq}';";
                     }
                     $render = "render: function(data, type, row) { {$context} }";
                 } else {
