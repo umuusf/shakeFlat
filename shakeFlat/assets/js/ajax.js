@@ -16,10 +16,12 @@ function callAjax(fnc, postdata, successCallback, errorCallback, _this)
             }
         }
     }).done(function(result, textStatus, jqXHR) {
-        if (!result || result.constructor != Object || !("error" in result) || !("errCode" in result.error)) {
+        if (!result || result.constructor != Object || !("data" in result) || !("error" in result) || !("errCode" in result.error)) {
             console.log(result);
             //console.log(textStatus);
             //console.log(jqXHR);
+            alert("서버 호출시 문제가 발생하였습니다. 잠시 후 다시 시도해주세요.");
+            return false;
         } else {
             switch(result.error.errCode) {
                 case 0 :

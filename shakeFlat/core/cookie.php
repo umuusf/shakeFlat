@@ -67,7 +67,7 @@ class Cookie
 
     public function clear()
     {
-        setcookie($this->cookieName, null, time(), "/");
+        setcookie($this->cookieName, "", time(), "/");
         $this->cookie = array();
     }
 }

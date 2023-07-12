@@ -60,6 +60,7 @@ class DataTable extends L
     private $searchJoinDBTable          = array();
     private $searchAndConditions        = array();
     private $searchOrConditions         = array();
+    private $groupBy                    = array();
 
     private $defaultOrder               = [];
     private $defaultOrderDirection      = [];
@@ -497,10 +498,11 @@ class DataTable extends L
     // $joinCondition : Conditions added to the ON condition
     // ex) If you need to perform a query like the one below, the statement corresponding to the [] part
     // ... left join tblSecond on tblSecond.key = tblMain.key [and tblSecond.duedate = '2022-01-01']
-    protected function setJoinDBTable($tableName, $joinColumn, $matchColumn, $joinCondition = null, $joinConditionBind = null)
+    protected function setJoinDBTable($tableName, $joinColumn, $matchColumn, $tableAlias = null, $joinCondition = null, $joinConditionBind = null)
     {
         $this->joinDBTable[] = array (
             "tableName"         => $tableName,
+            "tableAlias"        => $tableAlias,
             "joinColumn"        => $joinColumn,
             "matchColumn"       => $matchColumn,
             "joinCondition"     => $joinCondition,
@@ -526,6 +528,11 @@ class DataTable extends L
         $this->orConditions[] = $condition;
 
         if ($bind) $this->bind = array_merge($this->bind, $bind);
+    }
+
+    public function setGroupBy($queryGroupBy)
+    {
+        $this->groupBy[] = $queryGroupBy;
     }
 
     public function setSearchJoinDBTable($tableName, $joinColumn, $matchColumn, $joinCondition = null, $joinConditionBind = null)
@@ -710,6 +717,7 @@ class DataTable extends L
                     $context = "";
                     foreach($attr["displayEnum"] as $k => $v) {
                         $vq = str_replace("'", "\'", $v);
+                        $vq = preg_replace("/\{([a-zA-Z\d._]+)\}/", "'+$1+'", $vq);
                         $context .= "if (data == '{$k}') return '{$vq}';";
                     }
                     $render = "render: function(data, type, row) { {$context} }";
@@ -884,7 +892,7 @@ class DataTable extends L
 
         $this->htmlModal[] = <<<EOD
             <div class="modal fade" id="{$modalId}">
-                <div class="modal-dialog modal-dialog-scrollable modal-mg">
+                <div class="modal-dialog modal-dialog-scrollable">
                     <div class="modal-content">
                         <div class="modal-header bg-add">
                             <h5 class="modal-title">{$this->newRecordModalTitle}</h5>
@@ -962,7 +970,7 @@ class DataTable extends L
 
         $this->htmlModal[] = <<<EOD
             <div class="modal fade" id="{$modalId}">
-                <div class="modal-dialog modal-dialog-scrollable modal-mg">
+                <div class="modal-dialog modal-dialog-scrollable">
                     <div class="modal-content">
                         <div class="modal-header bg-modify">
                             <h5 class="modal-title">{$this->modifyRecordModalTitle}</h5>
@@ -1049,7 +1057,7 @@ class DataTable extends L
         }
         $this->htmlModal[] = <<<EOD
             <div class="modal fade" id="sf-modal-detailinfo-{$this->setName}">
-                <div class="modal-dialog modal-dialog-scrollable modal-mg">
+                <div class="modal-dialog modal-dialog-scrollable">
                     <div class="modal-content">
                         <div class="modal-header bg-detail">
                             <h5 class="modal-title">{$this->detailInfoModalTitle}</h5>
@@ -1096,6 +1104,27 @@ class DataTable extends L
         $divStyle = "";   if ($recordInfo["divStyle"])    $divStyle = " style=\"{$recordInfo["divStyle"]}\"";
         $labelStyle = ""; if ($recordInfo["labelStyle"])  $labelStyle = " style=\"{$recordInfo["labelStyle"]}\"";
 
+
+        if (isset($recordInfo["sectionTitle"]) && $recordInfo["sectionTitle"]) {
+            return <<<EOD
+                <div class="data-modal-detailinfo-section-title">
+                    <div class="fw-bold fs-5">{$recordInfo["sectionTitle"]}</div>
+                </div>
+            EOD;
+        }
+
+        if (isset($recordInfo["customHTML"]) && $recordInfo["customHTML"]) {
+            return <<<EOD
+                <div class="{$divClass}"{$divStyle}>
+                    <div>{$recordInfo["customHTML"]}</div>
+                </div>
+            EOD;
+        }
+
+
+        $customJS = "escapeHtml(result.data.info.{$alias})";
+        if (isset($recordInfo["customJS"])) $customJS = $recordInfo["customJS"];
+
         if ($recordInfo["displayEnum"]) {
             $scp = "";
             foreach($recordInfo["displayEnum"] as $value => $displayText) {
@@ -1103,11 +1132,11 @@ class DataTable extends L
                 $scp .= "if (result.data.info.{$alias} == '{$value}') $(\"#sf-{$this->setName}-detailinfo-{$alias}\").html(\"{$displayText}\");\n";
             }
             if ($scp) $scp .= "else ";
-            $scp .= "$(\"#sf-{$this->setName}-detailinfo-{$alias}\").html(escapeHtml(result.data.info.{$alias}));\n";
+            $scp .= "$(\"#sf-{$this->setName}-detailinfo-{$alias}\").html({$customJS});\n";
             $openScript .= "\t\t\t\t" . str_replace("\n", "\n\t\t\t\t", $scp) . "\n";
         } else {
             $openScript .= <<<EOD
-                            $("#sf-{$this->setName}-detailinfo-{$alias}").html(escapeHtml(result.data.info.{$alias}));
+                            $("#sf-{$this->setName}-detailinfo-{$alias}").html({$customJS});
 
             EOD;
         }
@@ -1395,7 +1424,12 @@ class DataTable extends L
             foreach($this->joinDBTable as $ji) {
                 $mc = $ji["matchColumn"];
                 if (strpos($mc, ".") === false) $mc = "{$this->mainDBTable}.{$mc}";
-                $joinSQL .= "left join {$ji["tableName"]} on {$ji["tableName"]}.{$ji["joinColumn"]} = {$mc}";
+
+                if ($ji["tableAlias"]) {
+                    $joinSQL .= "left join {$ji["tableName"]} as {$ji["tableAlias"]} on {$ji["tableAlias"]}.{$ji["joinColumn"]} = {$mc}";
+                } else {
+                    $joinSQL .= "left join {$ji["tableName"]} on {$ji["tableName"]}.{$ji["joinColumn"]} = {$mc}";
+                }
                 if ($ji["joinCondition"]) $joinSQL .= " " . $ji["joinCondition"];
                 $joinSQL .= "\n";
             }
@@ -1423,6 +1457,12 @@ class DataTable extends L
         }
         if ($andW) $whereSQL = "where " . implode(" and ", $andW);
         return $whereSQL;
+    }
+
+    private function groupbySQL()
+    {
+        if (!$this->groupBy) return "";
+        return "group by " . implode(",", $this->groupBy);
     }
 
     public function recordCount()
@@ -1488,6 +1528,7 @@ class DataTable extends L
         $proc = true;
     }
 
+    /*
     public function searchCount()
     {
         $this->procSearching();
@@ -1503,6 +1544,7 @@ class DataTable extends L
 
         return intval($db->fetch($rs)["cnt"] ?? 0);
     }
+    */
 
     public function listData()
     {
@@ -1522,7 +1564,7 @@ class DataTable extends L
         $columnArr = array();
         foreach($this->listing as $alias => $attr) {
             if (!$attr["realColumn"]) continue;
-            $columnArr[] = "{$attr["realColumn"]} as $alias";
+            $columnArr[] = "{$attr["realColumn"]} as `$alias`";
         }
 
         $columns = implode(",", $columnArr);
@@ -1534,6 +1576,7 @@ class DataTable extends L
             from {$this->mainDBTable}
             " . $this->joinSQL(1) . "
             " . $this->whereSQL(1) . "
+            " . $this->groupbySQL() . "
             {$order}
             limit {$param->start}, {$param->length}
         ", $this->bind);
@@ -1550,7 +1593,7 @@ class DataTable extends L
         $res = Response::getInstance();
         $res->draw              = $this->ajaxParam()->draw;
         $res->recordsTotal      = $this->recordCount();
-        $res->recordsFiltered   = $this->searchCount();
+        $res->recordsFiltered   = count($this->listData());
         $res->data              = $this->listData();
     }
 
@@ -1558,8 +1601,8 @@ class DataTable extends L
     {
         $columnArr = array();
         foreach($this->detailInfo as $alias => $attr) {
-            if (!isset($attr["realColumn"])) continue;
-            $columnArr[] = "{$attr["realColumn"]} as $alias";
+            if (!isset($attr["realColumn"]) || !$attr["realColumn"]) continue;
+            $columnArr[] = "{$attr["realColumn"]} as `$alias`";
         }
         $columns = implode(",", $columnArr);
 
@@ -1591,7 +1634,7 @@ class DataTable extends L
         $columnArr = array();
         foreach($this->modifyRecord as $alias => $attr) {
             if (!$attr["realColumn"] || $attr["notfill"]) continue;
-            $columnArr[] = "{$attr["realColumn"]} as $alias";
+            $columnArr[] = "{$attr["realColumn"]} as `$alias`";
         }
         $columns = implode(",", $columnArr);
 
