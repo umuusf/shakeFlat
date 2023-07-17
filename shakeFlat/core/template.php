@@ -22,7 +22,6 @@ use shakeFlat\Translation;
 use shakeFlat\Response;
 use shakeFlat\Router;
 use shakeFlat\AES256;
-use shakeFlat\Util;
 
 class Template
 {
@@ -33,8 +32,8 @@ class Template
     const MODE_API                  = 4;
     const MODE_API_ENCRYPT          = 5;
     const MODE_API_ENCRYPT_ZIP      = 6;
+    const MODE_CLI                  = 7;
 
-    private $template;
     private $layoutFile;
     private $layoutFileForError;
     private $templateFile;
@@ -237,6 +236,12 @@ class Template
                 }
                 header("Location: " . $this->redirectUrl);
                 exit;
+            case self::MODE_CLI :
+                $data = $res->data();
+                $data = $this->translationOutput($data);
+                if (strtoupper($this->charset) != "UTF-8") $data = iconv("UTF-8", $this->charset, $data);
+                echo $data;
+                exit;
         }
     }
 
@@ -249,7 +254,8 @@ class Template
             "data"   => array (),
         );
 
-        if (strtolower($_SERVER["HTTP_X_REQUESTED_WITH"] ?? "") == "xmlhttprequest") $this->mode = self::MODE_AJAX;
+        if (php_sapi_name() == "cli") $this->mode = self::MODE_CLI;
+        elseif (strtolower($_SERVER["HTTP_X_REQUESTED_WITH"] ?? "") == "xmlhttprequest") $this->mode = self::MODE_AJAX;
 
         switch($this->mode) {
             case self::MODE_AJAX :
@@ -342,6 +348,13 @@ class Template
                     ";
                 }
                 break;
+            case self::MODE_CLI :
+                echo "\n\n";
+                echo "errCode : {$code}\n";
+                echo "errMsg  : {$message}\n";
+                if ($context && ($context["parameters"] ?? false)) print_r($context);
+                echo "\n\n";
+                exit;
         }
     }
 

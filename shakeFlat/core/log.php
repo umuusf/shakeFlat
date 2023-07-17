@@ -12,7 +12,6 @@
 
 namespace shakeFlat;
 use shakeFlat\Template;
-use shakeFlat\Response;
 use \DateTime;
 use \DateTimeZone;
 

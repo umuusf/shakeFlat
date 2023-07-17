@@ -80,6 +80,12 @@ function sfModeAjax()
     $template->setMode(shakeFlat\Template::MODE_AJAX);
 }
 
+function sfModeCLI()
+{
+    $template = shakeFlat\Template::getInstance();
+    $template->setMode(shakeFlat\Template::MODE_CLI);
+}
+
 function sfIsAjax()
 {
     $template = shakeFlat\Template::getInstance();

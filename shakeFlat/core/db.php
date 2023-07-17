@@ -68,7 +68,11 @@ class DB extends L
 
             return new PDO($dsn, $user, $passwd, $options);
         } catch (Exception $e) {
-            self::exit($e->getMessage() . " ({code})", array("code"=>$e->getCode()));
+            if (SHAKEFLAT_ENV["config"]["debug_mode"] ?? false) {
+                self::exit($e->getMessage() . " ({code})", array("code"=>$e->getCode()));
+            } else {
+                self::exit("DB connection failed. ({$e->getCode()})");
+            }
         }
     }
 
