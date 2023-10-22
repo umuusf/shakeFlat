@@ -217,6 +217,7 @@ class Template
                 break;
             case self::MODE_WEB :
                 header("Content-Type: text/html; charset={$this->charset}");
+                $router = Router::getInstance();
                 $p = rtrim($this->gpath->TEMPLATES, " /");
                 ob_start();
                 include("{$p}/{$this->templateFile}.html");  // You can get the value by referring to $res in the template.
