@@ -49,21 +49,28 @@ class dtUserOnePage extends DataTable
 
         // define all columns
         parent::setAllColumns([
-            "user_no"      => [ "label" => "번호",     "orderable" => true ],
-            "status"       => [ "label" => "상태",     "realColumn"=> "user.status", "rendering" => "function(data, type, row) { switch(data) { case 0:return '사용중지';break; case 1:return '정상';break; case 2:return '점검중';break; } }" ],
-            "company_name" => [ "label" => "회사",     "realColumn" => "company.name", "orderable" => false, "searchable" => true ],
-            "nickname"     => [ "label" => "닉네임",   "orderable" => true, "searchable" => true ],
-            "login_id"     => [ "label" => "로그인ID", "orderable" => true, "searchable" => true ],
-            "price"        => [ "label" => "가격",     "orderable" => true, "className" => "text-amount", "rendering" => "$.fn.dataTable.render.number(',')" ],
-            "create_date"  => [ "label" => "생성일",   "realColumn" => "user.create_date", "orderable" => true ],
-            "btn"          => [ "isDetailInfoBtn" => true, "isModifyBtn" => true ],
+            "user_no"      => [ "label" => "번호",     "realColumn" => "user.user_no" ],
+            "status"       => [ "label" => "상태",     "realColumn" => "user.status", "rendering" => "function(data, type, row) { switch(data) { case 0:return '사용중지';break; case 1:return '정상';break; case 2:return '점검중';break; } }" ],
+            "company_name" => [ "label" => "회사",     "realColumn" => "company.name" ],
+            "nickname"     => [ "label" => "닉네임",   "realColumn" => "user.nickname"  ],
+            "login_id"     => [ "label" => "로그인ID", "realColumn" => "user.login_id"  ],
+            "price"        => [ "label" => "가격",     "realColumn" => "user.price", "rendering" => "$.fn.dataTable.render.number(',')" ],
+            "create_date"  => [ "label" => "생성일",   "realColumn" => "user.create_date" ],
+            "btn"          => [ self::ATTR_BTN_DETAIL, self::ATTR_BTN_MODIFY ],
         ]);
 
         // for listing
         parent::setListing([
             "user_no", "status", "company_name", "nickname", "login_id", "price", "create_date", "btn"
         ], [
-
+            "user_no"       => [ self::ATTR_TEXT_CENTER, self::ATTR_ORDERABLE ],
+            "status"        => [ self::ATTR_TEXT_CENTER, self::ATTR_ORDERABLE ],
+            "company_name"  => [ self::ATTR_ORDERABLE, self::ATTR_SEARCHABLE ],
+            "nickname"      => [ self::ATTR_ORDERABLE, self::ATTR_SEARCHABLE ],
+            "login_id"      => [ self::ATTR_ORDERABLE, self::ATTR_SEARCHABLE ],
+            "price"         => [ self::ATTR_TEXT_AMOUNT, self::ATTR_ORDERABLE ],
+            "create_date"   => [ self::ATTR_ORDERABLE ],
+            "btn"           => [ self::ATTR_ORDERABLE ],
         ]);
         parent::setCustomSearchSelectBox("status", "상태", [
             [ "value" => "", "text" => "전체", "selected" => true ],

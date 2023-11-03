@@ -1561,15 +1561,22 @@ class DataTable extends L
             $order = "order by " . implode(",", $ol);
         }
 
+        $db = DB::getInstance($this->connectionName);
+
         $columnArr = array();
         foreach($this->listing as $alias => $attr) {
             if (!$attr["realColumn"]) continue;
-            $columnArr[] = "{$attr["realColumn"]} as `$alias`";
+            if ($db->dbSystem() == "mysql") $alias = "`{$alias}`";
+            $columnArr[] = "{$attr["realColumn"]} as {$alias}";
         }
 
         $columns = implode(",", $columnArr);
 
-        $db = DB::getInstance($this->connectionName);
+        if ($db->dbSystem() == "sqlsrv") {
+            $limit = "offset {$param->start} rows fetch next {$param->length} rows only";
+        } else {
+            $limit = "limit {$param->start}, {$param->length}";
+        }
         $rs = $db->query("
             select
             {$columns}
@@ -1578,7 +1585,7 @@ class DataTable extends L
             " . $this->whereSQL(1) . "
             " . $this->groupbySQL() . "
             {$order}
-            limit {$param->start}, {$param->length}
+            {$limit}
         ", $this->bind);
         $data = array();
         while($attr = $db->fetch($rs)) {
@@ -1599,14 +1606,16 @@ class DataTable extends L
 
     public function recordData($pk)
     {
+        $db = DB::getInstance($this->connectionName);
+
         $columnArr = array();
         foreach($this->detailInfo as $alias => $attr) {
             if (!isset($attr["realColumn"]) || !$attr["realColumn"]) continue;
-            $columnArr[] = "{$attr["realColumn"]} as `$alias`";
+            if ($db->dbSystem() == "mysql") $alias = "`{$alias}`";
+            $columnArr[] = "{$attr["realColumn"]} as {$alias}";
         }
         $columns = implode(",", $columnArr);
 
-        $db = DB::getInstance($this->connectionName);
         $where = $this->whereSQL(1);
         if ($where) $where .= " and"; else $where = " where";
 
@@ -1631,14 +1640,16 @@ class DataTable extends L
 
     public function recordDataForModify($pk)
     {
+        $db = DB::getInstance($this->connectionName);
+
         $columnArr = array();
         foreach($this->modifyRecord as $alias => $attr) {
             if (!$attr["realColumn"] || $attr["notfill"]) continue;
-            $columnArr[] = "{$attr["realColumn"]} as `$alias`";
+            if ($db->dbSystem() == "mysql") $alias = "`{$alias}`";
+            $columnArr[] = "{$attr["realColumn"]} as {$alias}";
         }
         $columns = implode(",", $columnArr);
 
-        $db = DB::getInstance($this->connectionName);
         $where = $this->whereSQL(1);
         if ($where) $where .= " and"; else $where = " where";
 

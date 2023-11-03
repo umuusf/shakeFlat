@@ -14,6 +14,7 @@ class DB extends L
 {
     private $dbh = null;
     private $errInfo = array();
+    private $dbsys = "mysql";       // Database product types for DSN
 
     public static function getInstance($connectionName = "default")
     {
@@ -37,6 +38,8 @@ class DB extends L
         $this->dbh = $this->pdoConnection($connInfo);
     }
 
+    public function dbSystem() { return $this->dbsys; }
+
     private function pdoConnection($connInfo)
     {
         try {
@@ -46,12 +49,18 @@ class DB extends L
 
             $options = array(
                 PDO::ATTR_ERRMODE           => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_TIMEOUT           => $connInfo["connect_timeout"] ?? 5,
                 PDO::ATTR_EMULATE_PREPARES  => false,
                 PDO::ATTR_STRINGIFY_FETCHES => false,
             );
 
-            if (stripos($dsn, "mysql") !== false) {
+            if (stripos($dsn, "sqlsrv") !== false) {
+                $this->dbsys = "sqlsrv";
+                $dsn .= ";LoginTimeout=" . ($connInfo["connect_timeout"] ?? 5);
+
+            } elseif (stripos($dsn, "mysql") !== false) {
+                $this->dbsys = "mysql";
+
+                $options[PDO::ATTR_TIMEOUT] = $connInfo["connect_timeout"] ?? 5;
                 $options[PDO::MYSQL_ATTR_LOCAL_INFILE] = false;
 
                 $initCommand = array();
