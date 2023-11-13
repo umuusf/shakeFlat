@@ -31,6 +31,7 @@ class Router
     public function setWelcomePage($module = "welcome", $fnc = "main")
     {
         $this->welcomePage = "{$module}/{$fnc}";
+        $this->parseUrl();
     }
 
     private function parseUrl()
