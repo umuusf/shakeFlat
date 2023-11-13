@@ -37,12 +37,12 @@ function sfTimeDiffPretty($time, $postTime = null, $isKorean = true)
     return shakeFlat\Util::timeDiffPretty($time, $postTime, $isKorean);
 }
 
-function sfValidateDate($date, $format = "Y-m-d H:i:s")
+function sfValidateDate($date, $format = null)
 {
     return shakeFlat\Util::validateDate($date, $format);
 }
 
-function sfYmdHis($date, $format)
+function sfYmdHis($date, $format = null)
 {
     return shakeFlat\Util::YmdHis($date, $format);
 }

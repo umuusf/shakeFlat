@@ -259,20 +259,44 @@ class Util
         return substr(md5($id), 0, 2);
     }
 
-    // Check if the format of $format(YYYY-MM-DD HH:II:SS) is correct
-    public static function validateDate($dateStr, $format = "Y-m-d H:i:s")
+    public static function validateDate($dateString, $userFormat = null)
     {
-        $dateStr = trim($dateStr);
-        if (!$dateStr) return false;
-        $dateTime = DateTime::createFromFormat($format, $dateStr);
-        return $dateTime && ($dateTime->format($format) === $dateStr);
+        $dateTime = self::sfDateTime($dateString, $userFormat);
+        if ($dateTime !== false) return true;
+        return false;
     }
 
     // Returns a non Y-m-d H:i:s format as a Y-m-d H:i:s format.
-    public static function YmdHis($date, $format)
+    public static function YmdHis($dateString, $userFormat = null)
     {
-        $dateTime = DateTime::createFromFormat($format, $date);
+        $dateTime = self::sfDateTime($dateString, $userFormat);
+        if ($dateTime === false) return false;
         return $dateTime->format("Y-m-d H:i:s");
+    }
+
+    private static function sfDateTime($dateString, $userFormat = null)
+    {
+        if ($userFormat !== null) {
+            $formats = [ $userFormat ];
+        } else {
+            $formats = [
+                'Y-m-d',
+                'Y-m-d H:i:s',
+                'Y-m-d\TH:i:s',
+                'Y-m-d\TH:i',
+                'Y/m/d',
+                'Y/m/d H:i:s',
+                'Ymd',
+                'Ymd H:i:s',
+            ];
+        }
+
+        foreach ($formats as $format) {
+            $dateTime = DateTime::createFromFormat($format, $dateString);
+            if ($dateTime !== false) return $dateTime;
+        }
+
+        return false;
     }
 
     public static function number_formatX($p, $c = "")

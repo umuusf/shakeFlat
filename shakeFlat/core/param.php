@@ -15,6 +15,7 @@
 namespace shakeFlat;
 use shakeFlat\L;
 use shakeFlat\AES256;
+use shakeFlat\Util;
 use \Exception;
 
 class Param extends L
@@ -267,15 +268,14 @@ class Param extends L
                 }
                 return;
 
-            case Param::TYPE_ARRAY       : if (!is_array($this->params[$key]))                                               $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
-            case Param::TYPE_EMAIL       : if (filter_var($this->params[$key], FILTER_VALIDATE_EMAIL) === false)             $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
-            case Param::TYPE_URL         : if (filter_var($this->params[$key], FILTER_VALIDATE_URL) === false)               $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
-            case Param::TYPE_DOMAIN      : if (filter_var($this->params[$key], FILTER_VALIDATE_DOMAIN) === false)            $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
-            case Param::TYPE_IP          : if (filter_var($this->params[$key], FILTER_VALIDATE_IP) === false)                $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
-            case Param::TYPE_DATETIME    : if ($this->params[$key] != date("Y-m-d H:i:s", strtotime($this->params[$key])))   $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
-            case Param::TYPE_DATE        : if ($this->params[$key] != date("Y-m-d", strtotime($this->params[$key])))         $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
-
-            case Param::TYPE_FILE        : if (!isset($_FILES[$key]) || ($_FILES[$key]["error"] ?? 100) != 0)                $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
+            case Param::TYPE_ARRAY       : if (!is_array($this->params[$key]))                                              $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
+            case Param::TYPE_EMAIL       : if (filter_var($this->params[$key], FILTER_VALIDATE_EMAIL) === false)            $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
+            case Param::TYPE_URL         : if (filter_var($this->params[$key], FILTER_VALIDATE_URL) === false)              $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
+            case Param::TYPE_DOMAIN      : if (filter_var($this->params[$key], FILTER_VALIDATE_DOMAIN) === false)           $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
+            case Param::TYPE_IP          : if (filter_var($this->params[$key], FILTER_VALIDATE_IP) === false)               $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
+            case Param::TYPE_DATETIME    : if (Util::validateDate($this->params[$key]) === false)                           $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
+            case Param::TYPE_DATE        : if ($this->params[$key] != date("Y-m-d", strtotime($this->params[$key])))        $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
+            case Param::TYPE_FILE        : if (!isset($_FILES[$key]) || ($_FILES[$key]["error"] ?? 100) != 0)               $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
         }
         $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);
     }
