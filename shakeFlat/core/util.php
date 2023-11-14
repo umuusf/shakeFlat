@@ -79,9 +79,9 @@ class Util
     }
 
     // For the defined constants, among those corresponding to the prefix, the key of the one whose value is $value is found.
-    public static function classDefineFindKey($prefix, $value)
+    public static function classDefineFindKey($className, $prefix, $value)
     {
-        $list = self::classDefineList($prefix);
+        $list = self::classDefineList($className, $prefix);
         return array_search($value, $list);
     }
 
