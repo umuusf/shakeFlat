@@ -138,16 +138,16 @@ class AuthSession
                         $path = $gpath->STORAGE . $path;
                         if (SHAKEFLAT_ENV["auth"]["session"]["check_path"] ?? false) {
                             if (!is_dir($path)) mkdir($path);
-                            if (!file_exists($path)) $this::system("The storage folder does not exist in the file system.", array( "path" => $path ));
-                            if (!is_readable($path)) $this::system("You do not have read permission on the storage folder.", array( "path" => $path ));
-                            if (!is_writable($path)) $this::system("You do not have write access to the storage folder.", array( "path" => $path ));
+                            if (!file_exists($path)) L::system("The storage folder does not exist in the file system.", array( "path" => $path ));
+                            if (!is_readable($path)) L::system("You do not have read permission on the storage folder.", array( "path" => $path ));
+                            if (!is_writable($path)) L::system("You do not have write access to the storage folder.", array( "path" => $path ));
                         }
                         session_save_path($path);
                     }
                 }
             }
             session_start();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             L::exit($e->getMessage() . " ({code})", array("code"=>$e->getCode()));
         }
     }
