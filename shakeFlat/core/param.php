@@ -38,6 +38,9 @@ class Param extends L
     const TYPE_DOMAIN    = 1013;
     const TYPE_IP        = 1014;
 
+    const FILE_ALL       = 2001;
+    const FILE_IMAGE     = 2002;
+
     private $params = array();
     private $typeInfo = array();    // It has type and enum information specified for each parameter.
     private $noEnc = false;
@@ -163,6 +166,24 @@ class Param extends L
         $this->_checkType($key, $type, $enum);
     }
 
+    public function checkFileType($key, $type = SELF::FILE_ALL)
+    {
+        if (!$this->_existKey($key, self::TYPE_FILE)) $this->exitCode("[:The parameter {$key} does not exist.:]", GCode::MISSING_PARAM);
+        if (!$this->_existValue($key, SELF::TYPE_FILE)) return;
+        switch($type) {
+            case SELF::FILE_ALL : break;
+            case SELF::FILE_IMAGE :
+                if (!exif_imagetype($_FILES[$key]["tmp_name"])) $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);
+                break;
+        }
+        return;
+    }
+
+    public function existsFile($key)
+    {
+        return (($_FILES[$key]["error"] ?? 100) === 0) && isset($_FILES[$key]["tmp_name"]);
+    }
+
     public function exists($key)
     {
         return (array_key_exists($key, $this->params) === true || array_key_exists($key, $_FILES) === true);
@@ -170,8 +191,8 @@ class Param extends L
 
     private function _existKey($key, $type)
     {
-        if ($type == "file") {
-            if (!isset($_FILES[$key])) return false;
+        if ($type == self::TYPE_FILE) {
+            if (!isset($_FILES[$key]) && array_key_exists($key, $this->params) === false) return false;
         } else {
             if (array_key_exists($key, $this->params) === false) return false;
         }
@@ -180,7 +201,7 @@ class Param extends L
 
     private function _existValue($key, $type)
     {
-        if ($type == "file") {
+        if ($type == self::TYPE_FILE) {
             if (($_FILES[$key]["error"] ?? 100) != 0) return false;
         } else {
             if (($this->params[$key] ?? "") === "") return false;

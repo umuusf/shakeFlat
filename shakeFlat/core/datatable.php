@@ -40,8 +40,10 @@ class DataTable extends L
     const ATTR_TYPE_TEL         = 9215;
 
     // common
-    const ATTR_TEXT_CENTER      = 9901;
-    const ATTR_TEXT_AMOUNT      = 9902;
+    const ATTR_TEXT_AMOUNT      = 9901;
+    const ATTR_TEXT_LEFT        = 9911;
+    const ATTR_TEXT_CENTER      = 9912;
+    const ATTR_TEXT_RIGHT       = 9913;
 
 
     private static $instance            = array();
@@ -73,6 +75,8 @@ class DataTable extends L
     private $createdRow                 = "";
     private $drawCallBack               = "";
     private $dom                        = "<'row justify-content-between'<'col-auto'B><'col-auto'<'row'<'col-auto'<'sf-custom-search'>><'col-auto'f>>>><'row'<'col-12'tr>><'row justify-content-between'<'col-auto'i><'col-auto'<'row'<'col-auto'l><'col-auto'p>>>>";
+
+    private $excelEnable                = true;
     private $excelFileName              = "";
     private $excelButtonText            = "Excel";
     private $excelButtonClassName       = "btn btn-sm btn-secondary";
@@ -104,6 +108,8 @@ class DataTable extends L
     private $javaScriptReady2           = array();
     private $htmlModal                  = array();
     private $bind                       = array();
+
+    private $deliverParameters          = array();         // Defines parameters that must be passed when calling the ajax module. (for onePage)
 
     public static function getInstance()
     {
@@ -163,6 +169,7 @@ class DataTable extends L
         if (isset($config["lengthMenu"]))               $this->lengthMenu               = $config["lengthMenu"];
         if (isset($config["stateSave"]))                $this->stateSave                = $config["stateSave"];
         if (isset($config["searching"]))                $this->searching                = $config["searching"];
+        if (isset($config["excel"]))                    $this->excelEnable              = $config["excel"];             // true/false
     }
 
     // Defines the columns(fields) to be listed.
@@ -214,6 +221,8 @@ class DataTable extends L
                 "comment"           => $attr["comment"] ?? "",
 
                 "textCenter"        => $attr["textCenter"] ?? false,
+                "textLeft"          => $attr["textLeft"] ?? false,
+                "textRight"         => $attr["textRight"] ?? false,
                 "textAmount"        => $attr["textAmount"] ?? false,
 
                 "custom"            => $attr["custom"] ?? "",
@@ -256,6 +265,8 @@ class DataTable extends L
                 "comment"           => "",
 
                 "textCenter"        => false,
+                "textLeft"          => false,
+                "textRight"         => false,
                 "textAmount"        => false,
 
                 "custom"            => $attr["custom"] ?? "",
@@ -322,6 +333,9 @@ class DataTable extends L
                 case self::ATTR_TYPE_PASSWORD   : $attr["type"] = "password"; $attr["notfill"] = true; unset($attr[$idx]); break;
 
                 case self::ATTR_TEXT_CENTER     : $attr["textCenter"] = true;       unset($attr[$idx]); break;
+                case self::ATTR_TEXT_LEFT       : $attr["textLeft"] = true;         unset($attr[$idx]); break;
+                case self::ATTR_TEXT_RIGHT      : $attr["textRight"] = true;        unset($attr[$idx]); break;
+
                 case self::ATTR_TEXT_AMOUNT     : $attr["textAmount"] = true;       unset($attr[$idx]); break;
             }
         }
@@ -347,6 +361,45 @@ class DataTable extends L
                 }
             }
         }
+    }
+
+    // Do not use the Excel download function.
+    public function setExcelDisable()
+    {
+        $this->excelEnable = false;
+    }
+
+    public function setSearchDisable()
+    {
+        $this->searching = false;
+    }
+
+    // Defines parameters that must be passed(deliver) when calling the ajax module. (for onePage)
+    public function deliverParameter($k, $v)
+    {
+        $this->deliverParameters[$k] = $v;
+    }
+
+    // Returns a code that adds parameters to the ajax code.
+    private function deliverParamCode()
+    {
+        if (!$this->deliverParameters) return "";
+        $paramStr = "";
+        foreach($this->deliverParameters as $k => $v) {
+            $paramStr .= "{$k}:'{$v}',";
+        }
+        return $paramStr;
+    }
+
+    // Returns a code that adds parameters to formData of the ajax code.
+    private function deliverAppendCode($frm = "formData")
+    {
+        if (!$this->deliverParameters) return "";
+        $paramStr = "";
+        foreach($this->deliverParameters as $k => $v) {
+            $paramStr .= "{$frm}.append(\"{$k}\", \"{$v}\");\n\t\t\t\t\t";
+        }
+        return $paramStr;
     }
 
     // Required when not in one page mode.
@@ -572,7 +625,15 @@ class DataTable extends L
         $this->defaultOrderDirection[] = $direction;
     }
 
-    public function setCustomSearchSelectBox($alias, $label, $list, $isSelect2 = false, $style = null)
+    public function setCustomSearchHidden($alias, $callbackFnc)
+    {
+        $this->customSearch[$alias] = array(
+            "type"      => "hidden",
+            "callback"  => $callbackFnc,
+        );
+    }
+
+    public function setCustomSearchSelectBox($alias, $label, $list, $isSelect2 = false, $style = null, $callbackFnc = null)
     {
         $this->customSearch[$alias] = array(
             "type"      => "select",
@@ -580,16 +641,18 @@ class DataTable extends L
             "list"      => $list,
             "isSelect2" => $isSelect2,
             "style"     => $style,
+            "callback"  => $callbackFnc,
         );
     }
 
-    public function setCustomSearchDateRange($alias, $label, $style = null, $compareDateFormat = "Y-m-d H:i:s")
+    public function setCustomSearchDateRange($alias, $label, $style = null, $compareDateFormat = "Y-m-d H:i:s", $callbackFnc = null)
     {
         $this->customSearch[$alias] = array(
             "type"      => "dateRange",
             "label"     => $label,
             "style"     => $style,
             "compareDateFormat" => $compareDateFormat,
+            "callback"  => $callbackFnc,
         );
     }
 
@@ -730,7 +793,7 @@ class DataTable extends L
                 }
             }
 
-            $attr["className"] = join(" ", array_filter([ $attr["className"], ($attr["textCenter"] ? "text-center" : ""), ($attr["textAmount"] ? "text-amount" : "") ]));
+            $attr["className"] = join(" ", array_filter([ $attr["className"], ($attr["textCenter"] ? "text-center" : ""), ($attr["textLeft"] ? "text-start" : ""), ($attr["textRight"] ? "text-end" : ""), ($attr["textAmount"] ? "text-amount" : "") ]));
             if ($attr["className"]) $className = "className: \"{$attr["className"]}\", ";
 
             $columnsList[] = "{ name: \"{$alias}\", type: \"html\", {$data}{$label}{$searchable}{$orderable}{$className}{$visible}{$render}}";
@@ -742,7 +805,7 @@ class DataTable extends L
         $columns = "[\n\t\t\t\t\t".implode(",\n\t\t\t\t\t", $columnsList)."\n\t\t\t\t]";
         $excelColumns = json_encode($excelColumnsList, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
 
-        $drawCallBack = "";         if ($this->drawCallBack) $drawCallBack = "drawCallBack : function(settings) { {$this->drawCallBack} },\n";
+        $drawCallBack = "";         if ($this->drawCallBack) $drawCallBack = "fnDrawCallback : function(settings) { {$this->drawCallBack} },\n";
         $createdRow = "";           if ($this->createdRow) $createdRow = "createdRow : function(row, data, dataIndex, cells) { {$this->createdRow} },\n";
         $excelFileName = "";        if ($this->excelFileName) $excelFileName = "title: \"" . htmlspecialchars($this->excelFileName) . "\", ";
         $excelButtonText = "";      if ($this->excelButtonText) $excelButtonText = "text: \"" . str_replace("\"", "\\\"", $this->excelButtonText) . "\", ";
@@ -780,6 +843,9 @@ class DataTable extends L
                         $customSearchDateRange .= "$(\"#sf_search_{$alias}\").daterangepicker({ timePicker:true, autoUpdateInput: false, locale: { format: 'YYYY-MM-DD HH:mm', cancelLabel: 'Clear' }});\n\t\t";
                         $customSearchDateRange .= "$(\"#sf_search_{$alias}\").on(\"apply.daterangepicker\", function(ev, picker) { $(this).val(picker.startDate.format('YYYY-MM-DD HH:mm') + ' - ' + picker.endDate.format('YYYY-MM-DD HH:mm')); {$this->jsTableName}.ajax.reload(null, false); });\n\t\t";
                         break;
+                    case "hidden" :
+                        $html .= "\t\t\t\t<input type='hidden' name='sf_search_{$alias}' id='sf_search_{$alias}'>\\\n";
+                        break;
                 }
                 $customSearchList[] = $html;
                 $customSearchAjaxData .= "data.sf_search_{$alias} = valueForSelect($(\"#sf_search_{$alias}\"), \"{$default}\");\n\t\t\t\t";
@@ -790,10 +856,21 @@ class DataTable extends L
             $customSearchReload = "$(document).on(\"change\", \".sf-custom-search-{$this->jsTableName}\", function() { {$this->jsTableName}.ajax.reload(null, false); });";
         }
 
-        $btnNewRecord = "";
+        $buttons = array();
+        if ($this->excelEnable) {
+            $buttons[] = "{ extend: 'excelHtml5', titleAttr: 'Excel', {$excelFileName}{$excelButtonText}{$excelButtonClassName}action: newexportaction, exportOptions: { columns: {$excelColumns} } }";
+        }
         if ($this->newRecord) {
-            $btnNewRecord = "{ title: 'New', text: '{$this->newRecordModalTitle}', action: sf_open_add_form_{$this->setName}, {$excelButtonClassName} },";
+            $buttons[] = "{ title: 'New', text: '{$this->newRecordModalTitle}', action: sf_open_add_form_{$this->setName}, {$excelButtonClassName} },";
             $this->setScriptNewRecord();
+        }
+        $buttonsStr = implode(",", $buttons);
+
+        $deliverParameters = "";
+        if ($this->deliverParameters) {
+            foreach($this->deliverParameters as $k => $v) {
+                $deliverParameters .= "data.{$k} = '{$v}';\n\t\t\t\t";
+            }
         }
 
         $this->javaScript[] = <<<EOD
@@ -815,6 +892,7 @@ class DataTable extends L
                         retrieve    : true,
                         ajax        : function(data, callback, settings) {
                             {$customSearchAjaxData}
+                            {$deliverParameters}
                             data.sfdtmode = 'listAjax';
                             $.ajax({
                                 url: "{$this->ajaxUrl}",
@@ -836,11 +914,9 @@ class DataTable extends L
                         },
                         columns     : {$columns},
                         order       : {$order},
+                        aaSorting   : [  ],
                         dom         : "{$this->dom}",
-                        buttons     : [
-                            { extend: 'excelHtml5', titleAttr: 'Excel', {$excelFileName}{$excelButtonText}{$excelButtonClassName}action: newexportaction, exportOptions: { columns: {$excelColumns} } },
-                            {$btnNewRecord}
-                        ],
+                        buttons     : [ {$buttonsStr} ],
                         language    : {
                             "decimal" : "",
                             "emptyTable" : "데이터가 없습니다.",
@@ -892,7 +968,7 @@ class DataTable extends L
 
         $this->htmlModal[] = <<<EOD
             <div class="modal fade" id="{$modalId}">
-                <div class="modal-dialog modal-dialog-scrollable">
+                <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header bg-add">
                             <h5 class="modal-title">{$this->newRecordModalTitle}</h5>
@@ -929,6 +1005,7 @@ class DataTable extends L
                     }
                     var formData = new FormData($("#sf-frm-add-{$this->setName}")[0]);
                     formData.append("sfdtmode", "submitForNewAjax");
+                    {$this->deliverAppendCode()}
                     callAjax(
                         "{$this->newRecordAjaxUrl}",
                         Object.fromEntries(formData),
@@ -970,7 +1047,7 @@ class DataTable extends L
 
         $this->htmlModal[] = <<<EOD
             <div class="modal fade" id="{$modalId}">
-                <div class="modal-dialog modal-dialog-scrollable">
+                <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header bg-modify">
                             <h5 class="modal-title">{$this->modifyRecordModalTitle}</h5>
@@ -1000,7 +1077,7 @@ class DataTable extends L
                 var pk = $(this).data("pk");
                 callAjax(
                     "{$this->modifyRecordReadAjaxUrl}",
-                    { pk : pk, sfdtmode : 'detailForModifyAjax' },
+                    { pk : pk, sfdtmode : 'detailForModifyAjax', {$this->deliverParamCode()} },
                     function(result) {
                         if (!result.data.info) {
                             alert("오류가 발생하였습니다. 잠시 후 다시 시도해주세요.");
@@ -1022,6 +1099,7 @@ class DataTable extends L
                 }
                 var formData = new FormData($("#sf-frm-modify-{$this->setName}")[0]);
                 formData.append("sfdtmode", "submitForModifyAjax");
+                {$this->deliverAppendCode()}
                 callAjax(
                     "{$this->modifyRecordSubmitAjaxUrl}",
                     Object.fromEntries(formData),
@@ -1057,7 +1135,7 @@ class DataTable extends L
         }
         $this->htmlModal[] = <<<EOD
             <div class="modal fade" id="sf-modal-detailinfo-{$this->setName}">
-                <div class="modal-dialog modal-dialog-scrollable">
+                <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header bg-detail">
                             <h5 class="modal-title">{$this->detailInfoModalTitle}</h5>
@@ -1079,7 +1157,7 @@ class DataTable extends L
                 var pk = $(this).data("pk");
                 callAjax(
                     "{$this->detailInfoReadAjaxUrl}",
-                    { pk : pk, sfdtmode : 'detailAjax' },
+                    { pk : pk, sfdtmode : 'detailAjax', {$this->deliverParamCode()} },
                     function(result) {
                         if (!result.data.info) {
                             alert("오류가 발생하였습니다. 잠시 후 다시 시도해주세요.");
@@ -1098,7 +1176,7 @@ class DataTable extends L
         $label = $recordInfo["label"] ?? $alias;
 
         $divClass = join(" ", array_filter([ "mb-2", $divClass, $recordInfo["divClassName"] ]));
-        $class = join(" ", array_filter([ "data-modal-detailinfo", $recordInfo["className"], (($recordInfo["textCenter"]) ? "text-center" : "") ]));
+        $class = join(" ", array_filter([ "data-modal-detailinfo", $recordInfo["className"], (($recordInfo["textCenter"]) ? "text-center" : ""), (($recordInfo["textLeft"]) ? "text-start" : ""), (($recordInfo["textRight"]) ? "text-end" : "") ]));
 
         $style = "";      if ($recordInfo["style"])       $style = " style=\"{$recordInfo["style"]}\"";
         $divStyle = "";   if ($recordInfo["divStyle"])    $divStyle = " style=\"{$recordInfo["divStyle"]}\"";
@@ -1200,7 +1278,7 @@ class DataTable extends L
         $type = $recordInfo["type"] ?? "text";
 
         $divClass = join(" ", array_filter([ "mb-2", $divClass, $recordInfo["divClassName"] ]));
-        $class = join(" ", array_filter([ $recordInfo["className"], (($recordInfo["textCenter"]) ? "text-center" : "") ]));
+        $class = join(" ", array_filter([ $recordInfo["className"], (($recordInfo["textCenter"]) ? "text-center" : ""), (($recordInfo["textLeft"]) ? "text-start" : ""), (($recordInfo["textRight"]) ? "text-end" : "") ]));
 
         $style = "";      if ($recordInfo["style"])       $style = " style=\"{$recordInfo["style"]}\"";
         $divStyle = "";   if ($recordInfo["divStyle"])    $divStyle = " style=\"{$recordInfo["divStyle"]}\"";
@@ -1228,7 +1306,6 @@ class DataTable extends L
             case "number" :
             case "email" :
             case "url" :
-            case "datetime" :
             case "date" :
             case "time" :
             case "month" :
@@ -1239,6 +1316,16 @@ class DataTable extends L
                                 <div class="{$divClass}"{$divStyle}>
                                     <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}{$requiredStar}:</label>
                                     <input type="{$type}" class="form-control form-control-sm{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$defaultValue}{$readonly}{$custom}>
+                                    {$comment}
+                                </div>\n
+                EOD;
+                break;
+            case "datetime" :
+                if ($recordInfo["defaultValue"]) $defaultValue = " value=\"" . htmlspecialchars($recordInfo["defaultValue"]) . "\"";
+                return <<<EOD
+                                <div class="{$divClass}"{$divStyle}>
+                                    <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}{$requiredStar}:</label>
+                                    <input type="datetime-local" class="form-control form-control-sm{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$defaultValue}{$readonly}{$custom}>
                                     {$comment}
                                 </div>\n
                 EOD;
@@ -1497,8 +1584,11 @@ class DataTable extends L
         // custom search
         if ($this->customSearch) {
             foreach($this->customSearch as $alias => $info) {
-                if (!isset($this->columns[$alias])) continue;
                 $val = $param->get("sf_search_{$alias}", null);
+                if ($info["callback"] !== null) call_user_func($info["callback"], $val);
+
+                if (!isset($this->columns[$alias]) || !$this->columns[$alias]) continue;
+                if (!isset($this->columns[$alias]["realColumn"]) || !$this->columns[$alias]["realColumn"]) continue;
                 if($val !== null) {
                     switch($info["type"]) {
                         case "select" :
@@ -1520,6 +1610,9 @@ class DataTable extends L
                                 $val = substr($val, 0, 16) . " - " . $valEnd;
                             }
                             break;
+                        //case "hidden" :
+                        //    call_user_func($info["callback"], $val);
+                        //    break;
                     }
                 }
             }
@@ -1528,7 +1621,6 @@ class DataTable extends L
         $proc = true;
     }
 
-    /*
     public function searchCount()
     {
         $this->procSearching();
@@ -1544,7 +1636,6 @@ class DataTable extends L
 
         return intval($db->fetch($rs)["cnt"] ?? 0);
     }
-    */
 
     public function listData()
     {
@@ -1600,7 +1691,7 @@ class DataTable extends L
         $res = Response::getInstance();
         $res->draw              = $this->ajaxParam()->draw;
         $res->recordsTotal      = $this->recordCount();
-        $res->recordsFiltered   = count($this->listData());
+        $res->recordsFiltered   = $this->searchCount();
         $res->data              = $this->listData();
     }
 
