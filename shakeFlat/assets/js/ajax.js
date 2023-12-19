@@ -1,9 +1,42 @@
-function callAjax(fnc, postdata, successCallback, errorCallback, _this)
+function callAjax(url, frm, successCallback, errorCallback, _this)
 {
-    $.ajax({
-        url: fnc,
+    var frmObj = null;
+    var frmData = new FormData();
+    var includeFiles = false;
+
+    //console.log(typeof frm, frm.constructor.name);
+    if (typeof frm == "string") frmObj = $("#" + frm);
+    else if (typeof frm == "object" && frm.constructor.name == "ce") frmObj = frm;
+    else if (typeof frm == "object" && frm.constructor.name == "Object") {
+        //console.log("Object");
+        $.each(frm, function(k, v) {
+            if (typeof v == "object" && v.constructor.name == "File") {
+                frmData.append(k, $("#"+k)[0].files[0]);
+                includeFiles = true;
+            } else {
+                frmData.append(k, v);
+            }
+        });
+        //for (var pair of frmData.entries()) { console.log(pair[0]+ ', ' + pair[1]); }
+    }
+    if (frmObj) {
+        //console.log("frmObj");
+        $(frmObj.find('input,textarea,select')).each(function() {
+            //console.log($(this).attr("type"), $(this).attr("name"), $(this).val());
+            if ($(this).attr("type") == "file") {
+                frmData.append($(this).attr("name"), $("input[name="+$(this).attr("name")+"]")[0].files[0]);
+                includeFiles = true;
+            } else {
+                //console.log("frm.append : ", $(this).attr("name"), $(this).val());
+                frmData.append($(this).attr("name"), $(this).val());
+            }
+        });
+    }
+
+    var opt = {
+        url: url,
         method: "POST",
-        data: postdata,
+        data: frmData,
         xhrFields: { withCredentials: true },
         statusCode: {
             404: function() {
@@ -14,8 +47,14 @@ function callAjax(fnc, postdata, successCallback, errorCallback, _this)
                 alert('서버가 응답이 없습니다. (500)');
                 return false;
             }
-        }
-    }).done(function(result, textStatus, jqXHR) {
+        },
+        processData: false,
+        contentType: false,
+    };
+
+    //console.log(typeof frmData, opt);return;
+
+    $.ajax(opt).done(function(result, textStatus, jqXHR) {
         if (!result || result.constructor != Object || !("data" in result) || !("error" in result) || !("errCode" in result.error)) {
             console.log(result);
             //console.log(textStatus);
@@ -27,7 +66,9 @@ function callAjax(fnc, postdata, successCallback, errorCallback, _this)
                 case 0 :
                     return successCallback(result, _this);
                 case -9999 :
-                    alertJump('로그인이 필요합니다.', '/auth/login');
+                    msg = result.error.errMsg;
+                    if (!msg) msg = "로그인이 필요합니다.";
+                    alertJump(msg, '/auth/login');
                     return false;
                 default :
                     if (errorCallback) {
