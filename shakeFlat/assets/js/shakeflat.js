@@ -252,3 +252,53 @@ function sort_object(obj) {
     })
     return(sorted_obj)
 }
+
+function checkValidityForm(frmId)
+{
+    var pwList = [];
+    $("#"+frmId).find("input[type=password]").each(function() {
+        pwList.push($(this).attr("id"));
+    });
+    if (pwList.length > 0) {
+        pwList.forEach(function(o) {
+            if (o.substr(-8) == "_confirm") {
+                var str = o.slice(0, -8);
+                if (pwList.includes(str)) {
+                    if ($("#"+str).val() != $("#"+o).val()) {
+                        $("#"+o)[0].setCustomValidity("비밀번호가 일치하지 않습니다.");
+                        $("#"+frmId)[0].reportValidity();
+                        return false;
+                    } else {
+                        $("#"+o)[0].setCustomValidity("");
+                        $("#"+frmId)[0].reportValidity();
+                    }
+                }
+            }
+        });
+    }
+
+    if (!$("#"+frmId)[0].checkValidity()) {
+        $("#"+frmId)[0].reportValidity();
+        return false;
+    }
+
+    return true;
+}
+
+// now : Date()
+function getFormattedDate(now) {
+    const year = now.getFullYear();
+    const month = padZero(now.getMonth() + 1); // 월은 0부터 시작하므로 1을 더합니다.
+    const day = padZero(now.getDate());
+    const hours = padZero(now.getHours());
+    const minutes = padZero(now.getMinutes());
+    const seconds = padZero(now.getSeconds());
+
+    const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    return formattedDate;
+}
+
+// 숫자가 한 자리일 경우 앞에 0을 붙이는 함수
+function padZero(number) {
+    return number < 10 ? '0' + number : number;
+}
