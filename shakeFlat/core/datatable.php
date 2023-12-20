@@ -54,12 +54,12 @@ class DataTable extends L
     private $ajaxUrl                    = "";
     private $tableClass                 = "table table-sm table-hover";
     private $connectionName             = "default";
-    private $mainDBTable                = "";
-    private $mainDBTablePK              = "";
-    private $joinDBTable                = array();
+    private $mainTable                  = "";
+    private $mainTablePK                = "";
+    private $joinTable                  = array();
     private $andConditions              = array();
     private $orConditions               = array();
-    private $searchJoinDBTable          = array();
+    private $searchJoinTable            = array();
     private $searchAndConditions        = array();
     private $searchOrConditions         = array();
     private $groupBy                    = array();
@@ -148,10 +148,10 @@ class DataTable extends L
         $this->tableClass = $tableClass;
     }
 
-    protected function setDBMainTable($mainDBTable, $pkColumn, $connectionName = "default")
+    protected function setMainTable($mainTable, $pkColumn, $connectionName = "default")
     {
-        $this->mainDBTable = $mainDBTable;
-        $this->mainDBTablePK = $pkColumn;
+        $this->mainTable = $mainTable;
+        $this->mainTablePK = $pkColumn;
         $this->connectionName = $connectionName;
     }
 
@@ -160,7 +160,7 @@ class DataTable extends L
         if (isset($config["ajaxUrl"]))                  $this->ajaxUrl                  = $config["ajaxUrl"];
         if (isset($config["tableClass"]))               $this->tableClass               = $config["tableClass"];
         if (isset($config["connectionName"]))           $this->connectionName           = $config["connectionName"];
-        if (isset($config["mainDBTable"]))              $this->mainDBTable              = $config["mainDBTable"];
+        if (isset($config["mainTable"]))                $this->mainTable                = $config["mainTable"];
         if (isset($config["columns"]))                  $this->columns                  = $config["columns"];
         if (isset($config["defaultOrder"]))             $this->defaultOrder[]           = $config["defaultOrder"];
         if (isset($config["defaultOrderDirection"]))    $this->defaultOrderDirection[]  = $config["defaultOrderDirection"];
@@ -542,18 +542,13 @@ class DataTable extends L
         $this->connectionName = $connectionName;
     }
 
-    protected function setMainDBTable($tableName)
-    {
-        $this->mainDBTable = $tableName;
-    }
-
     // set left join table infomations.
     // $joinCondition : Conditions added to the ON condition
     // ex) If you need to perform a query like the one below, the statement corresponding to the [] part
     // ... left join tblSecond on tblSecond.key = tblMain.key [and tblSecond.duedate = '2022-01-01']
-    protected function setJoinDBTable($tableName, $joinColumn, $matchColumn, $tableAlias = null, $joinCondition = null, $joinConditionBind = null)
+    protected function setJoinTable($tableName, $joinColumn, $matchColumn, $tableAlias = null, $joinCondition = null, $joinConditionBind = null)
     {
-        $this->joinDBTable[] = array (
+        $this->joinTable[] = array (
             "tableName"         => $tableName,
             "tableAlias"        => $tableAlias,
             "joinColumn"        => $joinColumn,
@@ -588,9 +583,9 @@ class DataTable extends L
         $this->groupBy[] = $queryGroupBy;
     }
 
-    public function setSearchJoinDBTable($tableName, $joinColumn, $matchColumn, $joinCondition = null, $joinConditionBind = null)
+    public function setsearchJoinTable($tableName, $joinColumn, $matchColumn, $joinCondition = null, $joinConditionBind = null)
     {
-        $this->searchJoinDBTable[] = array (
+        $this->searchJoinTable[] = array (
             "tableName"         => $tableName,
             "joinColumn"        => $joinColumn,
             "matchColumn"       => $matchColumn,
@@ -714,7 +709,7 @@ class DataTable extends L
     {
         if (!$this->ajaxUrl) self::system("DataTable setting value is missing: ajaxURL");
         if (!$this->columns) self::system("DataTable setting value is missing: listing");
-        if (!$this->mainDBTable) self::system("DataTable setting value is missing: mainDBTable");
+        if (!$this->mainTable) self::system("DataTable setting value is missing: mainTable");
     }
 
     private function build()
@@ -765,11 +760,11 @@ class DataTable extends L
                 } else {
                     $rfnc = array();
                     if($attr["isDetailInfoBtn"]) {
-                        $rfnc[] = "<button data-pk='\"+row['{$this->mainDBTablePK}']+\"' class=\'btn btn-xs btn-detail btn-{$this->setName}-detailinfo\'>상세보기</button>";
+                        $rfnc[] = "<button data-pk='\"+row['{$this->mainTablePK}']+\"' class=\'btn btn-xs btn-detail btn-{$this->setName}-detailinfo\'>상세보기</button>";
                         $this->setScriptDetailInfo();
                     }
                     if ($attr["isModifyBtn"]) {
-                        $rfnc[] = "<button data-pk='\"+row['{$this->mainDBTablePK}']+\"' class=\'btn btn-xs btn-modify btn-{$this->setName}-modify\'>수정</button>";
+                        $rfnc[] = "<button data-pk='\"+row['{$this->mainTablePK}']+\"' class=\'btn btn-xs btn-modify btn-{$this->setName}-modify\'>수정</button>";
                         $this->setScriptModify();
                     }
                     $render = "render: function(data, type, row) { return \"" . implode(" &nbsp;", $rfnc) . "\" }";
@@ -1507,10 +1502,10 @@ class DataTable extends L
     private function joinSQL($isSearch = 0)
     {
         $joinSQL = "";
-        if ($this->joinDBTable) {
-            foreach($this->joinDBTable as $ji) {
+        if ($this->joinTable) {
+            foreach($this->joinTable as $ji) {
                 $mc = $ji["matchColumn"];
-                if (strpos($mc, ".") === false) $mc = "{$this->mainDBTable}.{$mc}";
+                if (strpos($mc, ".") === false) $mc = "{$this->mainTable}.{$mc}";
 
                 if ($ji["tableAlias"]) {
                     $joinSQL .= "left join {$ji["tableName"]} as {$ji["tableAlias"]} on {$ji["tableAlias"]}.{$ji["joinColumn"]} = {$mc}";
@@ -1521,10 +1516,10 @@ class DataTable extends L
                 $joinSQL .= "\n";
             }
         }
-        if ($isSearch && $this->searchJoinDBTable) {
-            foreach($this->searchJoinDBTable as $ji) {
+        if ($isSearch && $this->searchJoinTable) {
+            foreach($this->searchJoinTable as $ji) {
                 $mc = $ji["matchColumn"];
-                if (strpos($mc, ".") === false) $mc = "{$this->mainDBTable}.{$mc}";
+                if (strpos($mc, ".") === false) $mc = "{$this->mainTable}.{$mc}";
                 $joinSQL .= "left join {$ji["tableName"]} on {$ji["tableName"]}.{$ji["joinColumn"]} = {$mc}";
                 if ($ji["joinCondition"]) $joinSQL .= " " . $ji["joinCondition"];
                 $joinSQL .= "\n";
@@ -1560,7 +1555,7 @@ class DataTable extends L
         $db = DB::getInstance($this->connectionName);
         $rs = $db->query("
             select count(*) as cnt
-            from {$this->mainDBTable}
+            from {$this->mainTable}
             " . $this->joinSQL() . "
             " . $this->whereSQL() . "
         ", $this->bind);
@@ -1624,12 +1619,12 @@ class DataTable extends L
     public function searchCount()
     {
         $this->procSearching();
-        if (!$this->searchJoinDBTable && !$this->searchAndConditions && !$this->searchOrConditions) return $this->recordCount();
+        if (!$this->searchJoinTable && !$this->searchAndConditions && !$this->searchOrConditions) return $this->recordCount();
 
         $db = DB::getInstance($this->connectionName);
         $rs = $db->query("
             select count(*) as cnt
-            from {$this->mainDBTable}
+            from {$this->mainTable}
             " . $this->joinSQL(1) . "
             " . $this->whereSQL(1) . "
         ", $this->bind);
@@ -1671,7 +1666,7 @@ class DataTable extends L
         $rs = $db->query("
             select
             {$columns}
-            from {$this->mainDBTable}
+            from {$this->mainTable}
             " . $this->joinSQL(1) . "
             " . $this->whereSQL(1) . "
             " . $this->groupbySQL() . "
@@ -1714,9 +1709,9 @@ class DataTable extends L
         $rs = $db->query("
             select
             {$columns}
-            from {$this->mainDBTable}
+            from {$this->mainTable}
             " . $this->joinSQL(1) . "
-            {$where} {$this->mainDBTable}.{$this->mainDBTablePK} = :pk
+            {$where} {$this->mainTable}.{$this->mainTablePK} = :pk
         ", $this->bind);
         $data = $db->fetch($rs);
         return $data;
@@ -1748,9 +1743,9 @@ class DataTable extends L
         $rs = $db->query("
             select
             {$columns}
-            from {$this->mainDBTable}
+            from {$this->mainTable}
             " . $this->joinSQL(1) . "
-            {$where} {$this->mainDBTable}.{$this->mainDBTablePK} = :pk
+            {$where} {$this->mainTable}.{$this->mainTablePK} = :pk
         ", $this->bind);
         $data = $db->fetch($rs);
         return $data;
