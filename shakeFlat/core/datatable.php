@@ -81,6 +81,11 @@ class DataTable extends L
     private $excelButtonText            = "Excel";
     private $excelButtonClassName       = "btn btn-sm btn-secondary";
 
+    private $extraButton                = false;
+    private $extraButtonText            = "Extra";
+    private $extraButtonClassName       = "btn btn-sm btn-secondary";
+    private $extraButtonAction          = "";
+
     private $columns                    = array();
     private $listing                    = array();      // Column list of list screen
 
@@ -356,7 +361,7 @@ class DataTable extends L
             foreach($attrList as $alias => $attr) {
                 $attr = $this->constToAttr($attr);
                 foreach($attr as $key => $data) {
-                    if (!isset($this->columns[$alias][$key])) self::system("This is an unknown attribute: " . $key);
+                    if (!isset($this->columns[$alias][$key])) self::system("This is an unknown attribute: {$alias}({$key})");
                     $this->listing[$alias][$key] = $data;
                 }
             }
@@ -367,6 +372,14 @@ class DataTable extends L
     public function setExcelDisable()
     {
         $this->excelEnable = false;
+    }
+
+    public function setExtraButton($text, $action, $className = "btn btn-sm btn-secondary")
+    {
+        $this->extraButton = true;
+        $this->extraButtonText = $text;
+        $this->extraButtonAction = $action;
+        $this->extraButtonClassName = $className;
     }
 
     public function setSearchDisable()
@@ -856,8 +869,13 @@ class DataTable extends L
             $buttons[] = "{ extend: 'excelHtml5', titleAttr: 'Excel', {$excelFileName}{$excelButtonText}{$excelButtonClassName}action: newexportaction, exportOptions: { columns: {$excelColumns} } }";
         }
         if ($this->newRecord) {
-            $buttons[] = "{ title: 'New', text: '{$this->newRecordModalTitle}', action: sf_open_add_form_{$this->setName}, {$excelButtonClassName} },";
+            $buttons[] = "{ title: 'New', text: '{$this->newRecordModalTitle}', action: sf_open_add_form_{$this->setName}, {$excelButtonClassName} }";
             $this->setScriptNewRecord();
+        }
+        if ($this->extraButton) {
+            $extraOptions = "";
+            if ($this->extraButtonClassName) $extraOptions .= "className:'{$this->extraButtonClassName}',";
+            $buttons[] = "{ title: '{$this->extraButtonText}', text:'{$this->extraButtonText}', action:{$this->extraButtonAction}, {$extraOptions} }";
         }
         $buttonsStr = implode(",", $buttons);
 
