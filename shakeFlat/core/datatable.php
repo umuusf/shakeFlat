@@ -54,12 +54,12 @@ class DataTable extends L
     private $ajaxUrl                    = "";
     private $tableClass                 = "table table-sm table-hover";
     private $connectionName             = "default";
-    private $mainTable                  = "";
-    private $mainTablePK                = "";
-    private $joinTable                  = array();
+    private $mainDBTable                = "";
+    private $mainDBTablePK              = "";
+    private $joinDBTable                = array();
     private $andConditions              = array();
     private $orConditions               = array();
-    private $searchJoinTable            = array();
+    private $searchJoinDBTable          = array();
     private $searchAndConditions        = array();
     private $searchOrConditions         = array();
     private $groupBy                    = array();
@@ -80,11 +80,6 @@ class DataTable extends L
     private $excelFileName              = "";
     private $excelButtonText            = "Excel";
     private $excelButtonClassName       = "btn btn-sm btn-secondary";
-
-    private $extraButton                = false;
-    private $extraButtonText            = "Extra";
-    private $extraButtonClassName       = "btn btn-sm btn-secondary";
-    private $extraButtonAction          = "";
 
     private $columns                    = array();
     private $listing                    = array();      // Column list of list screen
@@ -153,10 +148,10 @@ class DataTable extends L
         $this->tableClass = $tableClass;
     }
 
-    protected function setMainTable($mainTable, $pkColumn, $connectionName = "default")
+    protected function setDBMainTable($mainDBTable, $pkColumn, $connectionName = "default")
     {
-        $this->mainTable = $mainTable;
-        $this->mainTablePK = $pkColumn;
+        $this->mainDBTable = $mainDBTable;
+        $this->mainDBTablePK = $pkColumn;
         $this->connectionName = $connectionName;
     }
 
@@ -165,7 +160,7 @@ class DataTable extends L
         if (isset($config["ajaxUrl"]))                  $this->ajaxUrl                  = $config["ajaxUrl"];
         if (isset($config["tableClass"]))               $this->tableClass               = $config["tableClass"];
         if (isset($config["connectionName"]))           $this->connectionName           = $config["connectionName"];
-        if (isset($config["mainTable"]))                $this->mainTable                = $config["mainTable"];
+        if (isset($config["mainDBTable"]))              $this->mainDBTable              = $config["mainDBTable"];
         if (isset($config["columns"]))                  $this->columns                  = $config["columns"];
         if (isset($config["defaultOrder"]))             $this->defaultOrder[]           = $config["defaultOrder"];
         if (isset($config["defaultOrderDirection"]))    $this->defaultOrderDirection[]  = $config["defaultOrderDirection"];
@@ -361,7 +356,7 @@ class DataTable extends L
             foreach($attrList as $alias => $attr) {
                 $attr = $this->constToAttr($attr);
                 foreach($attr as $key => $data) {
-                    if (!isset($this->columns[$alias][$key])) self::system("This is an unknown attribute: {$alias}({$key})");
+                    if (!isset($this->columns[$alias][$key])) self::system("This is an unknown attribute: " . $key);
                     $this->listing[$alias][$key] = $data;
                 }
             }
@@ -372,14 +367,6 @@ class DataTable extends L
     public function setExcelDisable()
     {
         $this->excelEnable = false;
-    }
-
-    public function setExtraButton($text, $action, $className = "btn btn-sm btn-secondary")
-    {
-        $this->extraButton = true;
-        $this->extraButtonText = $text;
-        $this->extraButtonAction = $action;
-        $this->extraButtonClassName = $className;
     }
 
     public function setSearchDisable()
@@ -555,13 +542,18 @@ class DataTable extends L
         $this->connectionName = $connectionName;
     }
 
+    protected function setMainDBTable($tableName)
+    {
+        $this->mainDBTable = $tableName;
+    }
+
     // set left join table infomations.
     // $joinCondition : Conditions added to the ON condition
     // ex) If you need to perform a query like the one below, the statement corresponding to the [] part
     // ... left join tblSecond on tblSecond.key = tblMain.key [and tblSecond.duedate = '2022-01-01']
-    protected function setJoinTable($tableName, $joinColumn, $matchColumn, $tableAlias = null, $joinCondition = null, $joinConditionBind = null)
+    protected function setJoinDBTable($tableName, $joinColumn, $matchColumn, $tableAlias = null, $joinCondition = null, $joinConditionBind = null)
     {
-        $this->joinTable[] = array (
+        $this->joinDBTable[] = array (
             "tableName"         => $tableName,
             "tableAlias"        => $tableAlias,
             "joinColumn"        => $joinColumn,
@@ -596,9 +588,9 @@ class DataTable extends L
         $this->groupBy[] = $queryGroupBy;
     }
 
-    public function setsearchJoinTable($tableName, $joinColumn, $matchColumn, $joinCondition = null, $joinConditionBind = null)
+    public function setSearchJoinDBTable($tableName, $joinColumn, $matchColumn, $joinCondition = null, $joinConditionBind = null)
     {
-        $this->searchJoinTable[] = array (
+        $this->searchJoinDBTable[] = array (
             "tableName"         => $tableName,
             "joinColumn"        => $joinColumn,
             "matchColumn"       => $matchColumn,
@@ -722,7 +714,7 @@ class DataTable extends L
     {
         if (!$this->ajaxUrl) self::system("DataTable setting value is missing: ajaxURL");
         if (!$this->columns) self::system("DataTable setting value is missing: listing");
-        if (!$this->mainTable) self::system("DataTable setting value is missing: mainTable");
+        if (!$this->mainDBTable) self::system("DataTable setting value is missing: mainDBTable");
     }
 
     private function build()
@@ -749,7 +741,7 @@ class DataTable extends L
         $columnsList = array();
         $excelColumnsList = array();
         $idx = 0;
-
+        $invisibleColumnsList = array();
         foreach($this->listing as $alias => $attr) {
             $searchable = "searchable: false, ";
             $orderable  = "orderable: false, ";
@@ -758,7 +750,9 @@ class DataTable extends L
             $className  = "";
             $render     = "";
             $visible    = "";
-            if ($attr["invisible"]) $visible = "visible: false, ";
+            //if ($attr["invisible"]) $visible = "visible: false, ";
+            if ($attr["invisible"]) $invisibleColumnsList[] = $idx;
+
 
             if (!$attr["isModifyBtn"] && !$attr["isDetailInfoBtn"]) {
                 if ($attr["realColumn"]) $data = "data: \"{$alias}\", ";
@@ -773,11 +767,11 @@ class DataTable extends L
                 } else {
                     $rfnc = array();
                     if($attr["isDetailInfoBtn"]) {
-                        $rfnc[] = "<button data-pk='\"+row['{$this->mainTablePK}']+\"' class=\'btn btn-xs btn-detail btn-{$this->setName}-detailinfo\'>상세보기</button>";
+                        $rfnc[] = "<button data-pk='\"+row['{$this->mainDBTablePK}']+\"' class=\'btn btn-xs btn-detail btn-{$this->setName}-detailinfo\'>상세보기</button>";
                         $this->setScriptDetailInfo();
                     }
                     if ($attr["isModifyBtn"]) {
-                        $rfnc[] = "<button data-pk='\"+row['{$this->mainTablePK}']+\"' class=\'btn btn-xs btn-modify btn-{$this->setName}-modify\'>수정</button>";
+                        $rfnc[] = "<button data-pk='\"+row['{$this->mainDBTablePK}']+\"' class=\'btn btn-xs btn-modify btn-{$this->setName}-modify\'>수정</button>";
                         $this->setScriptModify();
                     }
                     $render = "render: function(data, type, row) { return \"" . implode(" &nbsp;", $rfnc) . "\" }";
@@ -805,7 +799,7 @@ class DataTable extends L
             if ($attr["className"]) $className = "className: \"{$attr["className"]}\", ";
 
             $columnsList[] = "{ name: \"{$alias}\", type: \"html\", {$data}{$label}{$searchable}{$orderable}{$className}{$visible}{$render}}";
-            if ($attr["realColumn"]) $excelColumnsList[] = $idx;
+            if ($attr["realColumn"] && !$attr["invisible"]) $excelColumnsList[] = $idx;
 
             $idx++;
         }
@@ -869,13 +863,8 @@ class DataTable extends L
             $buttons[] = "{ extend: 'excelHtml5', titleAttr: 'Excel', {$excelFileName}{$excelButtonText}{$excelButtonClassName}action: newexportaction, exportOptions: { columns: {$excelColumns} } }";
         }
         if ($this->newRecord) {
-            $buttons[] = "{ title: 'New', text: '{$this->newRecordModalTitle}', action: sf_open_add_form_{$this->setName}, {$excelButtonClassName} }";
+            $buttons[] = "{ title: 'New', text: '{$this->newRecordModalTitle}', action: sf_open_add_form_{$this->setName}, {$excelButtonClassName} },";
             $this->setScriptNewRecord();
-        }
-        if ($this->extraButton) {
-            $extraOptions = "";
-            if ($this->extraButtonClassName) $extraOptions .= "className:'{$this->extraButtonClassName}',";
-            $buttons[] = "{ title: '{$this->extraButtonText}', text:'{$this->extraButtonText}', action:{$this->extraButtonAction}, {$extraOptions} }";
         }
         $buttonsStr = implode(",", $buttons);
 
@@ -885,6 +874,9 @@ class DataTable extends L
                 $deliverParameters .= "data.{$k} = '{$v}';\n\t\t\t\t";
             }
         }
+
+        $customInvisible = "";
+        if ($invisibleColumnsList) $customInvisible = $this->jsTableName.".columns([".implode(",", $invisibleColumnsList)."]).visible(false);";
 
         $this->javaScript[] = <<<EOD
             // This is the code generated through the DataTable class.
@@ -952,7 +944,9 @@ class DataTable extends L
                     {$customSearchSelect2}
                     {$customSearchDateRange}
                 }
+                {$customInvisible}
             }
+
             EOD;
 
         $this->javaScriptReady[] = <<<EOD
@@ -1520,10 +1514,10 @@ class DataTable extends L
     private function joinSQL($isSearch = 0)
     {
         $joinSQL = "";
-        if ($this->joinTable) {
-            foreach($this->joinTable as $ji) {
+        if ($this->joinDBTable) {
+            foreach($this->joinDBTable as $ji) {
                 $mc = $ji["matchColumn"];
-                if (strpos($mc, ".") === false) $mc = "{$this->mainTable}.{$mc}";
+                if (strpos($mc, ".") === false) $mc = "{$this->mainDBTable}.{$mc}";
 
                 if ($ji["tableAlias"]) {
                     $joinSQL .= "left join {$ji["tableName"]} as {$ji["tableAlias"]} on {$ji["tableAlias"]}.{$ji["joinColumn"]} = {$mc}";
@@ -1534,10 +1528,10 @@ class DataTable extends L
                 $joinSQL .= "\n";
             }
         }
-        if ($isSearch && $this->searchJoinTable) {
-            foreach($this->searchJoinTable as $ji) {
+        if ($isSearch && $this->searchJoinDBTable) {
+            foreach($this->searchJoinDBTable as $ji) {
                 $mc = $ji["matchColumn"];
-                if (strpos($mc, ".") === false) $mc = "{$this->mainTable}.{$mc}";
+                if (strpos($mc, ".") === false) $mc = "{$this->mainDBTable}.{$mc}";
                 $joinSQL .= "left join {$ji["tableName"]} on {$ji["tableName"]}.{$ji["joinColumn"]} = {$mc}";
                 if ($ji["joinCondition"]) $joinSQL .= " " . $ji["joinCondition"];
                 $joinSQL .= "\n";
@@ -1573,7 +1567,7 @@ class DataTable extends L
         $db = DB::getInstance($this->connectionName);
         $rs = $db->query("
             select count(*) as cnt
-            from {$this->mainTable}
+            from {$this->mainDBTable}
             " . $this->joinSQL() . "
             " . $this->whereSQL() . "
         ", $this->bind);
@@ -1637,12 +1631,12 @@ class DataTable extends L
     public function searchCount()
     {
         $this->procSearching();
-        if (!$this->searchJoinTable && !$this->searchAndConditions && !$this->searchOrConditions) return $this->recordCount();
+        if (!$this->searchJoinDBTable && !$this->searchAndConditions && !$this->searchOrConditions) return $this->recordCount();
 
         $db = DB::getInstance($this->connectionName);
         $rs = $db->query("
             select count(*) as cnt
-            from {$this->mainTable}
+            from {$this->mainDBTable}
             " . $this->joinSQL(1) . "
             " . $this->whereSQL(1) . "
         ", $this->bind);
@@ -1684,7 +1678,7 @@ class DataTable extends L
         $rs = $db->query("
             select
             {$columns}
-            from {$this->mainTable}
+            from {$this->mainDBTable}
             " . $this->joinSQL(1) . "
             " . $this->whereSQL(1) . "
             " . $this->groupbySQL() . "
@@ -1727,9 +1721,9 @@ class DataTable extends L
         $rs = $db->query("
             select
             {$columns}
-            from {$this->mainTable}
+            from {$this->mainDBTable}
             " . $this->joinSQL(1) . "
-            {$where} {$this->mainTable}.{$this->mainTablePK} = :pk
+            {$where} {$this->mainDBTable}.{$this->mainDBTablePK} = :pk
         ", $this->bind);
         $data = $db->fetch($rs);
         return $data;
@@ -1761,9 +1755,9 @@ class DataTable extends L
         $rs = $db->query("
             select
             {$columns}
-            from {$this->mainTable}
+            from {$this->mainDBTable}
             " . $this->joinSQL(1) . "
-            {$where} {$this->mainTable}.{$this->mainTablePK} = :pk
+            {$where} {$this->mainDBTable}.{$this->mainDBTablePK} = :pk
         ", $this->bind);
         $data = $db->fetch($rs);
         return $data;
