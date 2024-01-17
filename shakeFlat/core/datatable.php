@@ -943,8 +943,8 @@ class DataTable extends L
                     {$customSearch}
                     {$customSearchSelect2}
                     {$customSearchDateRange}
+                    {$customInvisible}
                 }
-                {$customInvisible}
             }
 
             EOD;
