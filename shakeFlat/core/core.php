@@ -33,7 +33,6 @@ class App extends L
     {
         $router = Router::getInstance();
         $router->setWelcomePage($module, $fnc);
-        $this->template->setCustomTemplateFile("{$module}/{$fnc}");
         return $this;
     }
 
