@@ -64,8 +64,8 @@ class DataTable extends L
     private $searchOrConditions         = array();
     private $groupBy                    = array();
 
-    private $defaultOrder               = [];
-    private $defaultOrderDirection      = [];
+    private $defaultOrder               = array();
+    private $defaultOrderDirection      = array();
     private $customSearch               = array();
     private $paging                     = true;
     private $searching                  = true;
@@ -74,12 +74,14 @@ class DataTable extends L
     private $stateSave                  = true;
     private $createdRow                 = "";
     private $drawCallBack               = "";
-    private $dom                        = "<'row justify-content-between'<'col-auto'B><'col-auto'<'row'<'col-auto'<'sf-custom-search'>><'col-auto'f>>>><'row'<'col-12'tr>><'row justify-content-between'<'col-auto'i><'col-auto'<'row'<'col-auto'l><'col-auto'p>>>>";
+    private $dom                        = "<'row justify-content-between'<'col-auto'B><'col-auto'<'row'<'col-auto'<'sf-custom-search'>><'col-auto'f>>>><'row'<'col-12'tr>><'row justify-content-between'<'col-auto'i><'col-auto'<'row sf-page-row'<'col-auto'l><'col-auto'<'sf-page-input'>><'col-auto'p>>>>";
 
     private $excelEnable                = true;
     private $excelFileName              = "";
     private $excelButtonText            = "Excel";
     private $excelButtonClassName       = "btn btn-sm btn-secondary";
+
+    private $extraButtons               = array();
 
     private $columns                    = array();
     private $listing                    = array();      // Column list of list screen
@@ -179,17 +181,14 @@ class DataTable extends L
     {
         $this->columns = array();
         foreach($columns as $alias => $attr) {
-            $attr = $this->constToAttr($attr);
+            $this->setColumn($alias, $attr);
+        }
+    }
 
-            // realColumn :
-            //   If omitted, it is replaced with the alias value.
-            //   If you want to output only the contents of render, set it to blank("") or null.
-            $realColumn = null;
-            if (!($attr["isModifyBtn"] ?? false) && !($attr["isDetailInfoBtn"] ?? false)) {
-                if (!array_key_exists("realColumn", $attr)) $realColumn = $alias;
-                elseif ($attr["realColumn"] !== null) $realColumn = $attr["realColumn"];
-            }
-
+    // Update/add one column(field) defined in the list.
+    public function setColumn($alias, $attr)
+    {
+        if (!isset($this->columns[$alias])) {
             $this->columns[$alias] = array(
                 "label"             => $attr["label"] ?? "",
                 "divClassName"      => $attr["divClassName"] ?? "",
@@ -202,7 +201,7 @@ class DataTable extends L
                 "displayEnum"       => $attr["displayEnum"] ?? [],
                 "rendering"         => $attr["rendering"] ?? "",
 
-                "realColumn"        => $realColumn,
+                "realColumn"        => null,
 
                 "isDetailInfoBtn"   => $attr["isDetailInfoBtn"] ?? false,
                 "isModifyBtn"       => $attr["isModifyBtn"] ?? false,
@@ -228,50 +227,6 @@ class DataTable extends L
                 "custom"            => $attr["custom"] ?? "",
             );
         }
-    }
-
-    // Update/add one column(field) defined in the list.
-    public function setColumn($alias, $attr)
-    {
-        if (!isset($this->columns[$alias])) {
-            $this->columns[$alias] = array(
-                "label"             => "",
-                "divClassName"      => "",
-                "className"         => "",
-
-                "labelStyle"        => "",
-                "divStyle"          => "",
-                "style"             => "",
-
-                "displayEnum"       => [],
-                "rendering"         => "",
-
-                "realColumn"        => null,
-
-                "isDetailInfoBtn"   => false,
-                "isModifyBtn"       => false,
-                "searchable"        => false,
-                "orderable"         => false,
-                "invisible"         => false,
-
-                "required"          => false,
-                "readonly"          => false,
-                "notfill"           => false,
-
-                "type"              => "text",
-                "optionList"        => [],
-                "placeholder"       => "",
-                "defaultValue"      => "",
-                "comment"           => "",
-
-                "textCenter"        => false,
-                "textLeft"          => false,
-                "textRight"         => false,
-                "textAmount"        => false,
-
-                "custom"            => $attr["custom"] ?? "",
-            );
-        }
 
         $attr = $this->constToAttr($attr);
 
@@ -291,6 +246,9 @@ class DataTable extends L
                     break;
 
                 case "realColumn" :
+                    // realColumn :
+                    //   If omitted, it is replaced with the alias value.
+                    //   If you want to output only the contents of render, set it to blank("") or null.
                     $realColumn = null;
                     if (!($attr["isModifyBtn"] ?? false) && !($attr["isDetailInfoBtn"] ?? false)) {
                         if (!array_key_exists("realColumn", $attr)) $realColumn = $alias;
@@ -343,7 +301,7 @@ class DataTable extends L
     }
 
     // Defines the column list and order of the list screen
-    public function setListing($layout, $attrList = null)
+    public function setListing($layout, $aliasList = null)
     {
         if (!is_array($layout)) self::system("layout is not defined.");
         $this->listing = array();
@@ -352,15 +310,69 @@ class DataTable extends L
             $this->listing[$alias] = $this->columns[$alias];
         }
 
-        if ($attrList && is_array($attrList)) {
-            foreach($attrList as $alias => $attr) {
-                $attr = $this->constToAttr($attr);
-                foreach($attr as $key => $data) {
+        if ($aliasList && is_array($aliasList)) {
+            foreach($aliasList as $alias => $attrList) {
+                $attrList = $this->constToAttr($attrList);
+                foreach($attrList as $key => $data) {
                     if (!isset($this->columns[$alias][$key])) self::system("This is an unknown attribute: " . $key);
                     $this->listing[$alias][$key] = $data;
                 }
             }
         }
+    }
+
+    public function setAttribute($aliasList, $attrName, $attrVal)
+    {
+        if (!is_array($aliasList)) $aliasList = [ $aliasList ];
+        foreach($aliasList as $alias) {
+            $this->columns[$alias][$attrName] = $attrVal;
+            if (isset($this->listing[$alias])) $this->listing[$alias][$attrName] = $attrVal;
+        }
+    }
+
+    public function setAttrSearchable($aliasList)
+    {
+        $this->setAttribute($aliasList, "searchable", true);
+    }
+
+    public function setAttrOrderable($aliasList)
+    {
+        $this->setAttribute($aliasList, "orderable", true);
+    }
+
+    public function setAttrInvisible($aliasList)
+    {
+        $this->setAttribute($aliasList, "invisible", true);
+    }
+
+    public function setAttrRequired($aliasList)
+    {
+        $this->setAttribute($aliasList, "required", true);
+    }
+
+    public function setAttrReadonly($aliasList)
+    {
+        $this->setAttribute($aliasList, "readonly", true);
+    }
+
+    public function setAttrTextCenter($aliasList)
+    {
+        $this->setAttribute($aliasList, "textCenter", true);
+    }
+
+    public function setAttrTextLeft($aliasList)
+    {
+        $this->setAttribute($aliasList, "textLeft", true);
+    }
+
+    public function setAttrTextRight($aliasList)
+    {
+        $this->setAttribute($aliasList, "textRight", true);
+    }
+
+    public function setAttrTextAmount($aliasList)
+    {
+        $this->setAttribute($aliasList, "textAmount", true);
     }
 
     // Do not use the Excel download function.
@@ -704,7 +716,14 @@ class DataTable extends L
         $this->excelButtonClassName = $class;
     }
 
-
+    public function setExtraButton($text, $actionJS, $class = "btn btn-sm")
+    {
+        $this->extraButtons[] = array(
+            "text"      => $text,
+            "action"    => $actionJS,
+            "class"     => $class,
+        );
+    }
 
     /*
      * for listing (html, js)
@@ -807,7 +826,7 @@ class DataTable extends L
         $columns = "[\n\t\t\t\t\t".implode(",\n\t\t\t\t\t", $columnsList)."\n\t\t\t\t]";
         $excelColumns = json_encode($excelColumnsList, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
 
-        $drawCallBack = "";         if ($this->drawCallBack) $drawCallBack = "fnDrawCallback : function(settings) { {$this->drawCallBack} },\n";
+        $drawCallBack = "";         if ($this->drawCallBack) $drawCallBack = "drawCallback : function(settings) { {$this->drawCallBack} },\n";
         $createdRow = "";           if ($this->createdRow) $createdRow = "createdRow : function(row, data, dataIndex, cells) { {$this->createdRow} },\n";
         $excelFileName = "";        if ($this->excelFileName) $excelFileName = "title: \"" . htmlspecialchars($this->excelFileName) . "\", ";
         $excelButtonText = "";      if ($this->excelButtonText) $excelButtonText = "text: \"" . str_replace("\"", "\\\"", $this->excelButtonText) . "\", ";
@@ -865,6 +884,15 @@ class DataTable extends L
         if ($this->newRecord) {
             $buttons[] = "{ title: 'New', text: '{$this->newRecordModalTitle}', action: sf_open_add_form_{$this->setName}, {$excelButtonClassName} },";
             $this->setScriptNewRecord();
+        }
+        if ($this->extraButtons) {
+            foreach($this->extraButtons as $exBtn) {
+                $class = "";
+                $action = "";
+                if ($exBtn["class"]) $class = "className: '{$exBtn["class"]}', ";
+                if ($exBtn["action"]) $action = "action: {$exBtn["action"]}, ";
+                $buttons[] = "{ text: '{$exBtn["text"]}', {$class}{$action} }";
+            }
         }
         $buttonsStr = implode(",", $buttons);
 
@@ -940,6 +968,7 @@ class DataTable extends L
                         },
                         {$drawCallBack}{$createdRow}
                     });
+                    $("div.sf-page-input").html("<input type='number' id='sf-paginate-number' class='form-control form-control-sm' min='1'><button type='button' id='sf-btn-paginate-direct' class='btn btn-sm btn-dark'>이동</button>");
                     {$customSearch}
                     {$customSearchSelect2}
                     {$customSearchDateRange}
@@ -951,6 +980,9 @@ class DataTable extends L
 
         $this->javaScriptReady[] = <<<EOD
                 {$this->jsTableName}_init();
+                $(document).on('click', '#sf-btn-paginate-direct', function() { {$this->jsTableName}.page(parseInt($('#sf-paginate-number').val())-1).draw(false); });
+                $(document).on('page.dt draw.dt', '#{$this->htmlTableId}', function() { $('#sf-paginate-number').val({$this->jsTableName}.page.info().page+1); });
+
                 $("#{$this->htmlTableId}_filter > label > input[type='search']").attr("id", "{$this->htmlTableId}-searchbox");
                 {$customSearchReload}
             EOD;
