@@ -1261,7 +1261,8 @@ class DataTable extends L
         if ($recordInfo["textAmount"]) {
             $openScript .= <<<EOD
                             var v = parseFloat($("#sf-{$this->setName}-detailinfo-{$alias}").html());
-                            if (typeof v == "number") $("#sf-{$this->setName}-detailinfo-{$alias}").html(v.numberFormat());
+                            if (isNaN(v)) $("#sf-{$this->setName}-detailinfo-{$alias}").html(0);
+                            else if (typeof v == "number") $("#sf-{$this->setName}-detailinfo-{$alias}").html(v.numberFormat());
 
             EOD;
         }
