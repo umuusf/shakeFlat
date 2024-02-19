@@ -138,7 +138,7 @@ class L
             $backtrace = debug_backtrace();
             $traceLog = array();
             foreach($backtrace as $bt) {
-                if (($bt["class"] ?? "") == get_class()) continue;
+                if (($bt["class"] ?? "") == "shakeFlat\L") continue;
                 if (($bt["file"] ?? "") == "") continue;
 
                 if (SHAKEFLAT_ENV["log"]["trace_short"] ?? false) {
