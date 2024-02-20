@@ -27,8 +27,9 @@ function callAjax(url, frm, successCallback, errorCallback, _this)
                 frmData.append($(this).attr("name"), $("input[name="+$(this).attr("name")+"]")[0].files[0]);
                 includeFiles = true;
             } else {
-                //console.log("frm.append : ", $(this).attr("name"), $(this).val());
-                frmData.append($(this).attr("name"), $(this).val());
+                //console.log("frm.append : ", $(this).attr("name"), $(this).val(), $(this).is(":checked"));
+                // In the case of a checkbox, if it is not checked, the value is not passed.
+                if (!($(this).attr("type") == "checkbox" && !$(this).is(":checked"))) frmData.append($(this).attr("name"), $(this).val());
             }
         });
     }
