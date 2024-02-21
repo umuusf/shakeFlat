@@ -5,6 +5,7 @@
  */
 
 namespace shakeFlat;
+use Exception;
 
 class AES256
 {
