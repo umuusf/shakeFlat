@@ -153,5 +153,10 @@
         "0": {
             "kr": "알수 없는 attribute 입니다 : $1"
         }
+    },
+    "The query sql statement must be in string format.": {
+        "0": {
+            "kr": "query에 사용하는 sql 문장은 string 형식이어야 합니다."
+        }
     }
 }

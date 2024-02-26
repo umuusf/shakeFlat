@@ -110,6 +110,7 @@ class DB extends L
 
     private function _query($sql, $bindList = null, $noExit = false)
     {
+        if (!is_string($sql)) self::exit("The query sql statement must be in string format.");
         $this->errInfo = array();
         if (SHAKEFLAT_ENV["log"]["include_query"] ?? false) LogQuery::stack($sql, $bindList);  // log.inc
         try {
