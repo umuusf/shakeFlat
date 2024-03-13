@@ -57,10 +57,14 @@ function callAjax(url, frm, successCallback, errorCallback, _this)
 
     $.ajax(opt).done(function(result, textStatus, jqXHR) {
         if (!result || result.constructor != Object || !("data" in result) || !("error" in result) || !("errCode" in result.error)) {
-            console.log(result);
-            //console.log(textStatus);
-            //console.log(jqXHR);
-            alert("서버 호출시 문제가 발생하였습니다. 잠시 후 다시 시도해주세요.");
+            if (errorCallback) {
+                errorCallback(result, _this);
+            } else {
+                console.log(result);
+                //console.log(textStatus);
+                //console.log(jqXHR);
+                alert("서버 호출시 문제가 발생하였습니다. 잠시 후 다시 시도해주세요.");
+            }
             return false;
         } else {
             switch(result.error.errCode) {
@@ -83,8 +87,12 @@ function callAjax(url, frm, successCallback, errorCallback, _this)
             }
         }
     }).fail(function(e) {
-        console.log(e);
-        alert("서버 호출시 문제가 발생하였습니다. 잠시 후 다시 시도해주세요.");
+        if (errorCallback) {
+            errorCallback(e, _this);
+        } else {
+            console.log(e);
+            alert("서버 호출시 문제가 발생하였습니다. 잠시 후 다시 시도해주세요.");
+        }
         return false;
     });
 }
