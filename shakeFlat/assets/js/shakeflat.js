@@ -302,3 +302,26 @@ function getFormattedDate(now) {
 function padZero(number) {
     return number < 10 ? '0' + number : number;
 }
+
+// rem to pixel (element is optional)
+// ex) var pixel = convertRemToPixels(3, document.getElementById('myElement'));
+function convertRemToPixels(rem, element) {
+    if (!element) element = document.documentElement;
+    return rem * parseFloat(getComputedStyle(element).fontSize);
+}
+
+// pixel to rem
+function convertPixelToRem(pixel, element) {
+    if (!element) element = document.documentElement;
+    return pixel / parseFloat(getComputedStyle(element).fontSize);
+}
+
+// width(pixel) for string with font
+// ex) var charWidth = getStringPixelWidth('text', document.getElementById('myElement'));
+function getStringPixelWidth(str, element) {
+    var canvas = document.createElement('canvas');
+    var context = canvas.getContext('2d');
+    context.font =  window.getComputedStyle(element).getPropertyValue('font-size') + " " +  window.getComputedStyle(element).getPropertyValue('font-family');
+    var metrics = context.measureText(str);
+    return metrics.width;
+}
