@@ -1,4 +1,4 @@
-function alert(msg) { sfAlertDark(msg); }
+function alert(msg) { sfAlert(msg); }
 function alertJump(msg, url) { sfAlertJump(msg, url); }
 function alertBack(msg) { sfAlertBack(msg); }
 function noti(msg) { sfNoti(msg); }

@@ -1053,7 +1053,7 @@ class DataTable extends L
                                 alert("오류가 발생하였습니다. 잠시 후 다시 시도해주세요.");
                                 return;
                             }
-                            alertNoti("등록 되었습니다.");
+                            noti("등록 되었습니다.");
                             {$this->jsTableName}.ajax.reload(null, false);
                             $("#sf-modal-add-{$this->setName}").modal("hide");
                         }
@@ -1147,7 +1147,7 @@ class DataTable extends L
                             alert("오류가 발생하였습니다. 잠시 후 다시 시도해주세요.");
                             return;
                         }
-                        alertNoti("수정 되었습니다.");
+                        noti("수정 되었습니다.");
                         {$this->jsTableName}.ajax.reload(null, false);
                         $("#sf-modal-modify-{$this->setName}").modal("hide");
                     }
