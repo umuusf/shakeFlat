@@ -1,4 +1,4 @@
-function alert(msg) { sfAlert(msg); }
+function alert(msg) { sfAlertDark(msg); }
 function alertJump(msg, url) { sfAlertJump(msg, url); }
 function alertBack(msg) { sfAlertBack(msg); }
 function noti(msg) { sfNoti(msg); }
@@ -173,6 +173,7 @@ function __sfAlert(options)
         if (defaults.iconSize) iconSize = defaults.iconSize;
 
         var $sfAlert = $("<div/>", { "id":"sfAlerts-" + alertIdx, "class":"modal fade", "tabindex":"-1", "data-bs-keyboard":"true", "data-bs-backdrop":"true" });
+        $sfAlert.css("z-index", "10000");
         if (defaults.top) $sfAlert.css("top", defaults.top);
         if (defaults.darkMode) $sfAlert.attr("data-bs-theme", "dark");
         if (defaults.customStyle) $sfAlert.attr("style", defaults.customStyle);
@@ -238,8 +239,8 @@ function __sfAlert(options)
                 "left": "0",
                 "width": "100%",
                 "height": "100%",
-                "background-color": "rgba(0, 0, 0, 0.5)",
-                "z-index": "1000",
+                "background-color": "rgba(0, 0, 0, 0.2)",
+                "z-index": "9999",
                 "display": "none",
             }});
             $("body").append($sfAlertOverlay);
