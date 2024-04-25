@@ -283,11 +283,14 @@ class Util
                 'Y-m-d',
                 'Y-m-d H:i:s',
                 'Y-m-d\TH:i:s',
+                'Y-m-d\TH:i:s.u',
                 'Y-m-d\TH:i',
                 'Y/m/d',
                 'Y/m/d H:i:s',
+                "Y/m/d H:i:s.u",
                 'Ymd',
                 'Ymd H:i:s',
+                'Ymd H:i:s.u',
             ];
         }
 
