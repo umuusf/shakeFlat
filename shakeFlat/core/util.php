@@ -276,6 +276,7 @@ class Util
 
     private static function sfDateTime($dateString, $userFormat = null)
     {
+        if (!$dateString) return false;
         if ($userFormat !== null) {
             $formats = [ $userFormat ];
         } else {

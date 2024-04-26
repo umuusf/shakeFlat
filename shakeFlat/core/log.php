@@ -241,6 +241,7 @@ class Log
         }
 
         error_log($logMsg . "\n", 3, $logPath . $logFile);
+        __Log_Delete();
 
         return array("message" => $message, "context" => $context);
     }
@@ -318,6 +319,7 @@ class LogQuery
             }
 
             error_log($logMsg . "\n", 3, $logPath . $logFile);
+            __Log_Delete();
         }
         return $sql;
     }
@@ -330,5 +332,27 @@ class LogQuery
     public static function list()
     {
         return self::$queryStack;
+    }
+}
+
+function __Log_Delete()
+{
+    if ((SHAKEFLAT_ENV["log"]["log_retention_days"] ?? 0) <= 0) return;
+
+    $gpath = GPath::getInstance();
+    $logPath = $gpath->STORAGE . trim(SHAKEFLAT_ENV["storage"]["log_path"], " /") . "/";
+    $files = glob($logPath . 'log-*.log');
+    foreach ($files as $file) {
+        if (filemtime($file) < strtotime("-" . SHAKEFLAT_ENV["log"]["log_retention_days"] . " days")) {
+            unlink($file);
+            echo "Deleted: $file\n";
+        }
+    }
+    $files = glob($logPath . 'query-*.log');
+    foreach ($files as $file) {
+        if (filemtime($file) < strtotime("-" . SHAKEFLAT_ENV["log"]["log_retention_days"] . " days")) {
+            unlink($file);
+            echo "Deleted: $file\n";
+        }
     }
 }
