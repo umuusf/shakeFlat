@@ -23,6 +23,7 @@ use shakeFlat\DataTable;
 use shakeFlat\Param;
 use shakeFlat\DB;
 use shakeFlat\Response;
+use shakeFlat\L;
 
 class dtUserOnePage extends DataTable
 {
