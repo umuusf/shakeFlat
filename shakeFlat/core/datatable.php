@@ -55,7 +55,7 @@ class DataTable extends L
     private $tableClass                 = "table table-sm table-hover";
     private $connectionName             = "default";
     private $mainDBTable                = "";
-    private $mainDBTablePK              = "";
+    private $mainDBTablePK              = [];                   // Primary key column name
     private $joinDBTable                = array();
     private $andConditions              = array();
     private $orConditions               = array();
@@ -153,7 +153,8 @@ class DataTable extends L
     protected function setDBMainTable($mainDBTable, $pkColumn, $connectionName = "default")
     {
         $this->mainDBTable = $mainDBTable;
-        $this->mainDBTablePK = $pkColumn;
+        if (is_array($pkColumn)) $this->mainDBTablePK = $pkColumn;
+        elseif (is_string($pkColumn)) $this->mainDBTablePK = [ $pkColumn ];
         $this->connectionName = $connectionName;
     }
 
@@ -784,16 +785,23 @@ class DataTable extends L
                 if ($attr["rendering"]) {
                     $render = "render: {$attr["rendering"]}, ";
                 } else {
+                    // $this->mainDBTablePK 으로 pk json string 값을 만든다.
+                    $pkscript = "var pks = {}; ";
+                    foreach($this->mainDBTablePK as $pk) {
+                        $pkscript .= "pks['{$pk}'] = row['{$pk}']; ";
+                    }
+                    $pkscript .= "var pk = JSON.stringify(pks); ";
+
                     $rfnc = array();
                     if($attr["isDetailInfoBtn"]) {
-                        $rfnc[] = "<button data-pk='\"+row['{$this->mainDBTablePK}']+\"' class=\'btn btn-xs btn-detail btn-{$this->setName}-detailinfo\'>상세보기</button>";
+                        $rfnc[] = "<button data-pk='\"+pk+\"' class=\'btn btn-xs btn-detail btn-{$this->setName}-detailinfo\'>상세보기</button>";
                         $this->setScriptDetailInfo();
                     }
                     if ($attr["isModifyBtn"]) {
-                        $rfnc[] = "<button data-pk='\"+row['{$this->mainDBTablePK}']+\"' class=\'btn btn-xs btn-modify btn-{$this->setName}-modify\'>수정</button>";
+                        $rfnc[] = "<button data-pk='\"+pk+\"' class=\'btn btn-xs btn-modify btn-{$this->setName}-modify\'>수정</button>";
                         $this->setScriptModify();
                     }
-                    $render = "render: function(data, type, row) { return \"" . implode(" &nbsp;", $rfnc) . "\" }";
+                    $render = "render: function(data, type, row) { {$pkscript} return \"" . implode(" &nbsp;", $rfnc) . "\" }";
                 }
             }
             if ($render == "") {
@@ -1113,7 +1121,7 @@ class DataTable extends L
         $this->javaScriptReady[] = <<<EOD
             sf_modify_inner_{$this->setName} = $("#sf-modify-form-{$this->setName}").html();
             $(document).on("click", ".btn-{$this->setName}-modify", function() {
-                var pk = $(this).data("pk");
+                var pk = JSON.stringify($(this).data("pk"));
                 callAjax(
                     "{$this->modifyRecordReadAjaxUrl}",
                     { pk : pk, sfdtmode : 'detailForModifyAjax', {$this->deliverParamCode()} },
@@ -1193,7 +1201,7 @@ class DataTable extends L
 
         $this->javaScriptReady[] = <<<EOD
             $(document).on("click", ".btn-{$this->setName}-detailinfo", function() {
-                var pk = $(this).data("pk");
+                var pk = JSON.stringify($(this).data("pk"));
                 callAjax(
                     "{$this->detailInfoReadAjaxUrl}",
                     { pk : pk, sfdtmode : 'detailAjax', {$this->deliverParamCode()} },
@@ -1324,7 +1332,7 @@ class DataTable extends L
         $divStyle = "";   if ($recordInfo["divStyle"])    $divStyle = " style=\"{$recordInfo["divStyle"]}\"";
         $labelStyle = ""; if ($recordInfo["labelStyle"])  $labelStyle = " style=\"{$recordInfo["labelStyle"]}\"";
         $readonly = "";   if ($recordInfo["readonly"])    $readonly = " readonly";
-        $comment = "";    if ($recordInfo["comment"])     $comment = "<small class=\"mute\">* {$recordInfo["comment"]}</small>";
+        $comment = "";    if ($recordInfo["comment"])     $comment = "<small class=\"mute\">{$recordInfo["comment"]}</small>";
 
         $requiredStar = "";
         $required = "";
@@ -1599,12 +1607,12 @@ class DataTable extends L
 
         $db = DB::getInstance($this->connectionName);
         $rs = $db->query("
-            select count(*) as cnt
+            select count(*) as CNT
             from {$this->mainDBTable}
             " . $this->joinSQL() . "
             " . $this->whereSQL() . "
         ", $this->bind);
-        $count = intval($db->fetch($rs)["cnt"]);
+        $count = intval($db->fetch($rs)["CNT"]);
         return $count;
     }
 
@@ -1668,13 +1676,13 @@ class DataTable extends L
 
         $db = DB::getInstance($this->connectionName);
         $rs = $db->query("
-            select count(*) as cnt
+            select count(*) as CNT
             from {$this->mainDBTable}
             " . $this->joinSQL(1) . "
             " . $this->whereSQL(1) . "
         ", $this->bind);
 
-        return intval($db->fetch($rs)["cnt"] ?? 0);
+        return intval($db->fetch($rs)["CNT"] ?? 0);
     }
 
     public function listData()
@@ -1682,11 +1690,12 @@ class DataTable extends L
         $this->procSearching();
         $param = $this->ajaxParam();
 
+        $order = "";
         if($param->order) {
             $ol = array();
-            foreach($param->order as $order) {
-                $alias = $param->columns[$order["column"]]["name"];
-                $dir = $order["dir"];
+            foreach($param->order as $od) {
+                $alias = $param->columns[$od["column"]]["name"];
+                $dir = $od["dir"];
                 $ol[] = "{$this->listing[$alias]["realColumn"]} {$dir}";
             }
             $order = "order by " . implode(",", $ol);
@@ -1703,21 +1712,39 @@ class DataTable extends L
 
         $columns = implode(",", $columnArr);
 
-        if ($db->dbSystem() == "sqlsrv") {
-            $limit = "offset {$param->start} rows fetch next {$param->length} rows only";
+        if ($db->dbSystem() == "unknown") {
+            $limitStart = $param->start + 1;
+            $limitEnd = $param->start + $param->length;
+            if ($order == "") $order = "order by {$this->mainDBTable}.{$this->mainDBTablePK[0]} desc";
+            $rs = $db->query("
+                select * from (
+                    select
+                    {$columns},
+                    ROW_NUMBER() OVER ({$order}) AS sfrnum
+                    from {$this->mainDBTable}
+                    " . $this->joinSQL(1) . "
+                    " . $this->whereSQL(1) . "
+                    " . $this->groupbySQL() . "
+                ) as otbl
+                where sfrnum between {$limitStart} and {$limitEnd}
+            ", $this->bind);
         } else {
-            $limit = "limit {$param->start}, {$param->length}";
+            if ($db->dbSystem() == "sqlsrv") {
+                $limit = "offset {$param->start} rows fetch next {$param->length} rows only";
+            } else {
+                $limit = "offset {$param->start} limit {$param->length}";
+            }
+            $rs = $db->query("
+                select
+                {$columns}
+                from {$this->mainDBTable}
+                " . $this->joinSQL(1) . "
+                " . $this->whereSQL(1) . "
+                " . $this->groupbySQL() . "
+                {$order}
+                {$limit}
+            ", $this->bind);
         }
-        $rs = $db->query("
-            select
-            {$columns}
-            from {$this->mainDBTable}
-            " . $this->joinSQL(1) . "
-            " . $this->whereSQL(1) . "
-            " . $this->groupbySQL() . "
-            {$order}
-            {$limit}
-        ", $this->bind);
         $data = array();
         while($attr = $db->fetch($rs)) {
             $data[] = $attr;
@@ -1750,13 +1777,17 @@ class DataTable extends L
         $where = $this->whereSQL(1);
         if ($where) $where .= " and"; else $where = " where";
 
-        $this->bind[":pk"] = $pk;
+        $wherePk = [];
+        foreach($this->mainDBTablePK as $pkf) {
+            $wherePk[] = "{$this->mainDBTable}.{$pkf} = :{$pkf}";
+            $this->bind[":{$pkf}"] = $pk[$pkf];
+        }
         $rs = $db->query("
             select
             {$columns}
             from {$this->mainDBTable}
             " . $this->joinSQL(1) . "
-            {$where} {$this->mainDBTable}.{$this->mainDBTablePK} = :pk
+            {$where} " . implode(" and ", $wherePk) . "
         ", $this->bind);
         $data = $db->fetch($rs);
         return $data;
@@ -1784,13 +1815,17 @@ class DataTable extends L
         $where = $this->whereSQL(1);
         if ($where) $where .= " and"; else $where = " where";
 
-        $this->bind[":pk"] = $pk;
+        $wherePk = [];
+        foreach($this->mainDBTablePK as $pkf) {
+            $wherePk[] = "{$this->mainDBTable}.{$pkf} = :{$pkf}";
+            $this->bind[":{$pkf}"] = $pk[$pkf];
+        }
         $rs = $db->query("
             select
             {$columns}
             from {$this->mainDBTable}
             " . $this->joinSQL(1) . "
-            {$where} {$this->mainDBTable}.{$this->mainDBTablePK} = :pk
+            {$where} " . implode(" and ", $wherePk) . "
         ", $this->bind);
         $data = $db->fetch($rs);
         return $data;
@@ -1824,13 +1859,17 @@ class DataTable extends L
                 break;
             case "detailAjax":
                 sfModeAjax();
-                $param->checkKeyValue("pk", Param::TYPE_INT);
-                $this->ajaxDetailInfoResponse($param->pk);
+                $param->checkKeyValue("pk", Param::TYPE_STRING);
+                $pk = json_decode($param->pk, true);
+                if (!$pk || !is_array($pk)) self::system("Invalid pk value");
+                $this->ajaxDetailInfoResponse($pk);
                 break;
             case "detailForModifyAjax":
                 sfModeAjax();
-                $param->checkKeyValue("pk", Param::TYPE_INT);
-                $this->ajaxDetailForModifyResponse($param->pk);
+                $param->checkKeyValue("pk", Param::TYPE_STRING);
+                $pk = json_decode($param->pk, true);
+                if (!$pk || !is_array($pk)) self::system("Invalid pk value");
+                $this->ajaxDetailForModifyResponse($pk);
                 break;
             case "submitForNewAjax":
                 sfModeAjax();

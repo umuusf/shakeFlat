@@ -103,7 +103,9 @@ class dtUserOnePage extends DataTable
         parent::setSubmitForModifyCallback(function() {
             sfModeAjax();
             $param = Param::getInstance();
-            $param->checkKeyValue("sf-userlist-modify-pk", Param::TYPE_INT);
+            $param->checkKeyValue("sf-userlist-modify-pk", Param::TYPE_STRING);
+            $pk = json_decode($param->get("sf-userlist-modify-pk"), true);
+            if (!$pk || !is_array($pk) || !array_key_exists("user_no", $pk)) L::error("잘못된 접근입니다.");
             $param->checkKeyValue("sf-userlist-modify-status", Param::TYPE_INT, array( 0, 1, 2 ));
             $param->checkKeyValue("sf-userlist-modify-nickname", Param::TYPE_STRING);
             $param->checkKeyValue("sf-userlist-modify-login_id", Param::TYPE_STRING);
@@ -118,7 +120,7 @@ class dtUserOnePage extends DataTable
                 where
                     user_no = :user_no
             ", [
-                ":user_no"  => $param->get("sf-userlist-modify-pk"),
+                ":user_no"  => $pk["user_no"],
                 ":status"   => $param->get("sf-userlist-modify-status"),
                 ":nickname" => $param->get("sf-userlist-modify-nickname"),
                 ":login_id" => $param->get("sf-userlist-modify-login_id"),

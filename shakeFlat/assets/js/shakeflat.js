@@ -5,7 +5,7 @@ function newexportaction(e, dt, button, config) {
     dt.one('preXhr', function (e, s, data) {
         // Just this once, load all data from the server...
         data.start = 0;
-        data.length = 2147483647;
+        data.length = dt.page.info().recordsTotal;
         dt.one('preDraw', function (e, settings) {
             // Call the original action function
             if (button[0].className.indexOf('buttons-copy') >= 0) {
