@@ -1859,17 +1859,13 @@ class DataTable extends L
                 break;
             case "detailAjax":
                 sfModeAjax();
-                $param->checkKeyValue("pk", Param::TYPE_STRING);
-                $pk = json_decode($param->pk, true);
-                if (!$pk || !is_array($pk)) self::system("Invalid pk value");
-                $this->ajaxDetailInfoResponse($pk);
+                $param->checkKeyValue("pk", Param::TYPE_JSON);
+                $this->ajaxDetailInfoResponse($param->pk);
                 break;
             case "detailForModifyAjax":
                 sfModeAjax();
-                $param->checkKeyValue("pk", Param::TYPE_STRING);
-                $pk = json_decode($param->pk, true);
-                if (!$pk || !is_array($pk)) self::system("Invalid pk value");
-                $this->ajaxDetailForModifyResponse($pk);
+                $param->checkKeyValue("pk", Param::TYPE_JSON);
+                $this->ajaxDetailForModifyResponse($param->pk);
                 break;
             case "submitForNewAjax":
                 sfModeAjax();
