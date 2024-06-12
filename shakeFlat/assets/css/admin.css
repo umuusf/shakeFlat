@@ -7,10 +7,12 @@ a,a:hover,a:visited { text-decoration:none; color:inherit; }
 .btn-xs { padding:0.125rem 0.25rem; font-size:0.75rem; line-height:1.5; border-radius:0.15rem; }
 .btn-add { color: #fff; border-bottom: none!important; background-color: #5657bb; border-color: #5657bb;box-shadow: none; }
 .btn-modify { color: #fff; background-color: #4db9f8; border-bottom: none!important; border-color: #4db9f8; box-shadow: none; }
+.btn-delete { color: #fff; background-color: #7b5e64; border-bottom: none!important; border-color: #7b5e64; box-shadow: none; }
 .btn-detail { color: #fff; background-color: #6e51d4; border-bottom: none!important; border-color: #6e51d4; box-shadow: none; }
 .btn-detail2 { color: #fff; background-color: #c08226; border-bottom: none!important; border-color: #6e51d4; box-shadow: none; }
 .bg-add { color: #fff; background-color: #5657bb; border-color: #4db9f8; border-bottom: none!important; box-shadow: none; }
 .bg-modify { color: #fff; background-color: #4db9f8; border-bottom: none!important; border-color: #4db9f8; box-shadow: none; }
+.bg-delete { color: #fff; background-color: #7b5e64; border-bottom: none!important; border-color: #7b5e64; box-shadow: none; }
 .bg-detail { color: #fff; background-color: #6e51d4; border-bottom: none!important; border-color: #6e51d4; box-shadow: none; }
 .bg-detail2 { color: #fff; background-color: #c08226; border-bottom: none!important; border-color: #6e51d4; box-shadow: none; }
 .spinner-border-xs { --bs-spinner-width: 0.85rem; --bs-spinner-height: 0.85rem; --bs-spinner-border-width: 0.12em; --bs-spinner-vertical-align: -0.19em; }

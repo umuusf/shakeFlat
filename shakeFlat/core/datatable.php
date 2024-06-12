@@ -18,7 +18,8 @@ class DataTable extends L
     const ATTR_ORDERABLE        = 9002;
     const ATTR_BTN_DETAIL       = 9003;
     const ATTR_BTN_MODIFY       = 9004;
-    const ATTR_INVISIBLE        = 9005;
+    const ATTR_BTN_DELETE       = 9005;
+    const ATTR_INVISIBLE        = 9006;
 
     // for new, modify
     const ATTR_REQUIRED         = 9101;
@@ -104,6 +105,9 @@ class DataTable extends L
     private $modifyRecordModalTitle     = "수정하기";
     private $modifyRecordCallback       = null;
 
+    private $deleteRecordCallback       = null;
+    private $deleteRecordSubmitAjaxUrl  = "";
+
     private $javaScript                 = array();
     private $javaScriptReady            = array();         // on document ready
     private $javaScript2                = array();         // custom
@@ -135,6 +139,7 @@ class DataTable extends L
         $this->newRecordAjaxUrl          = "/{$router->module()}/{$router->fnc()}/";
         $this->modifyRecordReadAjaxUrl   = "/{$router->module()}/{$router->fnc()}/";
         $this->modifyRecordSubmitAjaxUrl = "/{$router->module()}/{$router->fnc()}/";
+        $this->deleteRecordSubmitAjaxUrl = "/{$router->module()}/{$router->fnc()}/";
 
         if ($config) $this->setConfig($config);
     }
@@ -206,6 +211,8 @@ class DataTable extends L
 
                 "isDetailInfoBtn"   => $attr["isDetailInfoBtn"] ?? false,
                 "isModifyBtn"       => $attr["isModifyBtn"] ?? false,
+                "isDeleteBtn"       => $attr["isDeleteBtn"] ?? false,
+
                 "searchable"        => $attr["searchable"] ?? false,
                 "orderable"         => $attr["orderable"] ?? false,
                 "invisible"         => $attr["invisible"] ?? false,
@@ -241,6 +248,8 @@ class DataTable extends L
 
                 case "isDetailInfoBtn" :
                 case "isModifyBtn" :
+                case "isDeleteBtn" :
+
                 case "searchable" :
                 case "orderable" :
                     $this->columns[$alias][$key] = $val;
@@ -251,7 +260,7 @@ class DataTable extends L
                     //   If omitted, it is replaced with the alias value.
                     //   If you want to output only the contents of render, set it to blank("") or null.
                     $realColumn = null;
-                    if (!($attr["isModifyBtn"] ?? false) && !($attr["isDetailInfoBtn"] ?? false)) {
+                    if (!($attr["isModifyBtn"] ?? false) && !($attr["isDetailInfoBtn"] ?? false) && !($attr["isDeleteBtn"] ?? false)) {
                         if (!array_key_exists("realColumn", $attr)) $realColumn = $alias;
                         elseif ($attr["realColumn"] !== null) $realColumn = $attr["realColumn"];
                     }
@@ -268,6 +277,8 @@ class DataTable extends L
             switch($val) {
                 case self::ATTR_BTN_DETAIL      : $attr["isDetailInfoBtn"] = true;  unset($attr[$idx]); break;
                 case self::ATTR_BTN_MODIFY      : $attr["isModifyBtn"] = true;      unset($attr[$idx]); break;
+                case self::ATTR_BTN_DELETE      : $attr["isDeleteBtn"] = true;      unset($attr[$idx]); break;
+
                 case self::ATTR_SEARCHABLE      : $attr["searchable"] = true;       unset($attr[$idx]); break;
                 case self::ATTR_ORDERABLE       : $attr["orderable"] = true;        unset($attr[$idx]); break;
                 case self::ATTR_INVISIBLE       : $attr["invisible"] = true;        unset($attr[$idx]); break;
@@ -472,9 +483,19 @@ class DataTable extends L
         $this->modifyRecordSubmitAjaxUrl = $submitUrl;
     }
 
+    public function setDeleteAjax($url)
+    {
+        $this->deleteRecordSubmitAjaxUrl = $url;
+    }
+
     public function setSubmitForModifyCallback($callback)
     {
         $this->modifyRecordCallback = $callback;
+    }
+
+    public function setSubmitForDeleteCallback($callback)
+    {
+        $this->deleteRecordCallback = $callback;
     }
 
     public function setModifyRecord($layout, $attrList = null, $modalTitle = "수정하기")
@@ -774,7 +795,7 @@ class DataTable extends L
             if ($attr["invisible"]) $invisibleColumnsList[] = $idx;
 
 
-            if (!$attr["isModifyBtn"] && !$attr["isDetailInfoBtn"]) {
+            if (!$attr["isModifyBtn"] && !$attr["isDetailInfoBtn"] && !$attr["isDeleteBtn"]) {
                 if ($attr["realColumn"]) $data = "data: \"{$alias}\", ";
                 if ($attr["searchable"] && $data) $searchable = "searchable: true, ";
                 if ($attr["orderable"] && $data)  $orderable = "orderable: true, ";
@@ -800,6 +821,10 @@ class DataTable extends L
                     if ($attr["isModifyBtn"]) {
                         $rfnc[] = "<button data-pk='\"+pk+\"' class=\'btn btn-xs btn-modify btn-{$this->setName}-modify\'>수정</button>";
                         $this->setScriptModify();
+                    }
+                    if ($attr["isDeleteBtn"]) {
+                        $rfnc[] = "<button data-pk='\"+pk+\"' class=\'btn btn-xs btn-delete btn-{$this->setName}-delete\'>삭제</button>";
+                        $this->setScriptDelete();
                     }
                     $render = "render: function(data, type, row) { {$pkscript} return \"" . implode(" &nbsp;", $rfnc) . "\" }";
                 }
@@ -1163,6 +1188,32 @@ class DataTable extends L
             });
         EOD;
 
+    }
+
+    private function setScriptDelete()
+    {
+        $this->javaScriptReady[] = <<<EOD
+            $(document).on("click", ".btn-{$this->setName}-delete", function() {
+                var pk = JSON.stringify($(this).data("pk"));
+                confirm("정말 삭제하시겠습니까? 삭제된 자료는 복구 되지 않습니다.", function() {
+                    callAjax(
+                        "{$this->deleteRecordSubmitAjaxUrl}",
+                        {
+                            "sfdtmode": "submitForDeleteAjax",
+                            "sf-{$this->setName}-delete-pk": pk
+                        },
+                        function(result) {
+                            if (result.data.result != true) {
+                                alert("오류가 발생하였습니다. 잠시 후 다시 시도해주세요.");
+                                return;
+                            }
+                            noti("삭제 되었습니다.");
+                            {$this->jsTableName}.ajax.reload(null, false);
+                        }
+                    )
+                });
+            });
+        EOD;
     }
 
     private function setScriptDetailInfo()
@@ -1846,7 +1897,7 @@ class DataTable extends L
     public function onePageExec()
     {
         $param = Param::getInstance();
-        $param->check("sfdtmode", Param::TYPE_STRING, array("main", "listAjax", "detailAjax", "detailForModifyAjax", "submitForNewAjax", "submitForModifyAjax"));
+        $param->check("sfdtmode", Param::TYPE_STRING, array("main", "listAjax", "detailAjax", "detailForModifyAjax", "submitForNewAjax", "submitForModifyAjax", "submitForDeleteAjax"));
         $mode = $param->get("sfdtmode", "main");
 
         switch($mode) {
@@ -1876,6 +1927,11 @@ class DataTable extends L
                 sfModeAjax();
                 if (!$this->modifyRecordCallback) self::system("A callback function to handle modify submit must be defined(setSubmitForModifyCallback)");
                 call_user_func($this->modifyRecordCallback);
+                break;
+            case "submitForDeleteAjax":
+                sfModeAjax();
+                if (!$this->deleteRecordCallback) self::system("A callback function to handle delete submit must be defined(setSubmitForDeleteCallback)");
+                call_user_func($this->deleteRecordCallback);
                 break;
         }
     }
