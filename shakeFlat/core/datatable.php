@@ -342,6 +342,14 @@ class DataTable extends L
         }
     }
 
+    public function setAttributeForList($aliasList, $attrName, $attrVal)
+    {
+        if (!is_array($aliasList)) $aliasList = [ $aliasList ];
+        foreach($aliasList as $alias) {
+            $this->listing[$alias][$attrName] = $attrVal;
+        }
+    }
+
     public function setAttrSearchable($aliasList)
     {
         $this->setAttribute($aliasList, "searchable", true);
@@ -380,6 +388,24 @@ class DataTable extends L
     public function setAttrTextRight($aliasList)
     {
         $this->setAttribute($aliasList, "textRight", true);
+    }
+
+    // only listing...
+    public function setAttrTextCenterForList($aliasList)
+    {
+        $this->setAttributeForList($aliasList, "textCenter", true);
+    }
+
+    // only listing...
+    public function setAttrTextLeftForList($aliasList)
+    {
+        $this->setAttributeForList($aliasList, "textLeft", true);
+    }
+
+    // only listing...
+    public function setAttrTextRightForList($aliasList)
+    {
+        $this->setAttributeForList($aliasList, "textRight", true);
     }
 
     public function setAttrTextAmount($aliasList)
@@ -895,7 +921,7 @@ class DataTable extends L
                     case "dateRange" :
                         $html .= "\t\t\t\t<input type='search' class='form-control form-control-sm w-auto sf-custom-search-{$this->jsTableName}' {$style}name='sf_search_{$alias}' id='sf_search_{$alias}' autocomplete='off'>\\\n";
                         $customSearchDateRange .= "$(\"#sf_search_{$alias}\").daterangepicker({ timePicker:true, autoUpdateInput: false, locale: { format: 'YYYY-MM-DD HH:mm', cancelLabel: 'Clear' }});\n\t\t";
-                        $customSearchDateRange .= "$(\"#sf_search_{$alias}\").on(\"apply.daterangepicker\", function(ev, picker) { $(this).val(picker.startDate.format('YYYY-MM-DD HH:mm') + ' - ' + picker.endDate.format('YYYY-MM-DD HH:mm')); {$this->jsTableName}.ajax.reload(null, false); });\n\t\t";
+                        $customSearchDateRange .= "$(\"#sf_search_{$alias}\").on(\"apply.daterangepicker\", function(ev, picker) { $(this).val(picker.startDate.format('YYYY-MM-DD HH:mm') + ' - ' + picker.endDate.format('YYYY-MM-DD HH:mm')); {$this->jsTableName}.ajax.reload(null, true); });\n\t\t";
                         break;
                     case "hidden" :
                         $html .= "\t\t\t\t<input type='hidden' name='sf_search_{$alias}' id='sf_search_{$alias}'>\\\n";
@@ -907,7 +933,7 @@ class DataTable extends L
         }
         if ($customSearchList) {
             $customSearch = "$(\"div.sf-custom-search\").html(\"\\\n\t\t\t<div class='d-flex flex-row align-items-center flex-wrap'>\\\n" . implode("", $customSearchList) . "\t\t\t</div>\\\n\t\t\");";
-            $customSearchReload = "$(document).on(\"change\", \".sf-custom-search-{$this->jsTableName}\", function() { {$this->jsTableName}.ajax.reload(null, false); });";
+            $customSearchReload = "$(document).on(\"change\", \".sf-custom-search-{$this->jsTableName}\", function() { {$this->jsTableName}.ajax.reload(null, true); });";
         }
 
         $buttons = array();
@@ -1414,7 +1440,7 @@ class DataTable extends L
                 return <<<EOD
                                 <div class="{$divClass}"{$divStyle}>
                                     <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}{$requiredStar}:</label>
-                                    <input type="{$type}" class="form-control form-control-sm{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$defaultValue}{$readonly}{$custom}>
+                                    <input type="{$type}" class="form-control form-control-sm {$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$defaultValue}{$readonly}{$custom}>
                                     {$comment}
                                 </div>\n
                 EOD;
@@ -1424,7 +1450,7 @@ class DataTable extends L
                 return <<<EOD
                                 <div class="{$divClass}"{$divStyle}>
                                     <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}{$requiredStar}:</label>
-                                    <input type="datetime-local" class="form-control form-control-sm{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$defaultValue}{$readonly}{$custom}>
+                                    <input type="datetime-local" class="form-control form-control-sm {$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$defaultValue}{$readonly}{$custom}>
                                     {$comment}
                                 </div>\n
                 EOD;
@@ -1434,7 +1460,7 @@ class DataTable extends L
                 return <<<EOD
                                 <div class="{$divClass}"{$divStyle}>
                                     <label for="sf-{$this->setName}-{$prefix}-{$alias}" class="col-form-label"{$labelStyle}>{$label}{$requiredStar}:</label>
-                                    <textarea class="form-control form-control-sm{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$readonly}{$custom}>{$defaultValue}</textarea>
+                                    <textarea class="form-control form-control-sm {$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}"{$style}{$required}{$readonly}{$custom}>{$defaultValue}</textarea>
                                     {$comment}
                                 </div>\n
                 EOD;
@@ -1452,7 +1478,7 @@ class DataTable extends L
                                     <div class="{$divClass}"{$divStyle}>
                                         <label for="sf-{$this->setName}-{$prefix}-{$alias}-text" class="col-form-label"{$labelStyle}>{$label}{$requiredStar}:</label>
                                         <input type="hidden" class="{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}" name="sf-{$this->setName}-{$prefix}-{$alias}" value="{$defaultValue}">
-                                        <input type="text" class="form-control form-control-sm{$class}" id="sf-{$this->setName}-{$prefix}-{$alias}-text" name="sf-{$this->setName}-{$prefix}-{$alias}-text"{$style} readonly value="{$defaultText}"{$custom}>
+                                        <input type="text" class="form-control form-control-sm {$class}" id="sf-{$this->setName}-{$prefix}-{$alias}-text" name="sf-{$this->setName}-{$prefix}-{$alias}-text"{$style} readonly value="{$defaultText}"{$custom}>
                                         {$comment}
                                     </div>\n
                     EOD;
