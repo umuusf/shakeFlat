@@ -597,21 +597,16 @@ class DataTable extends L
         }
     }
 
-    protected function setDBConnectionName($connectionName)
+    protected function setConnectionName($connectionName)
     {
         $this->connectionName = $connectionName;
-    }
-
-    protected function setMainDBTable($tableName)
-    {
-        $this->mainDBTable = $tableName;
     }
 
     // set left join table infomations.
     // $joinCondition : Conditions added to the ON condition
     // ex) If you need to perform a query like the one below, the statement corresponding to the [] part
     // ... left join tblSecond on tblSecond.key = tblMain.key [and tblSecond.duedate = '2022-01-01']
-    protected function setJoinDBTable($tableName, $joinColumn, $matchColumn, $tableAlias = null, $joinCondition = null, $joinConditionBind = null)
+    protected function setDBJoinTable($tableName, $joinColumn, $matchColumn, $tableAlias = null, $joinCondition = null, $joinConditionBind = null)
     {
         $this->joinDBTable[] = array (
             "tableName"         => $tableName,
