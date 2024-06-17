@@ -91,7 +91,7 @@ class L
     private static function _terminate($logMsg, $errCode = -1)
     {
         if (SHAKEFLAT_ENV["config"]["display_error"] ?? false) {
-            if (SHAKEFLAT_ENV["config"]["debug_mode"] ?? false) {
+            if (SHAKEFLAT_ENV["display_error"]["tracing"] ?? false) {
                 $message = $logMsg["message"];
                 $context = $logMsg["context"];
                 $inPos = "";

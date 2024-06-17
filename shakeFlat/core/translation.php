@@ -18,7 +18,6 @@ class Translation
 {
     private $cacheTable;
     private $needUpdate;
-    private $error;
     private $translationFilePath;
 
     public static function getInstance()
@@ -33,8 +32,8 @@ class Translation
     {
         $this->needUpdate = false;
         $this->cacheTable = array();
-        $this->error = false;
-        $this->translationFilePath = SHAKEFLAT_PATH . "sample/translation.json";
+        $gpath = GPath::getInstance();
+        $this->translationFilePath = $gpath->TRANSLATION_FILE;
     }
 
     public function setFilePathTranslation($filePath)
@@ -61,7 +60,6 @@ class Translation
         }
 
         $re = preg_match_all("/\[[0-9]*\:(.*?)\:\]/", $output, $match);
-
         foreach($match[0] as $idx => $s) {
             $text = $match[1][$idx];
             $code = 0;
@@ -95,7 +93,7 @@ class Translation
             $text = json_encode($this->cacheTable, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
             if ($text) {
                 $re = file_put_contents($filepath, $text);
-                if ($re === false) $this->error = true;
+                //if ($re === false) $this->error = true;
             }
         }
     }
@@ -105,11 +103,11 @@ class Translation
         if (!isset($this->cacheTable[$k][$code][$lang]) || IS_DEBUG) {
             $allTable = $this->loadAll();
             $re = $k;
-            if (isset($allTable[$k][$code][$lang])) {
+            if (!IS_DEBUG && isset($allTable[$k][$code][$lang])) {
                 $re = $allTable[$k][$code][$lang];
             } else {
                 foreach($allTable as $str => $arr) {
-                    $str = str_replace(array("$1", "$2", "$3", "$4", "$5", "$6", "$7", "$8", "$9"), "([a-zA-Z0-9, ]*)", $str);
+                    $str = str_replace(array("$1", "$2", "$3", "$4", "$5", "$6", "$7", "$8", "$9"), "([\w-]+)", $str);
                     $str = str_replace(array("/"), array("\/"), $str);
                     $reg = preg_match_all("/^{$str}$/", $k, $match);
                     if (isset($match[0]) && $match[0] && isset($arr[$code][$lang])) {
@@ -136,12 +134,12 @@ class Translation
         __sfConfig__checkStorage();
 
         $gpath = GPath::getInstance();
-        if (!isset(SHAKEFLAT_ENV["storage"]["translation_cache"])) { $this->error = true; return false; }
+        if (!isset(SHAKEFLAT_ENV["storage"]["translation_cache"])) return false;
 
         $cachePath = rtrim($gpath->STORAGE . SHAKEFLAT_ENV["storage"]["translation_cache"], " /") . "/";
 
-        if (!is_dir($cachePath)) if (!mkdir($cachePath, 0775, true)) { $this->error = true; return false; }
-        if (!is_writable($cachePath)) { $this->error = true; return false; }
+        if (!is_dir($cachePath)) if (!mkdir($cachePath, 0775, true)) return false;
+        if (!is_writable($cachePath)) return false;
 
         $router = Router::getInstance();
         return $cachePath . str_replace("/", ".", "{$router->module()}/{$router->fnc()}") . ".{$lang}.json";
@@ -151,13 +149,11 @@ class Translation
     {
         static $allTable = null;
         if ($allTable) return $allTable;
-
-        if (!file_exists($this->translationFilePath)) { $this->error = true; return array(); }
-
+        if (!file_exists($this->translationFilePath)) return array();
         $json = file_get_contents($this->translationFilePath);
-        if ($json === false) { $this->error = true; return array(); }
+        if ($json === false) return array();
         $arr = json_decode($json, true);
-        if (!$arr) { $this->error = true; return array(); }
+        if (!$arr) return array();
         $allTable = $arr;
 
         return $allTable;

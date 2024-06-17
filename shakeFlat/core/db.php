@@ -138,14 +138,13 @@ class DB extends L
             $errInfo = $this->dbh->errorInfo();
 
             $msg = $errInfo[2] ?? "query error";
-            $msg .= "({code2})";
             $context = array (
                 "code1" => $errCode,
                 "code2" => $errInfo[1] ?? "",
             );
 
-            if (SHAKEFLAT_ENV["config"]["display_error"] ?? false) {
-                $msg .= " {code3}";
+            if ((SHAKEFLAT_ENV["config"]["display_error"] ?? false) && (SHAKEFLAT_ENV["display_error"]["database"] ?? false)) {
+                $msg .= ":{code2}({code1})\n{code3}";
                 $context["code3"] = $e->getMessage();
                 if (SHAKEFLAT_ENV["log"]["include_query"] ?? false) {
                     $msg .= "\nQuery:{code4}";
