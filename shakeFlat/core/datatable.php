@@ -700,7 +700,18 @@ class DataTable extends L
         );
     }
 
-    public function setCustomSearchDateRange($alias, $label, $style = null, $compareDateFormat = "Y-m-d H:i:s", $callbackFnc = null)
+    public function setCustomSearchDateTimeRange($alias, $label, $style = null, $compareDateFormat = "Y-m-d H:i:s", $callbackFnc = null)
+    {
+        $this->customSearch[$alias] = array(
+            "type"      => "datetimeRange",
+            "label"     => $label,
+            "style"     => $style,
+            "compareDateFormat" => $compareDateFormat,
+            "callback"  => $callbackFnc,
+        );
+    }
+
+    public function setCustomSearchDateRange($alias, $label, $style = null, $compareDateFormat = "Y-m-d", $callbackFnc = null)
     {
         $this->customSearch[$alias] = array(
             "type"      => "dateRange",
@@ -887,12 +898,13 @@ class DataTable extends L
         $excelButtonClassName = ""; if ($this->excelButtonClassName) $excelButtonClassName = "className: \"" . str_replace("\"", "\\\"", $this->excelButtonClassName) . "\", ";
 
 
-        $customSearch = "";
-        $customSearchAjaxData   = "";
-        $customSearchReload     = "";
-        $customSearchSelect2    = "";
-        $customSearchDateRange  = "";
-        $customSearchList       = array();
+        $customSearch               = "";
+        $customSearchAjaxData       = "";
+        $customSearchReload         = "";
+        $customSearchSelect2        = "";
+        $customSearchDateRange      = "";
+        $customSearchDatetimeRange  = "";
+        $customSearchList           = array();
         if ($this->customSearch) {
             $html = "";
             foreach($this->customSearch as $alias => $info) {
@@ -915,8 +927,15 @@ class DataTable extends L
                         break;
                     case "dateRange" :
                         $html .= "\t\t\t\t<input type='search' class='form-control form-control-sm w-auto sf-custom-search-{$this->jsTableName}' {$style}name='sf_search_{$alias}' id='sf_search_{$alias}' autocomplete='off'>\\\n";
-                        $customSearchDateRange .= "$(\"#sf_search_{$alias}\").daterangepicker({ timePicker:true, autoUpdateInput: false, locale: { format: 'YYYY-MM-DD HH:mm', cancelLabel: 'Clear' }});\n\t\t";
-                        $customSearchDateRange .= "$(\"#sf_search_{$alias}\").on(\"apply.daterangepicker\", function(ev, picker) { $(this).val(picker.startDate.format('YYYY-MM-DD HH:mm') + ' - ' + picker.endDate.format('YYYY-MM-DD HH:mm')); {$this->jsTableName}.ajax.reload(null, true); });\n\t\t";
+                        $customSearchDateRange .= "$(\"#sf_search_{$alias}\").daterangepicker({ timePicker:false, autoUpdateInput: false, locale: { format: 'YYYY-MM-DD', cancelLabel: 'Clear' }});\n\t\t";
+                        $customSearchDateRange .= "$(\"#sf_search_{$alias}\").on(\"apply.daterangepicker\", function(ev, picker) { $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD')); {$this->jsTableName}.ajax.reload(null, true); });\n\t\t";
+                        $customSearchDateRange .= "$(\"#sf_search_{$alias}\").on(\"cancel.daterangepicker\", function(ev, picker) { $(this).val(\"\"); {$this->jsTableName}.ajax.reload(null, true); });\n\t\t";
+                        break;
+                    case "datetimeRange" :
+                        $html .= "\t\t\t\t<input type='search' class='form-control form-control-sm w-auto sf-custom-search-{$this->jsTableName}' {$style}name='sf_search_{$alias}' id='sf_search_{$alias}' autocomplete='off'>\\\n";
+                        $customSearchDatetimeRange .= "$(\"#sf_search_{$alias}\").daterangepicker({ timePicker:true, autoUpdateInput: false, locale: { format: 'YYYY-MM-DD HH:mm', cancelLabel: 'Clear' }});\n\t\t";
+                        $customSearchDatetimeRange .= "$(\"#sf_search_{$alias}\").on(\"apply.daterangepicker\", function(ev, picker) { $(this).val(picker.startDate.format('YYYY-MM-DD HH:mm') + ' - ' + picker.endDate.format('YYYY-MM-DD HH:mm')); {$this->jsTableName}.ajax.reload(null, true); });\n\t\t";
+                        $customSearchDatetimeRange .= "$(\"#sf_search_{$alias}\").on(\"cancel.daterangepicker\", function(ev, picker) { $(this).val(\"\"); {$this->jsTableName}.ajax.reload(null, true); });\n\t\t";
                         break;
                     case "hidden" :
                         $html .= "\t\t\t\t<input type='hidden' name='sf_search_{$alias}' id='sf_search_{$alias}'>\\\n";
@@ -928,7 +947,7 @@ class DataTable extends L
         }
         if ($customSearchList) {
             $customSearch = "$(\"div.sf-custom-search\").html(\"\\\n\t\t\t<div class='d-flex flex-row align-items-center flex-wrap'>\\\n" . implode("", $customSearchList) . "\t\t\t</div>\\\n\t\t\");";
-            $customSearchReload = "$(document).on(\"change\", \".sf-custom-search-{$this->jsTableName}\", function() { {$this->jsTableName}.ajax.reload(null, true); });";
+            $customSearchReload = "$(document).on(\"change search\", \".sf-custom-search-{$this->jsTableName}\", function() { {$this->jsTableName}.ajax.reload(null, true); });";
         }
 
         $buttons = array();
@@ -1026,6 +1045,7 @@ class DataTable extends L
                     {$customSearch}
                     {$customSearchSelect2}
                     {$customSearchDateRange}
+                    {$customSearchDatetimeRange}
                     {$customInvisible}
                 }
             }
@@ -1715,6 +1735,22 @@ class DataTable extends L
                             $this->setSearchAnd("{$this->columns[$alias]["realColumn"]} = :sf_custom_search_{$alias}", array(":sf_custom_search_{$alias}" => $val));
                             break;
                         case "dateRange" :
+                            $val = trim($val);
+                            $valStart = substr($val, 0, 10);
+                            $valEnd = substr($val, 13);
+
+                            if (sfValidateDate($valStart, "Y-m-d")) {
+                                $dateTime = \DateTime::createFromFormat("Y-m-d", "{$valStart}");
+                                $this->setSearchAnd("{$this->columns[$alias]["realColumn"]} >= :sf_custom_search_{$alias}_start", array(":sf_custom_search_{$alias}_start" => $dateTime->format($info["compareDateFormat"])));
+                                $val = $valStart . " - " . substr($val, 13);
+                            }
+                            if (sfValidateDate($valEnd, "Y-m-d")) {
+                                $dateTime = \DateTime::createFromFormat("Y-m-d", "{$valEnd}");
+                                $this->setSearchAnd("{$this->columns[$alias]["realColumn"]} < :sf_custom_search_{$alias}_end", array(":sf_custom_search_{$alias}_end" => $dateTime->modify('+1 day')->format($info["compareDateFormat"])));
+                                $val = substr($val, 0, 13) . " - " . $valEnd;
+                            }
+                            break;
+                        case "datetimeRange" :
                             $val = trim($val);
                             $valStart = substr($val, 0, 16);
                             $valEnd = substr($val, 19);
