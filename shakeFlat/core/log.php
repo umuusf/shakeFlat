@@ -178,9 +178,8 @@ class L
 
         $re = $msg;
         foreach($allTable as $str => $arr) {
-            $str = str_replace(array("$1", "$2", "$3", "$4", "$5", "$6", "$7", "$8", "$9"), "([a-zA-Z0-9, ]*)", $str);
+            $str = str_replace(array("$1", "$2", "$3", "$4", "$5", "$6", "$7", "$8", "$9"), "([\w-]+)", $str);
             $str = str_replace(array("/"), array("\/"), $str);
-
             $reg = preg_match_all("/^{$str}$/", $msg, $match);
             if (isset($match[0]) && $match[0] && isset($arr[0][$lang])) {
                 $re = $arr[0][$lang];
