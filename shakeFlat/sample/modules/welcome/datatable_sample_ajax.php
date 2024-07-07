@@ -6,8 +6,6 @@
  *
  */
 
-use shakeFlat\Response;
-use shakeFlat\Util;
 use shakeFlat\datatables\dtUser;
 
 function fnc_datatable_sample_ajax($app)
