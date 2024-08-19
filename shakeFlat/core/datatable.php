@@ -893,7 +893,7 @@ class DataTable extends L
 
         $drawCallBack = "";         if ($this->drawCallBack) $drawCallBack = "drawCallback : function(settings) { {$this->drawCallBack} },\n";
         $createdRow = "";           if ($this->createdRow) $createdRow = "createdRow : function(row, data, dataIndex, cells) { {$this->createdRow} },\n";
-        $excelFileName = "";        if ($this->excelFileName) $excelFileName = "title: \"" . htmlspecialchars($this->excelFileName) . "\", ";
+        $excelFileName = "";        if ($this->excelFileName) $excelFileName = "filename: \"" . htmlspecialchars($this->excelFileName) . "\", ";
         $excelButtonText = "";      if ($this->excelButtonText) $excelButtonText = "text: \"" . str_replace("\"", "\\\"", $this->excelButtonText) . "\", ";
         $excelButtonClassName = ""; if ($this->excelButtonClassName) $excelButtonClassName = "className: \"" . str_replace("\"", "\\\"", $this->excelButtonClassName) . "\", ";
 
@@ -952,7 +952,7 @@ class DataTable extends L
 
         $buttons = array();
         if ($this->excelEnable) {
-            $buttons[] = "{ extend: 'excelHtml5', titleAttr: 'Excel', {$excelFileName}{$excelButtonText}{$excelButtonClassName}action: newexportaction, exportOptions: { columns: {$excelColumns} } }";
+            $buttons[] = "{ extend: 'excelHtml5', titleAttr: 'Excel', title:'', {$excelFileName}{$excelButtonText}{$excelButtonClassName}action: newexportaction, exportOptions: { columns: {$excelColumns} } }";
         }
         if ($this->newRecord) {
             $buttons[] = "{ title: 'New', text: '{$this->newRecordModalTitle}', action: sf_open_add_form_{$this->setName}, {$excelButtonClassName} },";
