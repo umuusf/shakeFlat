@@ -344,14 +344,14 @@ function __Log_Delete()
     foreach ($files as $file) {
         if (filemtime($file) < strtotime("-" . SHAKEFLAT_ENV["log"]["log_retention_days"] . " days")) {
             unlink($file);
-            echo "Deleted: $file\n";
+            //echo "Deleted: $file\n";
         }
     }
     $files = glob($logPath . 'query-*.log');
     foreach ($files as $file) {
         if (filemtime($file) < strtotime("-" . SHAKEFLAT_ENV["log"]["log_retention_days"] . " days")) {
             unlink($file);
-            echo "Deleted: $file\n";
+            //echo "Deleted: $file\n";
         }
     }
 }
