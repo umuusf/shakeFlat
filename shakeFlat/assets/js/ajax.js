@@ -6,7 +6,7 @@ function callAjax(url, frm, successCallback, errorCallback, _this)
 
     //console.log(typeof frm, frm.constructor.name);
     if (typeof frm == "string") frmObj = $("#" + frm);
-    else if (typeof frm == "object" && frm.constructor.name == "ce") frmObj = frm;
+    else if (typeof frm == "object" && (frm.constructor.name == "ce" || frm.constructor.name == "S")) frmObj = frm;
     else if (typeof frm == "object" && frm.constructor.name == "FormData") frmData = frm;
     else if (typeof frm == "object" && frm.constructor.name == "Object") {
         //console.log("Object");
