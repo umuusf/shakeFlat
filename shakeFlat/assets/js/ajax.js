@@ -4,12 +4,11 @@ function callAjax(url, frm, successCallback, errorCallback, _this)
     var frmData = new FormData();
     var includeFiles = false;
 
-    //console.log(typeof frm, frm.constructor.name);
-    if (typeof frm == "string") frmObj = $("#" + frm);
-    else if (typeof frm == "object" && (frm.constructor.name == "ce" || frm.constructor.name == "S")) frmObj = frm;
+    if (typeof frm === 'string') { frmObj = $("#" + frm); }
+    else if (frm instanceof jQuery) { frmObj = frm; }
+    else if (frm instanceof HTMLElement) { frmObj = $(frm); } 
     else if (typeof frm == "object" && frm.constructor.name == "FormData") frmData = frm;
     else if (typeof frm == "object" && frm.constructor.name == "Object") {
-        //console.log("Object");
         $.each(frm, function(k, v) {
             if (typeof v == "object" && v.constructor.name == "File") {
                 frmData.append(k, $("#"+k)[0].files[0]);
@@ -18,7 +17,6 @@ function callAjax(url, frm, successCallback, errorCallback, _this)
                 frmData.append(k, v);
             }
         });
-        //for (var pair of frmData.entries()) { console.log(pair[0]+ ', ' + pair[1]); }
     }
     if (frmObj) {
         //console.log("frmObj");

@@ -39,12 +39,13 @@ function __sfConfig__init()
 
     // path
     $gpath = GPath::getInstance();
-    $gpath->MODULES     = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["modules"]     ?? "sample/modules", " /") . "/";
-    $gpath->TEMPLATES   = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["templates"]   ?? "sample/modules/admin", " /") . "/";
-    $gpath->MODELS      = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["models"]      ?? "sample/models", " /") . "/";
-    $gpath->DATATABLES  = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["datatables"]  ?? "sample/datatables", " /") . "/";
-    $gpath->TRANSLATION = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["translation"] ?? "sample/translation/trans.json", " /") . "/";
-    $gpath->STORAGE     = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["storage"]     ?? "sample/storage", " /") . "/";
+    $gpath->MODULES          = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["modules"]      ?? "sample/modules", " /") . "/";
+    $gpath->TEMPLATES        = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["templates"]    ?? "sample/modules/admin", " /") . "/";
+    $gpath->MODELS           = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["models"]       ?? "sample/models", " /") . "/";
+    $gpath->DATATABLES       = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["datatables"]   ?? "sample/datatables", " /") . "/";
+    $gpath->STORAGE          = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["storage"]      ?? "sample/storage", " /") . "/";
+
+    $gpath->TRANSLATION_FILE = SHAKEFLAT_PATH . trim(SHAKEFLAT_ENV["path"]["translation_file"] ?? "sample/translation/translation.json");
 
     __sfConfig__checkStorage();
 }
