@@ -199,7 +199,7 @@ function __sfAlert(options)
             $sfAlertBody.append($iconTag);
         }
 
-        var $sfAlertMsg = $("<div/>", { "class":"text-center text-nowrap mt-3 mb-4", "css":{ "font-size":defaults.fontSize } }).html(defaults.messageText);
+        var $sfAlertMsg = $("<div/>", { "class":"text-center mt-3 mb-4", "css":{ "font-size":defaults.fontSize } }).html(defaults.messageText);
         $sfAlertBody.append($sfAlertMsg);
 
         var $sfAlertBtnArea = $("<div/>", { "class":"text-center mb-2" });
