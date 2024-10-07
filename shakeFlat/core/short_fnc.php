@@ -124,3 +124,11 @@ function sfRedirectMsg()
     if ($msg) return $msg;
     return false;
 }
+
+// This command returns the currently set translation language. If no language is set, it will return $default.
+function sfLang($default = null)
+{
+    $lang = shakeFlat\Template::getInstance()->getTranslationLang();
+    if (!$lang) return $default;
+    return $lang;
+}
