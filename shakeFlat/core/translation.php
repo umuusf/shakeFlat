@@ -108,7 +108,7 @@ class Translation
             } else {
                 foreach($allTable as $str => $arr) {
                     $str = str_replace(array("$1", "$2", "$3", "$4", "$5", "$6", "$7", "$8", "$9"), "(.+)", $str);
-                    $str = str_replace(array("/"), array("\/"), $str);
+                    $str = str_replace(array("/", "?", "."), array("\/", "\?", "\."), $str);
                     $reg = preg_match_all("/^{$str}$/", $k, $match);
                     if (isset($match[0]) && $match[0] && isset($arr[$code][$lang])) {
                         $re = $arr[$code][$lang];
