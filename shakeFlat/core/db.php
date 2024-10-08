@@ -156,18 +156,18 @@ class DB extends L
         }
     }
 
-    public function fetch($statement)
+    public function fetch($statement, $mode = PDO::FETCH_ASSOC)
     {
         try {
-            return $statement->fetch(PDO::FETCH_ASSOC);
+            return $statement->fetch($mode);
         } catch(Exception $e) {
             $this->exit($e->getMessage() . " ({code})", array("code"=>$e->getCode()));
         }
     }
 
-    public function fetchAll($statement)
+    public function fetchAll($statement, $mode = PDO::FETCH_KEY_PAIR)
     {
-        return $statement->fetchAll(PDO::FETCH_ASSOC);
+        return $statement->fetchAll($mode);
     }
 
     public function lastId()
