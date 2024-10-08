@@ -159,7 +159,7 @@ class DB extends L
     public function fetch($statement)
     {
         try {
-            return $statement->fetch(PDO::FETCH_ASSOC);
+            return $statement->fetch(PDO::FETCH_KEY_PAIR);
         } catch(Exception $e) {
             $this->exit($e->getMessage() . " ({code})", array("code"=>$e->getCode()));
         }
@@ -167,7 +167,7 @@ class DB extends L
 
     public function fetchAll($statement)
     {
-        return $statement->fetchAll(PDO::FETCH_ASSOC);
+        return $statement->fetchAll(PDO::FETCH_KEY_PAIR);
     }
 
     public function lastId()
