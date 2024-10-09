@@ -165,7 +165,7 @@ class DB extends L
         }
     }
 
-    public function fetchAll($statement, $mode = PDO::FETCH_KEY_PAIR)
+    public function fetchAll($statement, $mode = PDO::FETCH_ASSOC)
     {
         return $statement->fetchAll($mode);
     }
