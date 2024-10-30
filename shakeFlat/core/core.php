@@ -143,11 +143,11 @@ class App extends L
 
         $router = Router::getInstance();
         $moduleFile = rtrim($this->gpath->MODULES, " /") . "/{$router->module()}/{$router->fnc()}.php";
-        if (!file_exists($moduleFile)) $this::system("The file corresponding to module/function does not exist.", array( "module" => $router->module(), "function" => $router->fnc() ));
-        if (!include_once($moduleFile)) $this::system("The file corresponding to module/function cannot be included.", array( "module" => $router->module(), "function" => $router->fnc() ));
+        if (!file_exists($moduleFile)) $this::system("The file corresponding to module/function({$router->module()}/{$router->fnc()}) does not exist.", array( "module" => $router->module(), "function" => $router->fnc() ));
+        if (!include_once($moduleFile)) $this::system("The file corresponding to module/function({$router->module()}/{$router->fnc()}) cannot be included.", array( "module" => $router->module(), "function" => $router->fnc() ));
 
         $fncName = "fnc_" . str_replace("-", "_", $router->fnc());
-        if (!function_exists($fncName)) $this::system("A function corresponding to module/function does not exist.", array( "module" => $router->module(), "function" => $router->fnc() ));
+        if (!function_exists($fncName)) $this::system("A function corresponding to module/function({$router->module()}/{$router->fnc()}) does not exist.", array( "module" => $router->module(), "function" => $router->fnc() ));
 
         call_user_func($fncName, $this);
 

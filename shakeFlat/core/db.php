@@ -115,7 +115,8 @@ class DB extends L
         if (SHAKEFLAT_ENV["log"]["include_query"] ?? false) LogQuery::stack($sql, $bindList);  // log.inc
         try {
             if ($bindList === null) {
-                // This is not responsible for the sql injection problem. If there is a field containing a variable, $bindList must be used.
+                // This is not responsible for the sql injection problem. 
+                // If there is a field containing a variable, $bindList must be used.
                 return $this->dbh->query($sql);
             } elseif (is_array($bindList)) {
                 $statement = $this->dbh->prepare($sql);

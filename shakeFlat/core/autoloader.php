@@ -30,7 +30,7 @@ spl_autoload_register(function($class) {
         case "shakeFlat\Cookie" :       require_once SHAKEFLAT_PATH . "/core/cookie.php"; break;
         case "shakeFlat\AuthCookie" :
         case "shakeFlat\AuthSession" :  require_once SHAKEFLAT_PATH . "/core/auth.php"; break;
-        case "shakeFlat\DataTable" :    require_once SHAKEFLAT_PATH . "/core/datatable.php"; break;
+        case "shakeFlat\DataTables" :   require_once SHAKEFLAT_PATH . "/core/datatables.php"; break;
         case "shakeFlat\L" :
         case "shakeFlat\Log" :
         case "shakeFlat\LogQuery" :

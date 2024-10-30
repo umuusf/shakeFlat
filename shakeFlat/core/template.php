@@ -158,7 +158,7 @@ class Template
                 break;
             case self::MODE_AJAX_FOR_DATATABLE :
                 header("Content-Type: application/json; charset={$this->charset}");
-                $data = $res->data()["data"];
+                $data = $res->data();
                 $data = json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
                 if (strtoupper($this->charset) != "UTF-8") $data = iconv("UTF-8", $this->charset, $data);
                 echo $data;
@@ -252,11 +252,12 @@ class Template
     }
 
     // In case of publishing the error contents and closing the app.
-    public function displayError($message, $context, $code = -1)
+    // $errUrl : Used when redirecting to the specified URL.
+    public function displayError($message, $context, $code = -1, $errUrl = null)
     {
         $data = array(
             "common" => array ( "time" => time() ),
-            "error"  => array ( "errCode" => $code, "errMsg" => $message ),
+            "error"  => array ( "errCode" => $code, "errMsg" => $message, "errUrl" => $errUrl ),
             "data"   => array (),
         );
 

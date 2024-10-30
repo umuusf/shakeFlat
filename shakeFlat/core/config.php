@@ -45,8 +45,6 @@ function __sfConfig__init()
     $gpath->DATATABLES       = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["datatables"]   ?? "sample/datatables", " /") . "/";
     $gpath->STORAGE          = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["storage"]      ?? "sample/storage", " /") . "/";
 
-    $gpath->TRANSLATION_FILE = SHAKEFLAT_PATH . trim(SHAKEFLAT_ENV["path"]["translation_file"] ?? "sample/translation/translation.json");
-
     __sfConfig__checkStorage();
 }
 

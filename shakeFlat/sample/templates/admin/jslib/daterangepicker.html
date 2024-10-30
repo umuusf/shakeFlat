@@ -1,0 +1,165 @@
+<script src="/assets/libs/highlight-11.10.0/highlight.min.js"></script>
+<link rel="stylesheet" href="/assets/libs/highlight-11.10.0/styles/dark.min.css">
+
+<div class="mb-5">
+    A JavaScript component for choosing date ranges, dates and times.<br>
+    /assets/libs/daterangepicker-3.1<br>
+    official site: <a href="https://www.daterangepicker.com/" target="_blank">https://www.daterangepicker.com/</a>
+</div>
+
+<div class="mb-5">
+    <div class="d-flex">
+        <div class="mb-3" style="min-width:22rem;">
+            <label for="daterange" class="form-label">date ~ date</label>
+            <input type="search" class="form-control form-control-sm" name="daterange" id="daterange" autocomplete="off" style="width:210px;">
+        </div>
+        <div>
+            <h6>html</h6>
+            <pre><code class="language-html"><?php echo htmlspecialchars(<<<EOD
+            <label for="daterange" class="form-label">date ~ date</label>
+            <input type="search" class="form-control form-control-sm" name="daterange" id="daterange" autocomplete="off" style="width:210px;">
+            EOD);?></code></pre>
+
+            <h6>javascript</h6>
+            <pre><code class="language-js"><?php echo htmlspecialchars(<<<EOD
+            $('input[name="daterange"]').daterangepicker({
+                timePicker: false, 
+                autoUpdateInput: false, 
+                locale: { 
+                    format: 'YYYY-MM-DD', 
+                    cancelLabel: 'Clear' 
+                }
+            });  
+            $("#daterange").on("apply.daterangepicker", function(ev, picker) { 
+                $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD')); 
+            });
+            $("#daterange").on("cancel.daterangepicker", function(ev, picker) { 
+                $(this).val(""); 
+            });
+            EOD);?></code></pre>
+        </div>
+    </div>
+    <hr>
+    <div class="d-flex">
+        <div class="mb-1" style="min-width:22rem;">
+            <label for="datetimerange" class="form-label">datetime ~ datetime</label>
+            <input type="search" class="form-control form-control-sm" name="datetimerange" id="datetimerange" autocomplete="off" style="width:300px;">
+        </div>
+        <div>
+            <h6>html</h6>
+            <pre><code class="language-html"><?php echo htmlspecialchars(<<<EOD
+            <label for="daterange" class="form-label">datetime ~ datetime</label>
+            <input type="search" class="form-control form-control-sm" name="datetimerange" id="datetimerange" autocomplete="off" style="width:300px;">
+            EOD);?></code></pre>
+
+            <h5>javascript</h5>
+            <pre><code class="language-js"><?php echo htmlspecialchars(<<<EOD
+            $("#datetimerange").daterangepicker({
+                timePicker: true,
+                autoUpdateInput: false,
+                locale: {
+                    format: 'YYYY-MM-DD HH:mm',
+                    cancelLabel: 'Clear'
+                }
+            });
+            $("#datetimerange").on("apply.daterangepicker", function(ev, picker) {
+                $(this).val(picker.startDate.format('YYYY-MM-DD HH:mm') + ' - ' + picker.endDate.format('YYYY-MM-DD HH:mm'));
+            });
+            $("#datetimerange").on("cancel.daterangepicker", function(ev, picker) {
+                $(this).val("");
+            });
+            EOD);?></code></pre>        
+        </div>
+    </div>
+    <hr>
+    <div class="d-flex">
+        <div class="mb-1" style="min-width:22rem;">
+            <label for="datetimerange-kr" class="form-label">Korean</label>
+            <input type="search" class="form-control form-control-sm" name="datetimerange-kr" id="datetimerange-kr" autocomplete="off" style="width:300px;">
+        </div>
+        <div>
+            <h6>html</h6>
+            <pre><code class="language-html"><?php echo htmlspecialchars(<<<EOD
+            <label for="daterange" class="form-label">datetime ~ datetime</label>
+            <input type="search" class="form-control form-control-sm" name="datetimerange-kr" id="datetimerange-kr" autocomplete="off" style="width:300px;">
+            EOD);?></code></pre>
+
+            <h5>javascript</h5>
+            <pre><code class="language-js"><?php echo htmlspecialchars(<<<EOD
+            $("#datetimerange-kr").daterangepicker({
+                timePicker: true,
+                autoUpdateInput: false,
+                locale: {
+                    format: 'YYYY-MM-DD HH:mm',
+                    cancelLabel: '취소',
+                    applyLabel: '확인',
+                    monthNames: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
+                    daysOfWeek: ['일','월','화','수','목','금','토'],            
+                }
+            });
+            $("#datetimerange-kr").on("apply.daterangepicker", function(ev, picker) {
+                $(this).val(picker.startDate.format('YYYY-MM-DD HH:mm') + ' - ' + picker.endDate.format('YYYY-MM-DD HH:mm'));
+            });
+            $("#datetimerange-kr").on("cancel.daterangepicker", function(ev, picker) {
+                $(this).val("");
+            });
+            EOD);?></code></pre>        
+        </div>        
+    </div>
+</div>
+
+<script>
+$(document).ready(function(){
+    hljs.highlightAll();
+
+    $('input[name="daterange"]').daterangepicker({
+        timePicker: false, 
+        autoUpdateInput: false, 
+        locale: { 
+            format: 'YYYY-MM-DD', 
+            cancelLabel: 'Clear' 
+        }
+    });  
+    $("#daterange").on("apply.daterangepicker", function(ev, picker) { 
+        $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD')); 
+    });
+    $("#daterange").on("cancel.daterangepicker", function(ev, picker) { 
+        $(this).val(""); 
+    });
+
+
+    $("#datetimerange").daterangepicker({
+        timePicker: true,
+        autoUpdateInput: false,
+        locale: {
+            format: 'YYYY-MM-DD HH:mm',
+            cancelLabel: 'Clear'
+        }
+    });
+    $("#datetimerange").on("apply.daterangepicker", function(ev, picker) {
+        $(this).val(picker.startDate.format('YYYY-MM-DD HH:mm') + ' - ' + picker.endDate.format('YYYY-MM-DD HH:mm'));
+    });
+    $("#datetimerange").on("cancel.daterangepicker", function(ev, picker) {
+        $(this).val("");
+    });
+
+    $("#datetimerange-kr").daterangepicker({
+        timePicker: true,
+        autoUpdateInput: false,
+        locale: {
+            format: 'YYYY-MM-DD HH:mm',
+            cancelLabel: '취소',
+            applyLabel: '확인',
+            monthNames: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
+            daysOfWeek: ['일','월','화','수','목','금','토'],            
+        }
+    });
+    $("#datetimerange-kr").on("apply.daterangepicker", function(ev, picker) {
+        $(this).val(picker.startDate.format('YYYY-MM-DD HH:mm') + ' - ' + picker.endDate.format('YYYY-MM-DD HH:mm'));
+    });
+    $("#datetimerange-kr").on("cancel.daterangepicker", function(ev, picker) {
+        $(this).val("");
+    });
+
+});
+</script>

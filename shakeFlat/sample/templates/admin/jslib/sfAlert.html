@@ -1,0 +1,41 @@
+<script src="/assets/libs/highlight-11.10.0/highlight.min.js"></script>
+<link rel="stylesheet" href="/assets/libs/highlight-11.10.0/styles/dark.min.css">
+
+<div class="mb-5">
+    sfAlert is an alert and confirm function provided by shakeFlat.<br>
+    /assets/js/sfalert.js
+</div>
+
+<div class="mb-5">
+    <button type="button" class="btn btn-danger" onclick="alert('Hello, shakeFlat!')">alert</button>
+    <button type="button" class="btn btn-info" onclick="noti('Hello, shakeFlat!')">notify</button>
+    <button type="button" class="btn btn-primary" onclick="confirm('Are you sure?', function() { noti('You clicked OK!'); }, function() { alert('You clicked Cancel!'); })">confirm</button>
+</div>
+
+<div>
+    <h5>JavaScript Code</h5>
+    <pre><code class="language-js"><?php echo htmlspecialchars(<<<EOD
+    // alert - Warning icon, warning color
+    alert("Hello, shakeFlat!");
+
+    // notify - Notification icon, notification color
+    noti("Hello, shakeFlat!");
+
+    // jump, back
+    // alertJump(msg, url), alertBack(msg), notiJump(msg, url), notiBack(msg)
+
+    // confirm with ok and cancel callback. The cancel callback can be omitted.
+    // confirm(msg, okCallback, cancelCallback);
+    confirm("Are you sure?", function() {
+        alert("You clicked OK!");
+    }, function() {
+        alert("You clicked Cancel!");
+    });
+    EOD);?></code></pre>
+</div>
+
+<script>
+$(document).ready(function(){
+    hljs.highlightAll();
+});
+</script>

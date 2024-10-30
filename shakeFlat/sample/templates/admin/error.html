@@ -1,6 +1,13 @@
 <div class="text-warning text-bg-dark p-5">
     <h3>ERROR : <?=$message?></h3>
 </div>
+
+<?php if ($errUrl) : ?>
+<div class="text-center mt-3 mb-1">
+    <a href="<?=$errUrl?>" class="btn btn-secondary">돌아가기</a>
+</div>
+<?php endif; ?>
+
 <?php if ($context) : ?>
 <div>
      <?=sfWebDump($context)?>

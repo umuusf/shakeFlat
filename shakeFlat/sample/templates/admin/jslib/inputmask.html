@@ -1,0 +1,65 @@
+<script src="/assets/libs/highlight-11.10.0/highlight.min.js"></script>
+<link rel="stylesheet" href="/assets/libs/highlight-11.10.0/styles/dark.min.css">
+
+<div class="mb-5">
+    Inputmask is a javascript library that creates an input mask.<br>
+    /assets/libs/inputmask-5.0.10-beta.11<br>
+    official site: <a href="https://github.com/RobinHerbots/Inputmask" target="_blank">https://github.com/RobinHerbots/Inputmask</a>
+</div>
+
+<div class="mb-5">
+    <div class="mb-1">
+        <label for="mask-1" class="form-label">99-9999999</label>
+        <input id="mask-1" data-inputmask="'mask': '99-9999999'" />
+    </div>
+    <div class="mb-1">
+        <label for="mask-2" class="form-label">Phone</label>
+        <input id="mask-2" data-inputmask="'mask': '(999) 999-9999'" />
+    </div>
+    <div class="mb-1">
+        <label for="mask-3" class="form-label">9-a{1,3}9{1,3}</label>
+        <input id="mask-3" data-inputmask="'mask': '9-a{1,3}9{1,3}'" />
+    </div>
+    <div class="mb-1">
+        <label for="mask-4" class="form-label">9, repeat: 10, greedy: false</label>
+        <input id="mask-4" data-inputmask="'mask': '9', 'repeat': 10, 'greedy': false" />
+    </div>
+    <div class="mb-1">
+        <label for="mask-5" class="form-label">datetime</label>
+        <input id="mask-5" data-inputmask="'alias': 'datetime'" />
+    </div>
+</div>
+
+<div>
+    <h5>JavaScript Code</h5>
+    <pre><code class="language-js"><?php echo htmlspecialchars(<<<EOD
+    $(document).ready(function(){
+        $(selector).inputmask("99-9999999");  //static mask
+        $(selector).inputmask({"mask": "(999) 999-9999"}); //specifying options
+        $(selector).inputmask("9-a{1,3}9{1,3}"); //mask with dynamic syntax
+    });
+    EOD);?></code></pre>
+
+    <h5>use data-inputmask attribute</h5>
+    <pre><code class="language-html"><?php echo htmlspecialchars(<<<EOD
+    <input data-inputmask="'mask': '99-9999999'" />
+    <input data-inputmask="'alias': 'datetime'" />
+    <input data-inputmask="'mask': '9', 'repeat': 10, 'greedy' : false" />
+    EOD);?></code></pre>
+    <pre><code class="language-js"><?php echo htmlspecialchars(<<<EOD
+    $(document).ready(function(){
+        $(":input").inputmask();
+    });
+    EOD);?></code></pre>
+</div>
+
+<script>
+$(document).ready(function(){
+    hljs.highlightAll();
+    $("input").inputmask();
+});
+</script>
+
+<style>
+div label { width:180px; display:inline-block; }
+</style>

@@ -4,14 +4,13 @@ function alertBack(msg) { sfAlertBack(msg); }
 function noti(msg) { sfNoti(msg); }
 function notiJump(msg, url) { sfNotiJump(msg, url); }
 function notiBack(msg) { sfNotiBack(msg); }
-function confirm(msg, callback) { sfConfirm(msg, callback); }
+function confirm(msg, callback, noCallback) { sfConfirm(msg, callback, noCallback); }
 
 function sfAlert(p) {
     var opt = {
         type: "alert",
         messageText: "Alert!!",
         alertType: "danger",
-        darkMode: false,
     };
     if (typeof p == "string") opt.messageText = p;
     else if (typeof p == "object") $.extend(opt, p);
@@ -23,7 +22,6 @@ function sfAlertBack(p) {
         type: "alert",
         messageText: "Alert!!",
         alertType: "danger",
-        darkMode: false,
         okCallback: function() { history.go(-1); },
     };
     if (typeof p == "string") opt.messageText = p;
@@ -36,7 +34,6 @@ function sfAlertJump(p, url) {
         type: "alert",
         messageText: "Alert!!",
         alertType: "danger",
-        darkMode: false,
         okCallback: function() { location.href = url; },
     };
     if (typeof p == "string") opt.messageText = p;
@@ -44,31 +41,11 @@ function sfAlertJump(p, url) {
     __sfAlert(opt);
 }
 
-function sfAlertBackDark(p) {
-    var opt = {
-        darkMode: true,
-    };
-    if (typeof p == "string") opt.messageText = p;
-    else if (typeof p == "object") $.extend(opt, p);
-    sfAlertBack(opt);
-}
-
-function sfAlertDark(p) {
-    var opt = {
-        messageText: "Alert!!",
-        darkMode: true,
-    };
-    if (typeof p == "string") opt.messageText = p;
-    else if (typeof p == "object") $.extend(opt, p);
-    sfAlert(opt);
-}
-
 function sfNoti(p) {
     var opt = {
         type: "alert",
         messageText: "Notification",
         alertType: "info",
-        darkMode: false,
     };
     if (typeof p == "string") opt.messageText = p;
     else if (typeof p == "object") $.extend(opt, p);
@@ -95,47 +72,17 @@ function sfNotiBack(p, url) {
     sfNoti(opt);
 }
 
-function sfNotiDark(p) {
-    var opt = {
-        messageText: "Notification",
-        darkMode: true,
-    };
-    if (typeof p == "string") opt.messageText = p;
-    else if (typeof p == "object") $.extend(opt, p);
-    sfNoti(opt);
-}
-
-function sfNotiJumpDark(p, url) {
-    var opt = {
-        messageText: "Notification",
-        darkMode: true,
-        okCallback: function() { location.href = url; },
-    };
-    if (typeof p == "string") opt.messageText = p;
-    else if (typeof p == "object") $.extend(opt, p);
-    sfNoti(opt);
-}
-
-function sfConfirm(p, callback) {
+function sfConfirm(p, callback, noCallback) {
     var opt = {
         type: "confirm",
         messageText: "Confirm",
         alertType: "success",
         yesCallback: callback,
-        darkMode: false,
+        noCallback: noCallback,
     };
     if (typeof p == "string") opt.messageText = p;
     else if (typeof p == "object") $.extend(opt, p);
     __sfAlert(opt);
-}
-
-function sfConfirmDark(p, callback) {
-    var opt = {
-        darkMode: true,
-    };
-    if (typeof p == "string") opt.messageText = p;
-    else if (typeof p == "object") $.extend(opt, p);
-    sfConfirm(opt, callback);
 }
 
 var __sfAlertIdx = 0;
@@ -152,8 +99,7 @@ function __sfAlert(options)
 		messageText: 'Message',
 		alertType: 'default', //default, primary, success, info, warning, danger
 		inputFieldType: 'text', //could ask for number,email,etc
-        darkMode: false,
-        fontSize: '1.2em',
+        fontSize: '1.2rem',
         width: null,
         icon: null,
         iconSize: null,
@@ -162,7 +108,8 @@ function __sfAlert(options)
         okCallback: null,
         yesCallback: null,
         noCallback: null,
-        top: "10em",
+        top: '15vh',
+        left: '0px',
 	}
 	$.extend(defaults, options);
 
@@ -174,12 +121,29 @@ function __sfAlert(options)
 
         var $sfAlert = $("<div/>", { "id":"sfAlerts-" + alertIdx, "class":"modal fade", "tabindex":"-1", "data-bs-keyboard":"true", "data-bs-backdrop":"true" });
         $sfAlert.css("z-index", "10000");
-        if (defaults.top) $sfAlert.css("top", defaults.top);
-        if (defaults.darkMode) $sfAlert.attr("data-bs-theme", "dark");
+
         if (defaults.customStyle) $sfAlert.attr("style", defaults.customStyle);
 
         var $sfAlertDialog = $("<div/>", { "class":"modal-dialog modal-dialog-scrollable", "css": { "max-width":widthTag} });
-        if (defaults.isCenter) $sfAlertDialog.addClass("modal-dialog-centered");
+        if (defaults.isCenter) {
+            $sfAlertDialog.addClass("modal-dialog-centered");
+        } else {
+            var top = defaults.top, left = defaults.left;
+            var parent = getTopVisibleModal();
+            if (parent) {
+                if (parent.css("top") != "0px") {
+                    top = "calc(3rem + " + parent.css("top") + ")";
+                    left = "calc(3rem + " + parent.css("left") + ")";
+                    $sfAlert.css("top", top);
+                    $sfAlert.css("left", left);
+                } else {
+                    $sfAlertDialog.addClass("modal-dialog-centered");
+                }
+            } else {
+                $sfAlert.css("top", top);
+                $sfAlert.css("left", left);
+            }
+        }
 
         var $sfAlertContent = $("<div/>", { "class":"modal-content" });
         var $sfAlertBody = $("<div/>", { "class":"modal-body" });
@@ -250,18 +214,10 @@ function __sfAlert(options)
 			$(this).remove();
             if (defaults.okCallback) deferredObject.resolve(defaults.okCallback()); else deferredObject.resolve();
         }).on('hide.bs.modal', function() {
-            __sfAlertCount --;
             $("#sfAlertOverlay").css("display", "none");
 		}).on('shown.bs.modal', function () {
 			if ($('#prompt').length > 0) $('#prompt').focus();
 		}).on('show.bs.modal', function () {
-            if (__sfAlertCount >= 0) {
-                var topPx = (__sfAlertCount * convertRemToPixels(3)) + "px";
-                if (defaults.top) topPx = "calc(" + topPx + " + " + defaults.top + ")";
-                var leftPx = (__sfAlertCount * convertRemToPixels(3)) + "px";
-                $(this).css({"top":topPx, "left":leftPx});
-            }
-            __sfAlertCount ++;
             $("#sfAlertOverlay").css("display", "block");
         }).modal('show');
 
@@ -273,23 +229,20 @@ function __sfAlert(options)
     return deferredObject.promise();
 }
 
-String.prototype.stringWidth = function(font, fontSize) {
-    var tt = this.toLowerCase().split(/<br>|<br\/>|<br \/>|<p>/);
-    var max_tt = "";
-    for(i=0;i<tt.length;i++) if (max_tt.length < tt[i].length) max_tt = tt[i];
+function getTopVisibleModal() {
+    let topModal = null;
+    let maxZIndex = -1;
 
-    var fs = "1.2em";
-    if (fontSize) fs = fontSize;
-    var f = font || fs + " 'Nanum Gothic'",
-        o = $('<div></div>')
-            .text(max_tt)
-            .css({'position': 'absolute', 'float': 'left', 'white-space': 'nowrap', 'visibility': 'hidden', 'font': f})
-            .appendTo($('body')),
-        w = o.width();
-    o.remove();
-    w += 50;
-    if (w < 400) w = 400;
-    if (w > 1200) w = 1200;
+    $('div.modal').each(function () {
+        const $this = $(this);
+        if ($this.css('display') === 'block') {
+            const zIndex = parseInt($this.css('z-index'), 10) || 0;
+            if (zIndex > maxZIndex) {
+                maxZIndex = zIndex;
+                topModal = $this;
+            }
+        }
+    });
 
-    return w;
+    return topModal;
 }

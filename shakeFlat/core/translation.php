@@ -18,7 +18,7 @@ class Translation
 {
     private $cacheTable;
     private $needUpdate;
-    private $translationFilePath;
+    private $allTable;
 
     public static function getInstance()
     {
@@ -31,15 +31,24 @@ class Translation
     private function __construct()
     {
         $this->needUpdate = false;
-        $this->cacheTable = array();
-        $gpath = GPath::getInstance();
-        $this->translationFilePath = $gpath->TRANSLATION_FILE;
+        $this->cacheTable = [];
+        $this->allTable = [];
+
+        $this->setFilePathTranslation(__DIR__ . "/system_translation.json");
+        $this->setFilePathTranslation(SHAKEFLAT_PATH . trim(SHAKEFLAT_ENV["path"]["translation_file"] ?? "sample/translation.json"));
     }
 
     public function setFilePathTranslation($filePath)
     {
-        $this->translationFilePath = $filePath;
-        return $this;
+        try {
+            $json = file_get_contents($filePath);
+            if ($json !== false) {
+                $arr = json_decode($json, true);
+                if ($arr) $this->allTable = array_merge($this->allTable, $arr);
+            }        
+        } catch (\Exception $e) {
+            //echo $e->getMessage();
+        }
     }
 
     public function convert($output, $lang)
@@ -59,27 +68,29 @@ class Translation
             }
         }
 
-        $re = preg_match_all("/\[[0-9]*\:(.*?)\:\]/", $output, $match);
-        foreach($match[0] as $idx => $s) {
-            $text = $match[1][$idx];
-            $code = 0;
-            if (substr($s, 0, 2) != "[:") $code = intval(substr($s, 1, -1));
-            $output = str_replace($s, $this->_L($text, $code, $lang), $output);
+        // $output은 [:message:] 또는 [:code:message:] 형식이다. 전자라면 code는 "0"으로 간주한다.
+        $pattern = '/\[:([a-z0-9]+:)?(.*?)\:\]/';
+        preg_match_all($pattern, $output, $matches, PREG_SET_ORDER);        
+        if ($matches) {                        
+            foreach ($matches as $match) {
+                $code = "0";
+                if (isset($match[1]) && $match[1]) $code = rtrim($match[1], ":");
+                $output = str_replace($match[0], $this->_L($match[2], $code, $lang), $output);
+            }
         }
-
         return $output;
     }
 
     // Import the original data without translating the content.
     public function passing($output)
     {
-        $re = preg_match_all("/\[[0-9]*\:(.*?)\:\]/", $output, $match);
-
-        foreach($match[0] as $idx => $s) {
-            $text = $match[1][$idx];
-            $code = 0;
-            if (substr($s, 0, 2) != "[:") $code = intval(substr($s, 1, -1));
-            $output = str_replace($s, $text, $output);
+        $pattern = '/\[:([a-z0-9]+:)?(.*?)\:\]/';
+        preg_match_all($pattern, $output, $matches, PREG_SET_ORDER);
+        if ($matches) {
+            foreach($matches[0] as $idx => $s) {
+                $text = $matches[1][$idx];
+                $output = str_replace($s, $text, $output);
+            }
         }
         return $output;
     }
@@ -99,17 +110,16 @@ class Translation
     }
 
     private function _L($k, $code, $lang)
-    {
-        if (!isset($this->cacheTable[$k][$code][$lang]) || IS_DEBUG) {
-            $allTable = $this->loadAll();
+    { 
+        if (!isset($this->cacheTable[$k][$code][$lang]) || IS_DEBUG) {            
             $re = $k;
-            if (!IS_DEBUG && isset($allTable[$k][$code][$lang])) {
-                $re = $allTable[$k][$code][$lang];
-            } else {
-                foreach($allTable as $str => $arr) {
-                    $str = str_replace(array("$1", "$2", "$3", "$4", "$5", "$6", "$7", "$8", "$9"), "(.+)", $str);
-                    $str = str_replace(array("/", "?", "."), array("\/", "\?", "\."), $str);
-                    $reg = preg_match_all("/^{$str}$/", $k, $match);
+            if (!IS_DEBUG && isset($this->allTable[$k][$code][$lang])) {
+                $re = $this->allTable[$k][$code][$lang];
+            } else {                
+                foreach($this->allTable as $str => $arr) {            
+                    $str = str_replace(array("/", ")", "(", ","), array("\/", "\)", "\(", "\,"), $str);
+                    $str = str_replace(array("$1", "$2", "$3", "$4", "$5", "$6", "$7", "$8", "$9"), "([a-zA-Z0-9,\/ \(\)-_]*)", $str);                    
+                    $reg = preg_match_all("/^{$str}$/", $k, $match);    
                     if (isset($match[0]) && $match[0] && isset($arr[$code][$lang])) {
                         $re = $arr[$code][$lang];
                         for($i=1;$i<=9;$i++) {
@@ -143,19 +153,5 @@ class Translation
 
         $router = Router::getInstance();
         return $cachePath . str_replace("/", ".", "{$router->module()}/{$router->fnc()}") . ".{$lang}.json";
-    }
-
-    private function loadAll()
-    {
-        static $allTable = null;
-        if ($allTable) return $allTable;
-        if (!file_exists($this->translationFilePath)) return array();
-        $json = file_get_contents($this->translationFilePath);
-        if ($json === false) return array();
-        $arr = json_decode($json, true);
-        if (!$arr) return array();
-        $allTable = $arr;
-
-        return $allTable;
     }
 }

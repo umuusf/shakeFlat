@@ -12,6 +12,7 @@
 
 namespace shakeFlat;
 use shakeFlat\Template;
+use shakeFlat\Translation;
 use \DateTime;
 use \DateTimeZone;
 
@@ -39,7 +40,8 @@ class L
     // Do not record logs.
     public static function system($message, $context = array(), $exception = null)
     {
-        $message = self::getTranslationLangSystem($message);
+        $message = "[:{$message}:]";
+        $message = self::getTranslation($message);        
         list($message, $context) = self::_shakeMsgContext($message, $context, $exception);
         self::_terminate(array("message" => $message, "context" => $context));
     }
@@ -50,6 +52,13 @@ class L
     public static function exit($message, $context = array(), $exception = null)
     {
         self::_terminate(self::error($message, $context, $exception));
+    }
+
+    // After displaying the error message, navigate to $errUrl.
+    // Used in ajax mode, and the redirection is handled by the caller of the ajax.
+    public static function exitUrl($message, $errUrl, $context = array(), $exception = null)
+    {
+        self::_terminate(self::error($message, $context, $exception), -1, $errUrl);
     }
 
     // Terminates the process after logging. (exit)
@@ -67,7 +76,7 @@ class L
     public static function exitNoti($message, $code)
     {
         $template = Template::getInstance();
-        $message = self::getTranslationLangSystem($message);
+        $message = self::getTranslation($message);
         $template->displayError($message, array(), $code);
         exit;
     }
@@ -88,7 +97,7 @@ class L
 
     // Display an error screen and exit.
     // $logMsg => array( "message" => string, "context" => array )
-    private static function _terminate($logMsg, $errCode = -1)
+    private static function _terminate($logMsg, $errCode = -1, $errUrl = null)
     {
         if (SHAKEFLAT_ENV["config"]["display_error"] ?? false) {
             if (SHAKEFLAT_ENV["display_error"]["tracing"] ?? false) {
@@ -113,11 +122,11 @@ class L
             $message = self::defaultErrorMessage();
             $context = null;
 
-            $message = self::getTranslationLangSystem($message);
+            $message = self::getTranslation($message);
         }
 
         $template = Template::getInstance();
-        $template->displayError($message, $context, $errCode);
+        $template->displayError($message, $context, $errCode, $errUrl);
         exit;
     }
 
@@ -164,35 +173,25 @@ class L
         return array($message, $context);
     }
 
-    private static function getTranslationLangSystem($msg)
+    private static function getTranslation($output)
     {
-        $path = __DIR__ . "/translation.json";
-        if (!file_exists($path)) return $msg;
-        $json = file_get_contents($path);
-        if ($json === false) return $msg;
-        $allTable = json_decode($json, true);
         $template = Template::getInstance();
         $lang = $template->getTranslationLang();
-        if (!$lang) return $msg;
-        if (isset($allTable[$msg][0][$lang])) return $allTable[$msg][0][$lang];
-
-        $re = $msg;
-        foreach($allTable as $str => $arr) {
-            $str = str_replace(array("$1", "$2", "$3", "$4", "$5", "$6", "$7", "$8", "$9"), "([\w-]+)", $str);
-            $str = str_replace(array("/"), array("\/"), $str);
-            $reg = preg_match_all("/^{$str}$/", $msg, $match);
-            if (isset($match[0]) && $match[0] && isset($arr[0][$lang])) {
-                $re = $arr[0][$lang];
-                for($i=1;$i<=9;$i++) {
-                    if (isset($match[$i][0])) {
-                        $re = str_replace("$".$i, $match[$i][0], $re);
-                    }
-                }
-                break;
+        $translation = Translation::getInstance();
+        if ($lang) {            
+            if (is_array($output)) {
+                $output = json_decode($translation->convert(json_encode($output, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE), $lang), true);
+            } else {                                
+                $output = $translation->convert($output, $lang);                
             }
+            $translation->updateCache($lang);
+            return $output;
         }
-
-        return $re;
+        if (is_array($output)) {
+            return json_decode($translation->passing(json_encode($output, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE)), true);
+        } else {
+            return $translation->passing($output);
+        }
     }
 }
 
