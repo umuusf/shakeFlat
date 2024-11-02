@@ -11,9 +11,8 @@
  */
 
 namespace shakeFlat;
-use shakeFlat\L;
 
-class Modt extends L
+class Modt
 {
     protected static $instance = array();
 

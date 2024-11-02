@@ -13,12 +13,12 @@
  */
 
 namespace shakeFlat;
-use shakeFlat\L;
 use shakeFlat\AES256;
 use shakeFlat\Util;
+use shakeFlat\L;
 use \Exception;
 
-class Param extends L
+class Param
 {
     const TYPE_INT       = 1001;
     const TYPE_INTEGER   = 1001;
@@ -153,7 +153,7 @@ class Param extends L
     public function checkKey($key, $type, $enum = null)
     {
         $this->_setTypeEnum($key, $type, $enum);
-        if (!$this->_existKey($key, $type)) $this->exit("[:The parameter {$key} does not exist.:]");
+        if (!$this->_existKey($key, $type)) L::exit("[:The parameter {$key} does not exist.:]");
         if ($this->_existValue($key, $type)) $this->_checkType($key, $type, $enum);
     }
 
@@ -161,19 +161,19 @@ class Param extends L
     public function checkKeyValue($key, $type, $enum = null)
     {
         $this->_setTypeEnum($key, $type, $enum);
-        if (!$this->_existKey($key, $type)) $this->exit("[:The parameter {$key} does not exist.:]");
-        if (!$this->_existValue($key, $type)) $this->exit("[:The value of parameter {$key} is empty.:]");
+        if (!$this->_existKey($key, $type)) L::exit("[:The parameter {$key} does not exist.:]");
+        if (!$this->_existValue($key, $type)) L::exit("[:The value of parameter {$key} is empty.:]");
         $this->_checkType($key, $type, $enum);
     }
 
     public function checkFileType($key, $type = SELF::FILE_ALL)
     {
-        if (!$this->_existKey($key, self::TYPE_FILE)) $this->exit("[:The parameter {$key} does not exist.:]");
+        if (!$this->_existKey($key, self::TYPE_FILE)) L::exit("[:The parameter {$key} does not exist.:]");
         if (!$this->_existValue($key, SELF::TYPE_FILE)) return;
         switch($type) {
             case SELF::FILE_ALL : break;
             case SELF::FILE_IMAGE :
-                if (!exif_imagetype($_FILES[$key]["tmp_name"])) $this->exit("[:The type of parameter {$key} is incorrect.:]");
+                if (!exif_imagetype($_FILES[$key]["tmp_name"])) L::exit("[:The type of parameter {$key} is incorrect.:]");
                 break;
         }
         return;
@@ -248,39 +248,39 @@ class Param extends L
 
     private function _checkType($key, $type, $enum)
     {
-        if ($enum !== null && is_array($enum) && !in_array($this->params[$key], $enum)) $this->exit("[:The type of parameter {$key} is incorrect.:]");
+        if ($enum !== null && is_array($enum) && !in_array($this->params[$key], $enum)) L::exit("[:The type of parameter {$key} is incorrect.:]");
 
         switch($type) {
             case Param::TYPE_INT :
                 $val = strval(intval($this->params[$key]));
-                if ($val != $this->params[$key]) $this->exit("[:The type of parameter {$key} is incorrect.:]");
+                if ($val != $this->params[$key]) L::exit("[:The type of parameter {$key} is incorrect.:]");
                 $this->params[$key] = intval($this->params[$key]);
                 return;
             case Param::TYPE_FLOAT :
                 $val = strval(floatval($this->params[$key]));
-                if ($val != $this->params[$key]) $this->exit("[:The type of parameter {$key} is incorrect.:]");
+                if ($val != $this->params[$key]) L::exit("[:The type of parameter {$key} is incorrect.:]");
                 $this->params[$key] = floatval($this->params[$key]);
                 return;
             case Param::TYPE_STRING :
-                if (!is_string($this->params[$key])) $this->exit("[:The type of parameter {$key} is incorrect.:]");
+                if (!is_string($this->params[$key])) L::exit("[:The type of parameter {$key} is incorrect.:]");
                 $this->params[$key] = strval($this->params[$key]);
                 return;
             case Param::TYPE_BOOLEAN :
                 if (strtolower($this->params[$key]) == "true") $this->params[$key] = true;
                 if (strtolower($this->params[$key]) == "false") $this->params[$key] = false;
-                if (!is_bool($this->params[$key])) $this->exit("[:The type of parameter {$key} is incorrect.:]");
+                if (!is_bool($this->params[$key])) L::exit("[:The type of parameter {$key} is incorrect.:]");
                 return;
             case Param::TYPE_JSON :
                 if ($this->params[$key]) {
                     if (!is_array(json_decode($this->params[$key], true))) {
                         switch (json_last_error()) {
-                            case JSON_ERROR_NONE            : $this->exit("[:{$key} Error in json format : No errors:]"); break;
-                            case JSON_ERROR_DEPTH           : $this->exit("[:{$key} Error in json format : Maximum stack depth exceeded:]"); break;
-                            case JSON_ERROR_STATE_MISMATCH  : $this->exit("[:{$key} Error in json format : Underflow or the modes mismatch:]"); break;
-                            case JSON_ERROR_CTRL_CHAR       : $this->exit("[:{$key} Error in json format : Unexpected control character found:]"); break;
-                            case JSON_ERROR_SYNTAX          : $this->exit("[:{$key} Error in json format : Syntax error, malformed JSON:]"); break;
-                            case JSON_ERROR_UTF8            : $this->exit("[:{$key} Error in json format : Malformed UTF-8 characters, possibly incorrectly encoded:]"); break;
-                            default                         : $this->exit("[:{$key} Error in json format : Unknown error:]"); break;
+                            case JSON_ERROR_NONE            : L::exit("[:{$key} Error in json format : No errors:]"); break;
+                            case JSON_ERROR_DEPTH           : L::exit("[:{$key} Error in json format : Maximum stack depth exceeded:]"); break;
+                            case JSON_ERROR_STATE_MISMATCH  : L::exit("[:{$key} Error in json format : Underflow or the modes mismatch:]"); break;
+                            case JSON_ERROR_CTRL_CHAR       : L::exit("[:{$key} Error in json format : Unexpected control character found:]"); break;
+                            case JSON_ERROR_SYNTAX          : L::exit("[:{$key} Error in json format : Syntax error, malformed JSON:]"); break;
+                            case JSON_ERROR_UTF8            : L::exit("[:{$key} Error in json format : Malformed UTF-8 characters, possibly incorrectly encoded:]"); break;
+                            default                         : L::exit("[:{$key} Error in json format : Unknown error:]"); break;
                         }
                     }
                     $this->params[$key] = json_decode($this->params[$key], true);
@@ -289,16 +289,16 @@ class Param extends L
                 }
                 return;
 
-            case Param::TYPE_ARRAY       : if (!is_array($this->params[$key]))                                              $this->exit("[:The type of parameter {$key} is incorrect.:]");  return;
-            case Param::TYPE_EMAIL       : if (filter_var($this->params[$key], FILTER_VALIDATE_EMAIL) === false)            $this->exit("[:The type of parameter {$key} is incorrect.:]");  return;
-            case Param::TYPE_URL         : if (filter_var($this->params[$key], FILTER_VALIDATE_URL) === false)              $this->exit("[:The type of parameter {$key} is incorrect.:]");  return;
-            case Param::TYPE_DOMAIN      : if (filter_var($this->params[$key], FILTER_VALIDATE_DOMAIN) === false)           $this->exit("[:The type of parameter {$key} is incorrect.:]");  return;
-            case Param::TYPE_IP          : if (filter_var($this->params[$key], FILTER_VALIDATE_IP) === false)               $this->exit("[:The type of parameter {$key} is incorrect.:]");  return;
-            case Param::TYPE_DATETIME    : if (Util::validateDate($this->params[$key]) === false)                           $this->exit("[:The type of parameter {$key} is incorrect.:]");  return;
-            case Param::TYPE_DATE        : if ($this->params[$key] != date("Y-m-d", strtotime($this->params[$key])))        $this->exit("[:The type of parameter {$key} is incorrect.:]");  return;
-            case Param::TYPE_FILE        : if (!isset($_FILES[$key]) || ($_FILES[$key]["error"] ?? 100) != 0)               $this->exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_ARRAY       : if (!is_array($this->params[$key]))                                              L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_EMAIL       : if (filter_var($this->params[$key], FILTER_VALIDATE_EMAIL) === false)            L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_URL         : if (filter_var($this->params[$key], FILTER_VALIDATE_URL) === false)              L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_DOMAIN      : if (filter_var($this->params[$key], FILTER_VALIDATE_DOMAIN) === false)           L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_IP          : if (filter_var($this->params[$key], FILTER_VALIDATE_IP) === false)               L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_DATETIME    : if (Util::validateDate($this->params[$key]) === false)                           L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_DATE        : if ($this->params[$key] != date("Y-m-d", strtotime($this->params[$key])))        L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_FILE        : if (!isset($_FILES[$key]) || ($_FILES[$key]["error"] ?? 100) != 0)               L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
         }
-        $this->exit("[:The type of parameter {$key} is incorrect.:]");
+        L::exit("[:The type of parameter {$key} is incorrect.:]");
     }
 
     /**
@@ -345,7 +345,7 @@ class Param extends L
                 "fileSize"          => $_FILES[$key]["size"],
             );
         } catch(Exception $e) {
-            $this->exit("[:'{$key}' File upload error - {$e->getMessage()}:]", $e->getCode());
+            L::exit("[:'{$key}' File upload error - {$e->getMessage()}:]", $e->getCode());
         }
     }
 
