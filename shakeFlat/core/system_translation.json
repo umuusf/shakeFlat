@@ -115,9 +115,54 @@
         }
     },
 
+    "Communication with the server is not smooth. Please try again later.": {
+        "dt": {
+            "kr": "서버와의 통신이 원활하지 않습니다. 잠시 후 다시 시도해보세요."
+        }
+    },
+    "The server responded incorrectly. Please try again later.": {
+        "dt": {
+            "kr": "서버가 잘못된 응답을 하였습니다. 잠시 후 다시 시도해보세요."
+        }
+    },
     "It must be made only of alphabet(lower case) and numbers (the first letter is an alphabet).": {
         "dt": {
             "kr": "영문 소문자, 숫자(첫글자는 영문)이어야만 합니다."
+        }
+    },
+    "Reset search conditions": {
+        "dt": {
+            "kr": "검색 조건 초기화"
+        }
+    },
+    "Change column order and visibility settings": {
+        "dt": {
+            "kr": "열 순서 및 표시 설정 변경"
+        }
+    },
+    "Go directly to the page number you entered": {
+        "dt": {
+            "kr": "입력한 페이지 번호로 바로 이동"
+        }
+    },
+    "Restore the initial state of column order and visibility.": {
+        "dt": {
+            "kr": "열의 순서와 표시 여부를 처음 상태로 되돌립니다."
+        }
+    },
+    "Query for total number of records is not set.": {
+        "dt": {
+            "kr": "전체 레코드 수를 구하는 쿼리가 설정되어 있지 않습니다."
+        }
+    },
+    "Query for total number of records after filtering is not set." : {
+        "dt": {
+            "kr": "검색된 레코드 수를 구하는 쿼리가 설정되어 있지 않습니다."
+        }
+    },
+    "Function for data is not set.": {
+        "dt": {
+            "kr": "데이터를 가져오는 함수가 설정되어 있지 않습니다."
         }
     },
     "Reset" : {

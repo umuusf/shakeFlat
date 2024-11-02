@@ -404,7 +404,9 @@ body {
         .dt-paging {
             button.page-link { --bs-pagination-padding-y:0.14rem; --bs-pagination-padding-x:0.7rem; }
         }
-        .dt-search { input { min-width:15rem; } }
+        .dt-search { input { min-width:15rem; } margin-right:0.3rem!important; }
+        .btn-sfdt-search-reset { font-size:1.2rem; --bs-btn-padding-x:0.5rem!important; --bs-btn-padding-y:0!important; padding-top:3px; }
+
         .table > thead > tr > th, .table > tfoot > tr > th { border-top: 2px solid #ccc; border-bottom: 2px solid #ccc; padding-top: 0.4rem; padding-bottom: 0.4rem; }
 
         input.sfdt-page-jump { width: 55px; margin-right:0.3rem; }

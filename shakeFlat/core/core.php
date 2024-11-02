@@ -15,7 +15,7 @@ use shakeFlat\Modt;
 use shakeFlat\Util;
 use shakeFlat\Translation;
 
-class App extends L
+class App
 {
     private $transactionDB  = array();
     private $template       = null;
@@ -38,7 +38,7 @@ class App extends L
 
     public function setTransaction($connectionName = "default")
     {
-        if (!isset(SHAKEFLAT_ENV["database"]["connection"][$connectionName])) $this::system("DB connection information is not defined in config.ini.", array( "connection" => $connectionName ));
+        if (!isset(SHAKEFLAT_ENV["database"]["connection"][$connectionName])) L::system("[:DB connection information is not defined in config.ini.:]", array( "connection" => $connectionName ));
         $this->transactionDB[] = $connectionName;
         return $this;
     }
@@ -96,7 +96,7 @@ class App extends L
     public function setMode($mode)
     {
         $constList = Util::classDefineList("shakeFlat\Template", "MODE_", true);
-        if (!in_array($mode, array_values($constList))) $this::system("This template mode does not exist.");
+        if (!in_array($mode, array_values($constList))) L::system("[:This template mode does not exist.:]");
         $this->template->setMode($mode);
         return $this;
     }
@@ -143,11 +143,11 @@ class App extends L
 
         $router = Router::getInstance();
         $moduleFile = rtrim($this->gpath->MODULES, " /") . "/{$router->module()}/{$router->fnc()}.php";
-        if (!file_exists($moduleFile)) $this::system("The file corresponding to module/function({$router->module()}/{$router->fnc()}) does not exist.", array( "module" => $router->module(), "function" => $router->fnc() ));
-        if (!include_once($moduleFile)) $this::system("The file corresponding to module/function({$router->module()}/{$router->fnc()}) cannot be included.", array( "module" => $router->module(), "function" => $router->fnc() ));
+        if (!file_exists($moduleFile)) L::system("[:The file corresponding to module/function({$router->module()}/{$router->fnc()}) does not exist.:]", array( "module" => $router->module(), "function" => $router->fnc() ));
+        if (!include_once($moduleFile)) L::system("[:The file corresponding to module/function({$router->module()}/{$router->fnc()}) cannot be included.:]", array( "module" => $router->module(), "function" => $router->fnc() ));
 
         $fncName = "fnc_" . str_replace("-", "_", $router->fnc());
-        if (!function_exists($fncName)) $this::system("A function corresponding to module/function({$router->module()}/{$router->fnc()}) does not exist.", array( "module" => $router->module(), "function" => $router->fnc() ));
+        if (!function_exists($fncName)) L::system("[:A function corresponding to module/function({$router->module()}/{$router->fnc()}) does not exist.:]", array( "module" => $router->module(), "function" => $router->fnc() ));
 
         call_user_func($fncName, $this);
 

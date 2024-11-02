@@ -20,6 +20,27 @@ $(document).ready(function() {
         $(".sfdt-custom-search-item>select[data-sfselect2='true']").select2({theme: 'bootstrap5'});
     }
 
+    $(document).on("click", ".btn-sfdt-search-reset", function() {
+        let tableId = $(this).data("table-id");
+        $(".sfdt-"+tableId+"-custom-search").each(function() {
+            if ($(this).data("sfdt-custom-search-ex") != true) {
+                let alias = $(this).data("sfdt-alias");
+                let oriIdx = sfdtFindIndexForAlias(tableId, alias);
+                sfdt[tableId].columns(sfdt[tableId].colReorder.transpose(oriIdx)).search("");
+            }
+            switch($(this).prop("tagName")) {
+                case "INPUT" :
+                    if ($(this).attr("type") === 'text' || $(this).attr("type") === 'search') $(this).val("");
+                    break;
+                case "SELECT" :
+                    if ($(this).data("sfselect2") == true) $(this).val($(this).find("option:first").val()).trigger("change.select2");
+                    else $(this).find("option:first").prop("selected", true);
+                    break;
+            }
+        });
+        sfdt[tableId].search("").draw();
+    });
+
     $(document).on("click", "button.sfdt-btn-pagejump", function() {
         let tableId = $(this).parents('div').prev('input').data('table-id');
         let page = parseInt($(this).parents('div').prev('input').val(), 10);
@@ -31,7 +52,7 @@ $(document).ready(function() {
 
     $(".sfdt-custom-search-item>select[data-sfdt-custom-search-ex!='true']").on("change", function() {
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
-        let oriIdx = sfdtFindIndexForAlias(tableId, $(this).data("sfdt-data"));
+        let oriIdx = sfdtFindIndexForAlias(tableId, $(this).data("sfdt-alias"));
         sfdt[tableId].columns(sfdt[tableId].colReorder.transpose(oriIdx)).search($(this).val(), true, false).draw();
     });
 
@@ -42,7 +63,7 @@ $(document).ready(function() {
 
     $(".sfdt-custom-search-item>input[data-sfdt-custom-search-type='string'][data-sfdt-custom-search-ex!='true']").on("keyup", function() {
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
-        let oriIdx = sfdtFindIndexForAlias(tableId, $(this).data("sfdt-data"));
+        let oriIdx = sfdtFindIndexForAlias(tableId, $(this).data("sfdt-alias"));
         sfdt[tableId].columns(sfdt[tableId].colReorder.transpose(oriIdx)).search($(this).val()).draw();
     });
 
@@ -64,7 +85,7 @@ $(document).ready(function() {
 
     $(".sfdt-custom-search-item input[data-sfdt-custom-search-type='numberrange'][data-sfdt-custom-search-ex!='true']").on("apply.sfRangeSlide", function(event) {
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
-        let oriIdx = sfdtFindIndexForAlias(tableId, $(this).data("sfdt-data"));
+        let oriIdx = sfdtFindIndexForAlias(tableId, $(this).data("sfdt-alias"));
         sfdt[tableId].columns(sfdt[tableId].colReorder.transpose(oriIdx)).search($(this).val()).draw();
     });
 
@@ -86,7 +107,7 @@ $(document).ready(function() {
     $(".sfdt-custom-search-item>input[data-sfdt-custom-search-type='daterange'][data-sfdt-custom-search-ex!='true']").on("apply.daterangepicker", function(ev, picker) {
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
         $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
-        let oriIdx = sfdtFindIndexForAlias(tableId, $(this).data("sfdt-data"));
+        let oriIdx = sfdtFindIndexForAlias(tableId, $(this).data("sfdt-alias"));
         if (oriIdx > -1) sfdt[tableId].columns(sfdt[tableId].colReorder.transpose(oriIdx)).search($(this).val()).draw();
     });
 
@@ -99,7 +120,7 @@ $(document).ready(function() {
     $(".sfdt-custom-search-item>input[data-sfdt-custom-search-type='datetimerange'][data-sfdt-custom-search-ex!='true']").on("apply.daterangepicker", function(ev, picker) {
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
         $(this).val(picker.startDate.format('YYYY-MM-DD HH:mm') + ' - ' + picker.endDate.format('YYYY-MM-DD HH:mm'));
-        let oriIdx = sfdtFindIndexForAlias(tableId, $(this).data("sfdt-data"));
+        let oriIdx = sfdtFindIndexForAlias(tableId, $(this).data("sfdt-alias"));
         if (oriIdx > -1) sfdt[tableId].columns(sfdt[tableId].colReorder.transpose(oriIdx)).search($(this).val()).draw();
     });
 
@@ -112,7 +133,7 @@ $(document).ready(function() {
     $(".sfdt-custom-search-item>input[data-sfdt-custom-search-type='daterange'][data-sfdt-custom-search-ex!='true'], .sfdt-custom-search-item>input[data-sfdt-custom-search-type='datetimerange'][data-sfdt-custom-search-ex!='true']").on("cancel.daterangepicker", function(ev, picker) {
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
         $(this).val("");
-        let oriIdx = sfdtFindIndexForAlias(tableId, $(this).data("sfdt-data"));
+        let oriIdx = sfdtFindIndexForAlias(tableId, $(this).data("sfdt-alias"));
         if (oriIdx) sfdt[tableId].columns(sfdt[tableId].colReorder.transpose(oriIdx)).search($(this).val()).draw();
     });
 
@@ -126,7 +147,7 @@ $(document).ready(function() {
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
         if ($(this).val() === '') $(this).trigger('cancel.daterangepicker');
         else if ($(this).val().length === 23) {
-            let oriIdx = sfdtFindIndexForAlias(tableId, $(this).data("sfdt-data"));
+            let oriIdx = sfdtFindIndexForAlias(tableId, $(this).data("sfdt-alias"));
             if (oriIdx) sfdt[tableId].columns(sfdt[tableId].colReorder.transpose(oriIdx)).search($(this).val()).draw();
         }
     });
@@ -166,7 +187,7 @@ $(document).ready(function() {
         let tbl = `
             <table class="table table-sm table-hover mb-0">
                 <caption class="caption-top text-nowrap text-center pt-0">${txtTitleMessage}</caption>
-                <thead>document).on(
+                <thead>
                     <tr>
                         <th class="text-center text-nowrap">${txtColumn}</th>
                         <th class="text-center text-nowrap">${txtVisible}</th>
@@ -198,6 +219,7 @@ $(document).ready(function() {
                 </tbody>
             </table>
         `;
+
         $("#sfdt-modal-column-config-body").html(tbl);
 
         $("#sfdt-btn-column-config-apply").prop("disabled", true);
@@ -260,13 +282,12 @@ $(document).ready(function() {
 function sfdtFindIndexForAlias(tableId, alias)
 {
     let columns = sfdt[tableId].settings().init().columns;
-    for (let i = 0; i < columns.length; i++) if (columns[i].data == alias) return i;
+    for (let i = 0; i < columns.length; i++) if (columns[i].name == alias) return i;
     return -1;
 }
 
-function sfdtSetSearchDefaultValue(tableId, index, value)
+function sfdtSetSearchDefaultValue(tableId, alias, value)
 {
-    let alias = sfdt[tableId].column(index).dataSrc();
     let input = $("#sfdt-"+tableId+"-custom-search-" + alias);
     switch(input.prop("tagName")) {
         case "SELECT":

@@ -22,7 +22,7 @@ function fnc_custom_data()
     $param->checkKeyValue("start", Param::TYPE_INT);
     $param->checkKeyValue("length", Param::TYPE_INT);
     $param->checkKeyValue("search", Param::TYPE_ARRAY);
-    $param->check("customSearchEx_join_date2", Param::TYPE_STRING);
+    $param->check("customSearchEx", Param::TYPE_ARRAY);
 
     $db = DB::getInstance();
 
@@ -82,8 +82,8 @@ function fnc_custom_data()
         }
     }
 
-    if ($param->customSearchEx_join_date2) {
-        $between = explode(' - ', $param->customSearchEx_join_date2);
+    if ($param->customSearchEx["join_date2"] ?? false) {
+        $between = explode(' - ', $param->customSearchEx["join_date2"]);
         if (count($between) == 2 && strtotime($between[0]) && strtotime($between[1])) {
             $whereAnd[] = "join_date BETWEEN :waex_join_date2_start AND :waex_join_date2_end";
             $bind[":waex_join_date2_start"] = date("Y-m-d H:i:s", strtotime($between[0]));
@@ -96,6 +96,20 @@ function fnc_custom_data()
                 $endDate .= ':59';
             }
             $bind[":waex_join_date2_end"] = date("Y-m-d H:i:s", strtotime($endDate));
+        }
+    }
+
+    if ($param->customSearchEx["salary2"] ?? false) {
+        $between = explode(' - ', $param->customSearchEx["salary2"]);
+        if (count($between) == 2) {
+            $between[0] = intval(preg_replace('/\D/', '', $between[0]));
+            $between[1] = intval(preg_replace('/\D/', '', $between[1]));
+            $whereAnd[] = "salary BETWEEN :waex_{$col['data']}_start AND :waex_{$col['data']}_end";
+            $bind[":waex_{$col['data']}_start"] = $between[0];
+            $bind[":waex_{$col['data']}_end"] = $between[1];
+        } else {
+            $whereAnd[] = "salary = :waex_{$col['data']}";
+            $bind[":waex_{$col['data']}"] = intval(preg_replace('/\D/', '', $param->customSearchEx["salary2"]));
         }
     }
 

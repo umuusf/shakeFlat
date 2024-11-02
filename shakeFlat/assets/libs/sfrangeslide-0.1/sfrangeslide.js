@@ -2,7 +2,7 @@
     $.fn.sfRangeSlide = function (options) {
         const settings = $.extend({
             divClass: '',           // Class name for the created div
-            theme: 'auto',          // Can choose from 'auto', 'light', 'dark'            
+            theme: 'auto',          // Can choose from 'auto', 'light', 'dark'
             min: 0,                 // Minimum value for the Range Slider
             max: 9999999,           // Maximum value for the Range Slider
             step: null,             // Step value for the Range Slider
@@ -20,14 +20,32 @@
             return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
         }
 
+        // input 의 값에 따라서 slider 의 handle 을 이동시키는 함수
+        function moveSlider($input, $slider) {
+            const values = $input.val().split(' - ');
+            if (values.length === 2) {
+                const value1 = parseInt(values[0].replace(/\D/g, ''));
+                const value2 = parseInt(values[1].replace(/\D/g, ''));
+                if (value1 >= settings.min && value1 <= settings.max && value2 >= settings.min && value2 <= settings.max) {
+                    $slider.slider('values', [value1, value2]);
+                }
+            } else if (values.length === 1) {
+                const value = parseInt(values[0].replace(/\D/g, ''));
+                if (value >= settings.min && value <= settings.max) {
+                    $slider.slider('values', [value, settings.max]);
+                }
+            }
+        }
+
+
         // Bind events to each input element
         return this.each(function () {
             const $input = $(this);
-            
+
             $input.on('focus click', function () {
                 if ($input.data('sfRangeSlide')) {          // If the div already exists, show it
                     $input.data('sfRangeSlide').show();
-                    return; 
+                    return;
                 }
 
                 const isDark = (getTheme() === 'dark');
@@ -54,13 +72,13 @@
                 // create Range Slider
                 const $slider = $('<div>');
 
-                // jQuery UI Range Slider initialization                
+                // jQuery UI Range Slider initialization
                 $slider.slider({
                     range: true,
                     min: settings.min,
                     max: settings.max,
                     step: settings.step ? settings.step : (settings.max - settings.min) / 100,
-                    values: [settings.min, settings.max], 
+                    values: [ settings.min, settings.max ],
                     width: 'calc(' + w + 'px - 4rem)',
                     slide: function (event, ui) {
                         //console.log(`Range: ${ui.values[0]} - ${ui.values[1]}`);
@@ -71,6 +89,7 @@
                         $input.trigger('apply.sfRangeSlide');
                     },
                 });
+                moveSlider($input, $slider);
 
                 // Divide the slider into 5 parts and draw a ruler. Display vertical lines on the slider bar.
                 const $scale1 = $('<div>').css({ position: 'absolute', top: '0', left: '0%', width: '1px', height: '100%', background: isDark ? '#000' : '#000', zIndex: 1 });
@@ -80,7 +99,7 @@
                 const $scale5 = $('<div>').css({ position: 'absolute', top: '0', left: '100%', width: '1px', height: '100%', background: isDark ? '#000' : '#000', zIndex: 1 });
 
                 const num1 = $.sfNumberShort(settings.min);
-                const num2 = $.sfNumberShort(Math.floor((settings.max - settings.min) / 4));         
+                const num2 = $.sfNumberShort(Math.floor((settings.max - settings.min) / 4));
                 const num3 = $.sfNumberShort(Math.floor((settings.max - settings.min) / 2));
                 const num4 = $.sfNumberShort(Math.floor((settings.max - settings.min) * 3 / 4));
                 const num5 = $.sfNumberShort(settings.max);
@@ -96,7 +115,7 @@
                 $slider.append($scale3).append($label3);
                 $slider.append($scale4).append($label4);
                 $slider.append($scale5).append($label5);
-                
+
 
 
                 // Add slider to div and insert into DOM
@@ -105,30 +124,17 @@
 
                 $('body').append($div);
                 $input.data('sfRangeSlide', $div);
-               
+
                 // Event function to close the slider
                 $input.on('close.sfRangeSlide', function () { $div.hide(); });
                 $input.on('blur', function () { if (!$div.is(':hover')) $div.hide(); });
                 $(document).on('click', function (e) { if (!$input.is(':focus') && !$div.is(e.target) && $div.has(e.target).length === 0) $div.hide(); });
 
                 // Function to apply the Range Slider
-                $input.on('search', function () { $div.hide(); $input.trigger('apply.sfRangeSlide'); });
-                $input.on('change keyup', function (e) { 
-                    const values = $input.val().split(' - ');
-                    if (values.length === 2) {
-                        const value1 = parseInt(values[0].replace(/\D/g, ''));
-                        const value2 = parseInt(values[1].replace(/\D/g, ''));
-                        if (value1 >= settings.min && value1 <= settings.max && value2 >= settings.min && value2 <= settings.max) {
-                            $slider.slider('values', [value1, value2]);
-                        }
-                    } else if (values.length === 1) {
-                        const value = parseInt(values[0].replace(/\D/g, ''));
-                        if (value >= settings.min && value <= settings.max) {
-                            $slider.slider('values', [value, settings.max]);
-                        }
-                    }
-
-                    $input.trigger('apply.sfRangeSlide'); 
+                $input.on('search', function () { $div.hide(); $slider.slider("values", [settings.min, settings.max]); $input.trigger('apply.sfRangeSlide'); });
+                $input.on('change keyup', function (e) {
+                    moveSlider($input, $slider);
+                    $input.trigger('apply.sfRangeSlide');
 
                     e.stopPropagation();
                     return false;

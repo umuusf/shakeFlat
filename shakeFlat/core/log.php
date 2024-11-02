@@ -40,8 +40,7 @@ class L
     // Do not record logs.
     public static function system($message, $context = array(), $exception = null)
     {
-        $message = "[:{$message}:]";
-        $message = self::getTranslation($message);        
+        $message = self::getTranslation($message);
         list($message, $context) = self::_shakeMsgContext($message, $context, $exception);
         self::_terminate(array("message" => $message, "context" => $context));
     }
@@ -178,11 +177,11 @@ class L
         $template = Template::getInstance();
         $lang = $template->getTranslationLang();
         $translation = Translation::getInstance();
-        if ($lang) {            
+        if ($lang) {
             if (is_array($output)) {
                 $output = json_decode($translation->convert(json_encode($output, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE), $lang), true);
-            } else {                                
-                $output = $translation->convert($output, $lang);                
+            } else {
+                $output = $translation->convert($output, $lang);
             }
             $translation->updateCache($lang);
             return $output;

@@ -2,14 +2,15 @@
 namespace shakeFlat;
 use shakeFlat\L;
 use shakeFlat\Translation;
-use shakeFlat\Template;
-use shakeFlat\Router;
+use shakeFlat\Param;
 
 class DataTablesColumn
 {
     private $alias;
-    private $title;
     private $data;
+    private $columnQuery;       // for database field name (if different from data)
+                                // select {$columnQuery} as {$data} from table...
+    private $title;
     private $class;
     private $render;
     private $type;
@@ -20,8 +21,10 @@ class DataTablesColumn
     public function __construct($alias)
     {
         $this->alias = $alias;
-        $this->title = "";
         $this->data = $alias;
+        $this->columnQuery = $alias;
+
+        $this->title = "";
         $this->class = [];
         $this->render = "";
         $this->type = "";
@@ -33,6 +36,13 @@ class DataTablesColumn
     public function alias()
     {
         return $this->alias;
+    }
+
+    public function columnQuery($columnQuery = null)
+    {
+        if ($columnQuery === null) return $this->columnQuery;
+        $this->columnQuery = $columnQuery;
+        return $this;
     }
 
     public function title($title = null)
@@ -171,27 +181,31 @@ class DataTablesCustomSearch
     private $title;
     private $type;
     private $controlOption;
-    private $data;
+    private $options;
     private $numberRangeOption;
     private $select2;
-
-    private $ex;        // for not in columns
+    private $exColumnQuery;     // for database field name for search(where statement)
 
     public function __construct($alias)
     {
         $this->alias = $alias;
         $this->title = "";
-        $this->type = "string";
+        $this->type = self::TYPE_STRING;
         $this->controlOption = "";
         $this->numberRangeOption = [ "min" => 0, "max" => 100 ];
-        $this->data = [];
+        $this->options = [];
         $this->select2 = false;
-        $this->ex = false;
+        $this->exColumnQuery = "";
     }
 
     public function alias() { return $this->alias; }
-    public function ex() { $this->ex = true; return $this; }
-    public function isEx() { return $this->ex; }
+    public function ex($exColumnQuery = null)
+    {
+        if ($exColumnQuery === null) $this->exColumnQuery = $this->alias;
+        else $this->exColumnQuery = $exColumnQuery;
+        return $this;
+    }
+    public function exColumnQuery() { return $this->exColumnQuery; }
 
     public function title($title = null)
     {
@@ -214,14 +228,30 @@ class DataTablesCustomSearch
         return $this;
     }
 
-    public function data($key = null, $value = null)
+    public function widthPx($px) { $this->controlOption .= " style='width:{$px}px;'"; return $this; }
+    public function widthRem($rem) { $this->controlOption .= " style='width:{$rem}rem;'"; return $this; }
+    public function widthEm($em) { $this->controlOption .= " style='width:{$em}em;'"; return $this; }
+
+    public function option($key = null, $value = null)
     {
-        if ($key === null && $value === null) return $this->data;
+        if ($key === null && $value === null) return $this->options;
 
         if (is_array($key) && $value === null) {
-            $this->data = array_merge($this->data, $key);
+            $this->options = array_merge($this->options, $key);
         } else {
-            $this->data[$key] = $value;
+            $this->options[$key] = $value;
+        }
+        return $this;
+    }
+
+    public function options($key = null, $value = null)
+    {
+        if ($key === null && $value === null) return $this->options;
+
+        if (is_array($key) && $value === null) {
+            $this->options = array_merge($this->options, $key);
+        } else {
+            $this->options[$key] = $value;
         }
         return $this;
     }
@@ -254,23 +284,99 @@ class DataTablesCustomSearch
             "alias"             => $this->alias,
             "type"              => $this->type,
             "controlOption"     => $this->controlOption,
-            "data"              => $this->data,
+            "option"            => $this->options,
             "numberRangeOption" => $this->numberRangeOption,
             "select2"           => $this->select2
         ];
     }
 }
 
+class DataTablesExtraButton
+{
+    private $btnId;
+    private $title;
+    private $class;
+    private $option;
+    private $action;
+    private $tooltip;
+
+    public function __construct($btnId)
+    {
+        $this->btnId = $btnId;
+        $this->title = $btnId;
+        $this->class = [];
+        $this->action = "";
+        $this->option = [];
+        $this->tooltip = "";
+    }
+
+    public function btnId() { return $this->btnId; }
+
+    public function title($title = null)
+    {
+        if ($title === null) return $this->title;
+        $this->title = $title;
+        return $this;
+    }
+
+    public function class($class = null)
+    {
+        if ($class === null) return $this->class;
+        if (!in_array($class, $this->class)) $this->class[] = $class;
+        return $this;
+    }
+
+    public function action($action = null)
+    {
+        if ($action === null) return $this->action;
+        $this->action = $action;
+        return $this;
+    }
+
+    public function option($option = null)
+    {
+        if ($option === null) return $this->option;
+        if (!in_array($option, $this->option)) $this->option[] = $option;
+        return $this;
+    }
+
+    public function tooltip($tooltip = null)
+    {
+        if ($tooltip === null) return $this->tooltip;
+        $this->tooltip = $tooltip;
+        return $this;
+    }
+
+    public function html()
+    {
+        $class = implode(" ", $this->class);
+        $option = implode(" ", $this->option);
+        return "<button type=\"button\" id=\"{$this->btnId}\" class=\"btn btn-sm {$class}\"{$option}>{$this->title}</button>";
+    }
+
+    public function tooltipScript()
+    {
+        if (!$this->tooltip()) return "";
+        $tp = str_replace('"', '\"', $this->tooltip());
+        return <<<EOD
+
+                $('#{$this->btnId}').data("bs-toggle", "tooltip").attr("title", "{$tp}").tooltip();
+        EOD;
+    }
+}
+
 class DataTables
 {
-    private static $instance = array();
-    private static $checkOnce = false;
+    private static $checkOnceScript = false;
+    private static $checkOnceHtmlColReorder = false;
 
     private $tableId;
     private $containerOption;
+    private $disableTooltip;
 
     private $options;
     private $language;
+    private $ajaxUrl;
 
     private $exportActionPrint;
     private $exportActionPDF;
@@ -283,51 +389,43 @@ class DataTables
 
     private $extraButtons;
 
-    private $recordsTotal;
-    private $recordsFiltered;
-
     private $columns;
     private $customSearch;
 
     private $layoutCustomSearch;
     private $layoutList;
 
+    private $onePage;
+    private $querySearchSQL;
+    private $querySearchBind;
+
     // output for template
     private $html;
 
-    public static function getInstance()
-    {
-        $calledClass = get_called_class();
-        if (isset(self::$instance[$calledClass])) return self::$instance[$calledClass];
-        self::$instance[$calledClass] = new $calledClass();
-        return self::$instance[$calledClass];
-    }
-
-    protected function __construct($tableId)
+    public function __construct($tableId)
     {
         $chk = preg_match("/^[a-z][a-z0-9]*$/", $tableId);
         if (!$chk) L::system("[:dt:It must be made only of alphabet(lower case) and numbers (the first letter is an alphabet).:]");
 
         $this->tableId = $tableId;
         $this->containerOption = "";
+        $this->disableTooltip = false;
 
         $this->options = [
             "pageLength" => 20,
             "lengthMenu" => [10, 20, 25, 30, 50, 75, 100],
-            "paging"     => true,
-
             "stateSave"  => true,
-            "colReorder" => true,
 
+            "paging"     => true,
+            "colReorder" => true,
             "responsive" => false,
             "scrollX"    => true,
-
             "retrieve"   => true,
             "serverSide" => true,
         ];
+
         $this->language = 'kr';
-        $this->recordsTotal = 0;
-        $this->recordsFiltered = 0;
+        $this->ajaxUrl = $_SERVER['REQUEST_URI'];
         $this->columns = [];
         $this->customSearch = [];
         $this->layoutCustomSearch = [];
@@ -345,6 +443,10 @@ class DataTables
         $this->exportFilenameExcel  = "export-data.xlsx";
 
         $this->extraButtons = [];
+
+        $this->onePage = false;
+        $this->querySearchSQL = "";
+        $this->querySearchBind = null;
     }
 
     public function containerOption($option) { $this->containerOption = $option; }
@@ -353,9 +455,13 @@ class DataTables
      * table options
      */
     public function options($options) { $this->options = array_merge($this->options, $options); }
+    public function pageLength($length) { $this->options["pageLength"] = intval($length); }
+    public function lengthMenu($menu) { $this->options["lengthMenu"] = $menu; }
+    public function disableStateSave() { $this->options["stateSave"] = false; }
     public function disableColReorder() { $this->options["colReorder"] = false; }
-
     public function english() { $this->language = 'en'; }
+    public function ajaxUrl($url) { $this->ajaxUrl = $url; }
+    public function disableTooltip() { $this->disableTooltip = true; }
 
     /*
      * export option
@@ -378,13 +484,16 @@ class DataTables
     /*
      * extra buttons
      */
-    public function extraButton($btnId, $text, $class = "", $option = null) {
-        $this->extraButtons[$btnId] = [
-            "text" => $text,
-            "class" => $class,
-            "option" => $option
-        ];
+    public function extraButton($btnId)
+    {
+        $this->extraButtons[$btnId] = new DataTablesExtraButton($btnId);
+        return $this->extraButtons[$btnId];
     }
+
+    /*
+     * one page
+     */
+    public function onePage() { $this->onePage = true; }
 
     /*
      * column options
@@ -408,67 +517,83 @@ class DataTables
     public function layoutList($layout) { $this->layoutList = $layout; }
 
 
-
-    public function recordsTotal()
-    {
-    }
-
-    public function recordsFiltered()
-    {
-    }
-
     // Create a script/html that should be output only once even if the instance is created multiple times
-    private function once()
+    private function onceOutput()
     {
         $script = "";
         $html = "";
 
-        if (self::$checkOnce) return [ "script" => $script, "html" => $html ];
-        self::$checkOnce = true;
+        if (!self::$checkOnceScript) {
+            self::$checkOnceScript = true;
 
-        $script .= <<<EOD
-            $.fn.dataTable.ext.errMode = 'throw';
-            let sfdt = {};  // DataTables Object
+            $script .= <<<EOD
+                $.fn.dataTable.ext.errMode = 'throw';
+                let sfdt = {};  // DataTables Object
 
-            EOD;
+                EOD;
+        }
 
-        $html .= <<<EOD
+        if (!self::$checkOnceHtmlColReorder && $this->options["colReorder"]) {
+            self::$checkOnceHtmlColReorder = true;
+            if (!$this->disableTooltip) $tooltip = ` data-bs-toggle="tooltip" title="[:dt:Restore the initial state of column order and visibility.:]"`; else $tooltip = "";
 
-            <!-- DataTables Column Config Modal -->
-            <div class="modal fade" tabindex="-1" id="sfdt-modal-column-config">
-                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                    <div class="modal-content">
-                        <div class="modal-body" id="sfdt-modal-column-config-body"></div>
-                        <div class="modal-footer d-flex justify-content-between">
-                            <div><button type="button" class="btn btn-reset sfdt-btn-column-config-reset">[:dt:Reset:]</button></div>
-                            <div>
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">[:dt:Cancel:]</button>
-                                <button type="button" class="btn btn-primary" id="sfdt-btn-column-config-apply" disabled>[:dt:Apply:]</button>
+            $html .= <<<EOD
+
+                <!-- DataTables Column Config Modal -->
+                <div class="modal fade" tabindex="-1" id="sfdt-modal-column-config">
+                    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-body" id="sfdt-modal-column-config-body"></div>
+                            <div class="modal-footer d-flex justify-content-between">
+                                <div><button type="button" class="btn btn-reset sfdt-btn-column-config-reset"{$tooltip}>[:dt:Reset:]</button></div>
+                                <div>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">[:dt:Cancel:]</button>
+                                    <button type="button" class="btn btn-primary" id="sfdt-btn-column-config-apply" disabled>[:dt:Apply:]</button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            EOD;
-
+                EOD;
+        }
 
         return [ "script" => $script, "html" => $html ];
     }
 
     private function makeCodeAjax()
     {
-        $router = Router::getInstance();
-        //$url = $router->module() . "/" . $router->fnc();
-
         $scriptCustomExSearch = "";
-        foreach($this->customSearch as $alias => $cs) {
-            if ($cs->isEx()) {
-                $scriptCustomExSearch .= <<<EOD
+        if ($this->customSearch) {
+            $scriptEx = [];
+            foreach($this->customSearch as $alias => $cs) {
+                if ($cs->exColumnQuery()) {
+                    $scriptEx[] = <<<EOD
+                        csEx['{$alias}'] = $('#sfdt-{$this->tableId}-custom-search-{$alias}').val();
+                        EOD;
+                }
+            }
+            if ($scriptEx) {
+                $exstr = implode("\n            ", $scriptEx);
+                $scriptCustomExSearch =<<<EOD
 
-                    data.customSearchEx_{$alias} = $("#sfdt-{$this->tableId}-custom-search-{$alias}").val();
+                                let csEx = {};
+                                {$exstr}
+                                data.customSearchEx = csEx;
+                                localStorage.setItem('sfdt-{$this->tableId}-custom-search-ex', JSON.stringify(csEx));
+
                     EOD;
             }
+        }
+
+        $url = $this->ajaxUrl;
+        if ($this->onePage) {
+            $url = $_SERVER['REQUEST_URI'];
+            $scriptCustomExSearch .= <<<EOD
+
+                                data.sfdtPageMode = 'data';
+
+                    EOD;
         }
 
         return <<<EOD
@@ -476,11 +601,10 @@ class DataTables
                     function(data, callback, settings) {
                         {$scriptCustomExSearch}
                         $.ajax({
-                            url: "/datatables/custom-data",
-                            type: "POST",
+                            url: '{$url}',
+                            type: 'POST',
                             data: data,
                         }).done(function (json, textStatus, jqXHR) {
-                            console.log("call ajax");
                             try {
                                 if (typeof json !== 'object') throw "json is not object";
                                 if (!('error' in json) || !('errCode' in json.error) || !('errMsg' in json.error)) throw "error object is not exist";
@@ -497,7 +621,7 @@ class DataTables
                                 if (!('data' in json) || !('draw' in json.data) || !('recordsTotal' in json.data) || !('recordsFiltered' in json.data) || !('data' in json.data)) throw "data object is not exist";
                                 callback(json.data);
                             } catch (e) {
-                                alert("[:Oops!! An error has occurred.<br>Engineers comparable to advanced AI are working hard to fix it.<br>We won't let you down!!:]");
+                                alert("[:dt:The server responded incorrectly. Please try again later.:]");
                                 console.log("ajax page returns data in wrong:", e);
                                 console.log("json:", json);
                                 console.log("textStatus:", textStatus)
@@ -505,7 +629,7 @@ class DataTables
                                 callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
                             }
                         }).fail(function(jqXHR, textStatus, errorThrown) {
-                            alert("[:Oops!! An error has occurred.<br>Engineers comparable to advanced AI are working hard to fix it.<br>We won't let you down!!:]");
+                            alert("[:dt:Communication with the server is not smooth. Please try again later.:]");
                             console.log("ajax fail");
                             console.log("textStatus:", textStatus);
                             console.log("jqXHR:", jqXHR);
@@ -521,8 +645,7 @@ class DataTables
         $code = [];
         $render = [];
         foreach($this->columns as $alias => $column) {
-            $c = [];
-
+            $c = [ "name" => $alias ];
             if ($column->data())    $c["data"] = $column->data();
             if ($column->title())   $c["title"] = $column->title();
             if ($column->class())   $c["className"] = implode(" ", $column->class());
@@ -547,21 +670,30 @@ class DataTables
 
     private function makeCodeLayout()
     {
+        $colReorder = "";
         $ebArr = [];
-        if ($this->extraButtons) {
-            foreach($this->extraButtons as $btnId => $btn) {
-                $option = "";
-                if ($btn['option']) $option = " {$btn['option']}";
-                $ebArr[] = "<button type=\"button\" id=\"{$btnId}\" class=\"btn btn-sm {$btn['class']}\"{$option}>{$btn['text']}</button>";
-            }
+        $extraButtons = "";
+
+        if ($this->options["colReorder"]) {
+            $colReorder = <<<EOD
+                    ,{
+                                            text: '[:dt:Columns:]',
+                                            className:'sfdt-btn-open-column-config',
+                                            attr: { 'data-table-id': '{$this->tableId}' }
+                                        }
+                    EOD;
         }
+
+        if ($this->extraButtons) {
+            foreach($this->extraButtons as $btnId => $eb) $ebArr[] = $eb->html();
+        }
+
         if ($ebArr) $extraButtons = "div: { html:`" . implode(" ", $ebArr) . "` },";
-        else $extraButtons = "";
 
         return <<<EOD
 
                     {
-                        topStart: [ 'search' ],
+                        topStart: [ 'search', function() { return '<button type="button" class="btn btn-sfdt-search-reset" data-table-id="{$this->tableId}"><i class="bi bi-arrow-clockwise"></i></button>'; } ],
                         topEnd: {
                             buttons: [
                                 {
@@ -620,11 +752,7 @@ class DataTables
                                     action: {$this->exportActionExcel},
                                     title: '{$this->exportTitleExcel}',
                                     exportOptions: { columns: ':visible:not(.sfdt-no-export)' }
-                                }, {
-                                    text: '[:dt:Columns:]',
-                                    className:'sfdt-btn-open-column-config',
-                                    attr: { 'data-table-id': '{$this->tableId}' }
-                                }
+                                }{$colReorder}
                             ],
                             {$extraButtons}
                         },
@@ -651,12 +779,12 @@ class DataTables
 
         $forEx = "";
         $title = $cs->title();
-        $sfdtData = "";
-        if ($cs->isEx()) {
+        $sfdtDataAlias = "";
+        if ($cs->exColumnQuery()) {
             $forEx = " data-sfdt-custom-search-ex='true'";
         } else {
             if (!$title) $title = $this->columns[$alias]->title();
-            $sfdtData = " data-sfdt-data=\"{$this->columns[$alias]->data()}\"";
+            $sfdtDataAlias = " data-sfdt-alias=\"{$alias}\"";
         }
 
         switch($cs->type()) {
@@ -665,25 +793,25 @@ class DataTables
 
                                 <div class="sfdt-custom-search-item">
                                     <label for="sfdt-{$this->tableId}-custom-search-{$alias}">{$title} :</label>
-                                    <input type="search" class="form-control form-control-sm" name="sfdt-{$this->tableId}-custom-search-{$alias}" id="sfdt-{$this->tableId}-custom-search-{$alias}" data-sfdt-custom-search-type="string"{$sfdtData}{$forEx} autocomplete="off"{$controlOption}>
+                                    <input type="search" class="form-control form-control-sm sfdt-{$this->tableId}-custom-search" name="sfdt-{$this->tableId}-custom-search-{$alias}" id="sfdt-{$this->tableId}-custom-search-{$alias}" data-sfdt-custom-search-type="string"{$sfdtDataAlias}{$forEx} autocomplete="off"{$controlOption}>
                                 </div>
 
                     EOD;
 
             case DataTablesCustomSearch::TYPE_SELECT :
-                $data = $cs->data();
-                if ($cs->isSelect2() || count($data) > 10) $controlOption .= " data-sfselect2='true'";
-                $option = "";
-                foreach($data as $key => $value) {
-                    $option .= "<option value=\"{$key}\">{$value}</option>";
+                $option = $cs->option();
+                if ($cs->isSelect2() || count($option) > 10) $controlOption .= " data-sfselect2='true'";
+                $optionStr = "";
+                foreach($option as $key => $value) {
+                    $optionStr .= "<option value=\"{$key}\">{$value}</option>";
                 }
                 return <<<EOD
 
                                 <div class="sfdt-custom-search-item">
                                     <label for="sfdt-{$this->tableId}-custom-search-{$alias}">{$title} :</label>
-                                    <select class="form-control form-control-sm" name="sfdt-{$this->tableId}-custom-search-{$alias}" id="sfdt-{$this->tableId}-custom-search-{$alias}"{$sfdtData}{$forEx}{$controlOption}>
+                                    <select class="form-control form-control-sm sfdt-{$this->tableId}-custom-search" name="sfdt-{$this->tableId}-custom-search-{$alias}" id="sfdt-{$this->tableId}-custom-search-{$alias}"{$sfdtDataAlias}{$forEx}{$controlOption}>
                                         <option value="">[:dtcustomsearch:All:]</option>
-                                        {$option}
+                                        {$optionStr}
                                     </select>
                                 </div>
 
@@ -694,7 +822,7 @@ class DataTables
 
                                 <div class="sfdt-custom-search-item">
                                     <label for="sfdt-{$this->tableId}-custom-search-{$alias}">{$title} :</label>
-                                    <input type="search" class="form-control form-control-sm" name="sfdt-{$this->tableId}-custom-search-{$alias}" id="sfdt-{$this->tableId}-custom-search-{$alias}" data-sfdt-custom-search-type="daterange"{$sfdtData} autocomplete="off"{$forEx}{$controlOption}>
+                                    <input type="search" class="form-control form-control-sm sfdt-{$this->tableId}-custom-search" name="sfdt-{$this->tableId}-custom-search-{$alias}" id="sfdt-{$this->tableId}-custom-search-{$alias}" data-sfdt-custom-search-type="daterange"{$sfdtDataAlias} autocomplete="off"{$forEx}{$controlOption}>
                                 </div>
 
                     EOD;
@@ -704,7 +832,7 @@ class DataTables
 
                                 <div class="sfdt-custom-search-item">
                                     <label for="sfdt-{$this->tableId}-custom-search-{$alias}">{$title} :</label>
-                                    <input type="search" class="form-control form-control-sm" name="sfdt-{$this->tableId}-custom-search-{$alias}" id="sfdt-{$this->tableId}-custom-search-{$alias}" data-sfdt-custom-search-type="datetimerange"{$sfdtData} autocomplete="off"{$forEx}{$controlOption}>
+                                    <input type="search" class="form-control form-control-sm sfdt-{$this->tableId}-custom-search" name="sfdt-{$this->tableId}-custom-search-{$alias}" id="sfdt-{$this->tableId}-custom-search-{$alias}" data-sfdt-custom-search-type="datetimerange"{$sfdtDataAlias} autocomplete="off"{$forEx}{$controlOption}>
                                 </div>
 
                     EOD;
@@ -716,7 +844,7 @@ class DataTables
                                 <div class="sfdt-custom-search-item">
                                     <label for="sfdt-{$this->tableId}-custom-search-{$alias}">{$title} :</label>
                                     <div class="input-group input-group-sm">
-                                        <input type="search" class="form-control" name="sfdt-{$this->tableId}-custom-search-{$alias}" id="sfdt-{$this->tableId}-custom-search-{$alias}" data-sfdt-custom-search-type="numberrange"{$sfdtData} data-sfdt-numberrange-min="{$numberRangeOption['min']}" data-sfdt-numberrange-max="{$numberRangeOption['max']}"{$forEx} autocomplete="off"{$controlOption}>
+                                        <input type="search" class="form-control sfdt-{$this->tableId}-custom-search" name="sfdt-{$this->tableId}-custom-search-{$alias}" id="sfdt-{$this->tableId}-custom-search-{$alias}" data-sfdt-custom-search-type="numberrange"{$sfdtDataAlias} data-sfdt-numberrange-min="{$numberRangeOption['min']}" data-sfdt-numberrange-max="{$numberRangeOption['max']}"{$forEx} autocomplete="off"{$controlOption}>
                                     </div>
                                 </div>
 
@@ -786,10 +914,13 @@ class DataTables
     // build html, js
     public function build()
     {
+        if ($this->onePage) {
+            $param = Param::getInstance();
+            if ($param->sfdtPageMode === "data") return $this->opAjax();
+        }
+
         if (!array_key_exists("keys", $this->options)) {
-            foreach($this->columns as $alias => $column) {
-                if (!$column->data()) $column->class("no-keys-cursor");
-            }
+            foreach($this->columns as $alias => $column) $column->class("no-keys-cursor");
             $this->options["keys"] = [ "blurable" => false, "columns" => ':not(.no-keys-cursor)' ];
         }
         $options = $this->options;
@@ -800,36 +931,79 @@ class DataTables
         $options["columns"] = $codeColumns["list"];
         if ($this->language == "kr") $options["language"] = [ "url" => "/assets/libs/datatables-2.1.8/i18n/ko.json" ];
         $options["drawCallback"] = "drawCallback-function";
+
         $optionsStr = json_encode($options, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
 
-        $replaceFrom = [];
-        $replaceTo = [];
+        $replaceFrom = $replaceTo = [];
+
         $replaceFrom[] = "\"ajax\": \"ajax-function\"";     $replaceTo[] = "\"ajax\": {$this->makeCodeAjax()}";
         $replaceFrom[] = "\"layout\": \"layout-code\"";     $replaceTo[] = "\"layout\": {$this->makeCodeLayout()}";
-
-        $replaceFrom[] = "\"drawCallback\": \"drawCallback-function\"";
-        $replaceTo[] = <<<EOD
-
-                "drawCallback": function(settings) {
-                    var state = sfdt['{$this->tableId}'].state();
-                    state.columns.forEach(function(col, index) {
-                        if (col.search.search) sfdtSetSearchDefaultValue('{$this->tableId}', index, col.search.search);
-                    });
-                }
-            EOD;
         if ($codeColumns["render"]) {
             foreach($codeColumns["render"] as $alias => $render) {
                 $replaceFrom[] = "\"rendering-{$alias}\"";
                 $replaceTo[] = $render;
             }
         }
+
+        if ($this->options["stateSave"]) {
+            $callBackStateSave = <<<EOD
+
+                        let state = sfdt['{$this->tableId}'].state();
+                        state.columns.forEach(function(col, index) {
+                            if (col.search.search) sfdtSetSearchDefaultValue('{$this->tableId}', sfdt['{$this->tableId}'].column(index).dataSrc(), col.search.search);
+                        });
+                EOD;
+        } else $callBackStateSave = "";
+
+        $callBackTooltip = "";
+        if (!$this->disableTooltip) {
+            if ($this->extraButtons) {
+                foreach($this->extraButtons as $btnId => $eb) {
+                    $callBackTooltip .= $eb->tooltipScript();
+                }
+                $callBackTooltip .= "\n";
+            }
+            $callBackTooltip .= <<<EOD
+
+                        $(".btn-sfdt-search-reset").data("bs-toggle", "tooltip").attr("title", "[:dt:Reset search conditions:]").tooltip();
+                        $(".sfdt-btn-open-column-config").data("bs-toggle", "tooltip").attr("title", "[:dt:Change column order and visibility settings:]").tooltip();
+                        $(".sfdt-btn-pagejump").data("bs-toggle", "tooltip").attr("title", "[:dt:Go directly to the page number you entered:]").tooltip();
+
+                EOD;
+        }
+
+        $replaceFrom[] = "\"drawCallback\": \"drawCallback-function\"";
+        $replaceTo[] = <<<EOD
+
+                "drawCallback": function(settings) {
+                    {$callBackStateSave}
+                    {$callBackTooltip}
+                }
+            EOD;
+
+        $replaceFrom[] = "\n"; $replaceTo[] = "\n    ";
         $optionsStr = str_replace($replaceFrom, $replaceTo, $optionsStr);
 
         $htmlCustomSearch = $this->makeCodeCustomSearch();
-        $once = $this->once();
+        $once = $this->onceOutput();
 
         $containerOption = $this->containerOption;
         if ($containerOption) $containerOption = " {$containerOption}";
+
+        $csStorage = "";
+        if ($this->options["stateSave"]) {
+            $csStorage = <<<EOD
+
+                    let csStorage = localStorage.getItem('sfdt-{$this->tableId}-custom-search-ex');
+                    if (csStorage) {
+                        let csEx = JSON.parse(csStorage);
+                        for (let key in csEx) {
+                            sfdtSetSearchDefaultValue('{$this->tableId}', key, csEx[key]);
+                        }
+                    }
+
+                EOD;
+        }
 
         $this->html = <<<EOD
             {$once["html"]}
@@ -843,6 +1017,7 @@ class DataTables
             {$once["script"]}
             $(document).ready(function() {
                 sfdt['{$this->tableId}'] = new DataTable('#{$this->tableId}', {$optionsStr});
+                {$csStorage}
             });
             </script>
 
@@ -870,5 +1045,169 @@ class DataTables
         } else {
             return $translation->passing($output);
         }
+    }
+
+
+    /*
+     * for handling everything on one page
+     */
+    private function opAjax()
+    {
+        $param = Param::getInstance();
+        $res = Response::getInstance();
+        $template = Template::getInstance();
+
+        $res->draw              = $param->draw;
+        $res->recordsTotal      = $this->opRecordsTotal();
+        $res->recordsFiltered   = $this->opRecordsFiltered();
+        $res->data              = $this->opData();
+
+        $template->setMode(Template::MODE_AJAX_FOR_DATATABLE);
+        $template->displayResult();
+        exit;
+    }
+
+    // Get the total number of records
+    // Use it by overriding it in the inherited class.
+    protected function opRecordsTotal()
+    {
+        L::system("[:dt:Query for total number of records is not set.:]");
+    }
+
+    // Get the total number of records after filtering
+    // Use it by overriding it in the inherited class.
+    protected function opRecordsFiltered()
+    {
+        L::system("[:dt:Query for total number of records after filtering is not set.:]");
+    }
+
+    protected function opData()
+    {
+        L::system("[:dt:Function for data is not set.:]");
+    }
+
+    // SQL where statement
+    protected function opQuerySearch()
+    {
+        if ($this->querySearchSQL) return [ "sql" => $this->querySearchSQL, "bind" => $this->querySearchBind ];
+
+        $param = Param::getInstance();
+
+        $whereOr = [];
+        $whereAnd = [];
+
+        $searchableColumns = [];        // for all searchable columns
+
+        // find search keyword for custom search (each column)
+        if ($param->columns) {
+            foreach($param->columns as $col) {
+                $alias = $col['data'];
+                $value = $col['search']['value'];
+                if (!array_key_exists($alias, $this->columns)) continue;
+                $columnQuery = $this->columns[$alias]->columnQuery();
+                if ($col['searchable']) $searchableColumns[] = $columnQuery;
+                if (!$this->columns[$alias]->searchable() || $value == "") continue;
+
+                $this->opQuerySearchBind($alias, $value, $columnQuery, $col['search']['regex'], $whereAnd, 'cse');
+            }
+        }
+
+        // find search keyword for custom search ex
+        if ($param->customSearchEx) {
+            foreach($param->customSearchEx as $alias => $value) {
+                if (!array_key_exists($alias, $this->customSearch)) continue;
+                $columnQuery = $this->customSearch[$alias]->exColumnQuery();
+                $this->opQuerySearchBind($alias, $value, $columnQuery, 'false', $whereAnd, 'cex');
+            }
+        }
+
+        // find search keyword for all searchable columns
+        if ($param->search && $param->search['value'] && count($searchableColumns) > 0) {
+            foreach($searchableColumns as $columnQuery) {
+                $whereOr[] = "({$columnQuery}) LIKE :asc_{$alias}";
+                $this->querySearchBind[":asc_{$alias}"] = "%{$param->search['value']}%";
+            }
+        }
+
+        if ($whereOr) $whereAnd[] = '(' . implode(' OR ', $whereOr) . ')';
+        if ($whereAnd) $this->querySearchSQL = '(' . implode(' AND ', $whereAnd) . ')';
+
+        return [ "sql" => $this->querySearchSQL, "bind" => $this->querySearchBind ];
+    }
+
+    private function opQuerySearchBind($alias, $value, $columnQuery, $regex, &$whereAnd, $prefix)
+    {
+        switch ($this->customSearch($alias)->type()) {
+            case DataTablesCustomSearch::TYPE_STRING :
+                $whereAnd[] = "{$alias} LIKE :{$prefix}_{$alias}";
+                $this->querySearchBind[":{$prefix}_{$alias}"] = "%{$value}%";
+                break;
+            case DataTablesCustomSearch::TYPE_DATERANGE :
+            case DataTablesCustomSearch::TYPE_DATETIMERANGE :
+                $between = explode(' - ', $value);
+                if (count($between) == 2 && strtotime($between[0]) && strtotime($between[1])) {
+                    $whereAnd[] = "({$columnQuery}) BETWEEN :{$prefix}_{$alias}_start AND :{$prefix}_{$alias}_end";
+                    $this->querySearchBind[":{$prefix}_{$alias}_start"] = date("Y-m-d H:i:s", strtotime($between[0]));
+                    $endDate = $between[1];
+                    if (strlen($endDate) == 10) {
+                        $endDate .= ' 23:59:59';
+                    } elseif (strlen($endDate) == 13) {
+                        $endDate .= ':59:59';
+                    } elseif (strlen($endDate) == 16) {
+                        $endDate .= ':59';
+                    }
+                    $this->querySearchBind[":{$prefix}_{$alias}_end"] = date("Y-m-d H:i:s", strtotime($endDate));
+                }
+                break;
+            case DataTablesCustomSearch::TYPE_NUMBERRANGE :
+                $between = explode(' - ', $value);
+                if (count($between) == 2) {
+                    $between[0] = intval(preg_replace('/\D/', '', $between[0]));
+                    $between[1] = intval(preg_replace('/\D/', '', $between[1]));
+                    $whereAnd[] = "({$columnQuery}) BETWEEN :{$prefix}_{$alias}_start AND :{$prefix}_{$alias}_end";
+                    $this->querySearchBind[":{$prefix}_{$alias}_start"] = $between[0];
+                    $this->querySearchBind[":{$prefix}_{$alias}_end"] = $between[1];
+                } else {
+                    $whereAnd[] = "({$columnQuery}) = :{$prefix}_{$alias}";
+                    $this->querySearchBind[":{$prefix}_{$alias}"] = intval(preg_replace('/\D/', '', $value));
+                }
+                break;
+            default :
+                if ($regex === 'true') {      // If regex is true, do not perform a like search, but check for an exact match.
+                    $whereAnd[] = "({$columnQuery}) = :{$prefix}_{$alias}";
+                    $this->querySearchBind[":{$prefix}_{$alias}"] = $value;
+                } else {
+                    $whereAnd[] = "({$columnQuery}) LIKE :{$prefix}_{$alias}";
+                    $this->querySearchBind[":{$prefix}_{$alias}"] = "%{$value}%";
+                }
+                break;
+            }
+    }
+
+    protected function opQueryOrderBy()
+    {
+        $param = Param::getInstance();
+        $order = "";
+        if ($param->order) {
+            $orders = [];
+            foreach($param->order as $ord) {
+                $orders[] = "{$param->columns[$ord['column']]['data']} {$ord['dir']}";
+            }
+            $order = "ORDER BY " . implode(', ', $orders);
+        }
+
+        return $order;
+    }
+
+    protected function opQueryLimitStart()
+    {
+        $param = Param::getInstance();
+        return $param->start;
+    }
+
+    protected function opQueryLimitLength()
+    {
+        $param = Param::getInstance();
+        return $param->length;
     }
 }

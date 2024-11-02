@@ -8,8 +8,9 @@
 </div>
 <?php endif; ?>
 
-<?php if ($context) : ?>
-<div>
-     <?=sfWebDump($context)?>
+<?php if ($context && IS_DEBUG) : ?>
+<div style="background-color:#fff; color:#000; padding:2rem;">
+    <b>이것은 디버깅용 메시지입니다. 개발 서버에서만 보입니다.</b><br>
+    <?=sfWebDump($context, '1.2rem')?>
 </div>
 <?php endif; ?>

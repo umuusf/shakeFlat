@@ -357,12 +357,12 @@ class Util
     }
 
     // for debugging
-    public static function webDump($p, $fontSize = 10)
+    public static function webDump($p, $fontSize = "1rem")
     {
         if (self::isJson($p)) {
             $p = json_encode(json_decode($p), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
         }
-        echo "\n<br>\n<font style='font-size:{$fontSize}pt;'>" .
+        echo "\n<br>\n<font style='font-size:{$fontSize};'>" .
                 str_replace("<span style=\"color: #0000BB\">&lt;?php<br /></span>", "", highlight_string("<?php\n".print_r($p,true), true)) .
                 "</font><br>\n<br>\n";
     }

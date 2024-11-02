@@ -10,7 +10,7 @@ use shakeFlat\L;
 use \PDO;
 use \Exception;
 
-class DB extends L
+class DB
 {
     private $dbh = null;
     private $errInfo = array();
@@ -26,7 +26,7 @@ class DB extends L
 
     private function __construct($connectionName)
     {
-        if (!isset(SHAKEFLAT_ENV["database"]["connection"][$connectionName])) $this::system("DB connection information is not defined in config.ini.", array( "connection" => $connectionName ));
+        if (!isset(SHAKEFLAT_ENV["database"]["connection"][$connectionName])) L::system("[:DB connection information is not defined in config.ini.:]", array( "connection" => $connectionName ));
         $connInfo = SHAKEFLAT_ENV["database"]["connection"][$connectionName][rand(0, count(SHAKEFLAT_ENV["database"]["connection"][$connectionName])-1)];
 
         if(isset(SHAKEFLAT_ENV["database"]["common"])) {
@@ -78,9 +78,9 @@ class DB extends L
             return new PDO($dsn, $user, $passwd, $options);
         } catch (Exception $e) {
             if (SHAKEFLAT_ENV["config"]["debug_mode"] ?? false) {
-                self::exit($e->getMessage() . " ({code})", array("code"=>$e->getCode()));
+                L::exit($e->getMessage() . " ({code})", array("code"=>$e->getCode()));
             } else {
-                self::exit("DB connection failed. ({$e->getCode()})");
+                L::exit("DB connection failed. ({$e->getCode()})");
             }
         }
     }
@@ -110,12 +110,12 @@ class DB extends L
 
     private function _query($sql, $bindList = null, $noExit = false)
     {
-        if (!is_string($sql)) self::exit("The query sql statement must be in string format.");
+        if (!is_string($sql)) L::exit("The query sql statement must be in string format.");
         $this->errInfo = array();
         if (SHAKEFLAT_ENV["log"]["include_query"] ?? false) LogQuery::stack($sql, $bindList);  // log.inc
         try {
             if ($bindList === null) {
-                // This is not responsible for the sql injection problem. 
+                // This is not responsible for the sql injection problem.
                 // If there is a field containing a variable, $bindList must be used.
                 return $this->dbh->query($sql);
             } elseif (is_array($bindList)) {
@@ -153,7 +153,7 @@ class DB extends L
                 }
             }
 
-            $this->exit($msg, $context);
+            L::exit($msg, $context);
         }
     }
 
@@ -162,7 +162,7 @@ class DB extends L
         try {
             return $statement->fetch($mode);
         } catch(Exception $e) {
-            $this->exit($e->getMessage() . " ({code})", array("code"=>$e->getCode()));
+            L::exit($e->getMessage() . " ({code})", array("code"=>$e->getCode()));
         }
     }
 

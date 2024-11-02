@@ -45,7 +45,7 @@ class Translation
             if ($json !== false) {
                 $arr = json_decode($json, true);
                 if ($arr) $this->allTable = array_merge($this->allTable, $arr);
-            }        
+            }
         } catch (\Exception $e) {
             //echo $e->getMessage();
         }
@@ -53,6 +53,8 @@ class Translation
 
     public function convert($output, $lang)
     {
+        if (!$output) return "";
+
         // In the case of debug mode, the cache file is updated every time.
         // If the translation file is modified in the live environment, be sure to delete the cache files.
         if (!IS_DEBUG) {
@@ -70,8 +72,8 @@ class Translation
 
         // $output은 [:message:] 또는 [:code:message:] 형식이다. 전자라면 code는 "0"으로 간주한다.
         $pattern = '/\[:([a-z0-9]+:)?(.*?)\:\]/';
-        preg_match_all($pattern, $output, $matches, PREG_SET_ORDER);        
-        if ($matches) {                        
+        preg_match_all($pattern, $output, $matches, PREG_SET_ORDER);
+        if ($matches) {
             foreach ($matches as $match) {
                 $code = "0";
                 if (isset($match[1]) && $match[1]) $code = rtrim($match[1], ":");
@@ -110,16 +112,16 @@ class Translation
     }
 
     private function _L($k, $code, $lang)
-    { 
-        if (!isset($this->cacheTable[$k][$code][$lang]) || IS_DEBUG) {            
+    {
+        if (!isset($this->cacheTable[$k][$code][$lang]) || IS_DEBUG) {
             $re = $k;
             if (!IS_DEBUG && isset($this->allTable[$k][$code][$lang])) {
                 $re = $this->allTable[$k][$code][$lang];
-            } else {                
-                foreach($this->allTable as $str => $arr) {            
+            } else {
+                foreach($this->allTable as $str => $arr) {
                     $str = str_replace(array("/", ")", "(", ","), array("\/", "\)", "\(", "\,"), $str);
-                    $str = str_replace(array("$1", "$2", "$3", "$4", "$5", "$6", "$7", "$8", "$9"), "([a-zA-Z0-9,\/ \(\)-_]*)", $str);                    
-                    $reg = preg_match_all("/^{$str}$/", $k, $match);    
+                    $str = str_replace(array("$1", "$2", "$3", "$4", "$5", "$6", "$7", "$8", "$9"), "([a-zA-Z0-9,\/ \(\)-_]*)", $str);
+                    $reg = preg_match_all("/^{$str}$/", $k, $match);
                     if (isset($match[0]) && $match[0] && isset($arr[$code][$lang])) {
                         $re = $arr[$code][$lang];
                         for($i=1;$i<=9;$i++) {
