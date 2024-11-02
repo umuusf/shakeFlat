@@ -1081,12 +1081,14 @@ class DataTables
         L::system("[:dt:Query for total number of records after filtering is not set.:]");
     }
 
+    // Get the data to be displayed
+    // Use it by overriding it in the inherited class.
     protected function opData()
     {
         L::system("[:dt:Function for data is not set.:]");
     }
 
-    // SQL where statement
+    // SQL where statement and binding for search
     protected function opQuerySearch()
     {
         if ($this->querySearchSQL) return [ "sql" => $this->querySearchSQL, "bind" => $this->querySearchBind ];

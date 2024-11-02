@@ -1,22 +1,34 @@
 
 <div>
-    <div class="sf-custom-search mb-3">
-        <div class="sf-custom-search-group">
-            <div class="sf-custom-search-item">
-                <label for="example-custom-search-birthdate">생일 :</label>
-                <input type="search" class="form-control form-control-sm" name="example-custom-search-birthdate" id="example-custom-search-birthdate" autocomplete="off" style="width:210px;">
+    <!-- shakeFlat DataTables Custom Search -->
+    <div class="sfdt-custom-search mb-3" data-table-id="example" data-language="kr">
+        <div class="sfdt-custom-search-group">
+            <div class="sfdt-custom-search-item">
+                <label for="sfdt-example-custom-search-name">이름 :</label>
+                <input type="search" class="form-control form-control-sm sfdt-example-custom-search" name="sfdt-example-custom-search-name" id="sfdt-example-custom-search-name" data-sfdt-custom-search-type="string" data-sfdt-alias="name" autocomplete="off"  style='width:12rem;'>
             </div>
-            <div class="sf-custom-search-item">
-                <label for="example-custom-search-join">입사일 :</label>
-                <input type="search" class="form-control form-control-sm" name="example-custom-search-join" id="example-custom-search-join" autocomplete="off" style="width:210px;">
+            <div class="sfdt-custom-search-item">
+                <label for="sfdt-example-custom-search-phone">전화 :</label>
+                <input type="search" class="form-control form-control-sm sfdt-example-custom-search" name="sfdt-example-custom-search-phone" id="sfdt-example-custom-search-phone" data-sfdt-custom-search-type="string" data-sfdt-alias="phone" autocomplete="off"  style='width:12rem;'>
             </div>
-            <div class="sf-custom-search-item">
-                <label for="example-custom-search-address">주소 :</label>
-                <input type="search" class="form-control form-control-sm" name="example-custom-search-address" id="example-custom-search-address" autocomplete="off" style="width:250px;">
+            <div class="sfdt-custom-search-item">
+                <label for="sfdt-example-custom-search-status">상태 :</label>
+                <select class="form-control form-control-sm sfdt-example-custom-search" name="sfdt-example-custom-search-status" id="sfdt-example-custom-search-status" data-sfdt-alias="status"  style='width:6rem;' data-sfselect2='true'>
+                    <option value="">전체</option>
+                    <option value="active">active</option><option value="inactive">inactive</option><option value="banned">banned</option>
+                </select>
             </div>
-            <div class="sf-custom-search-item">
-                <label for="example-custom-search-salary">연봉 :</label>
-                <input type="search" class="form-control form-control-sm" name="example-custom-search-salary" id="example-custom-search-salary" autocomplete="off" style="width:280px;">
+        </div>
+        <div class="sfdt-custom-search-group">
+            <div class="sfdt-custom-search-item">
+                <label for="sfdt-example-custom-search-join_date">입사일 :</label>
+                <input type="search" class="form-control form-control-sm sfdt-example-custom-search" name="sfdt-example-custom-search-join_date" id="sfdt-example-custom-search-join_date" data-sfdt-custom-search-type="daterange" data-sfdt-alias="join_date" autocomplete="off"  style='width:13rem;'>
+            </div>
+            <div class="sfdt-custom-search-item">
+                <label for="sfdt-example-custom-search-salary">연봉 :</label>
+                <div class="input-group input-group-sm">
+                    <input type="search" class="form-control sfdt-example-custom-search" name="sfdt-example-custom-search-salary" id="sfdt-example-custom-search-salary" data-sfdt-custom-search-type="numberrange" data-sfdt-alias="salary" data-sfdt-numberrange-min="0" data-sfdt-numberrange-max="999999999" autocomplete="off"  style='width:15rem;'>
+                </div>
             </div>
         </div>
     </div>
@@ -43,388 +55,335 @@
     </div>
 </div>
 
-<!-- column config modal -->
-<div class="modal fade" tabindex="-1" id="sf-column-config">
+<!-- DataTables Column Config Modal -->
+<div class="modal fade" tabindex="-1" id="sfdt-modal-column-config">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-body sf-column-config-body">
-            </div>
+            <div class="modal-body" id="sfdt-modal-column-config-body"></div>
             <div class="modal-footer d-flex justify-content-between">
-                <div>
-                    <button type="button" id="btn-column-config-init" class="btn btn-reset" data-bs-toggle="tooltip" title="처음 상태로 되돌리기">초기화</button>
-                    <!--
-                    <button type="button" id="btn-column-config-save" class="btn btn-save" data-bs-toggle="tooltip" title="설정 저장하기"><i class="fas fa-save"></i></button>
-                    <button type="button" id="btn-column-config-load" class="btn btn-load" data-bs-toggle="tooltip" title="설정 불러오기"><i class="fas fa-folder-open"></i></button>
-                    -->
-                </div>
+                <div><button type="button" class="btn btn-reset sfdt-btn-column-config-reset">초기화</button></div>
                 <div>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
-                    <button type="button" id="btn-column-config-apply" class="btn btn-primary" disabled>적용</button>
+                    <button type="button" class="btn btn-primary" id="sfdt-btn-column-config-apply" disabled>적용</button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+
 <script>
-$.fn.dataTable.ext.errMode = 'throw';       // datatable 에러 발생시 throw로 처리 (console에 출력)
-var sfTbl = null;
-$(document).ready(function () {
-    sfTbl = new DataTable('#example', {
-        pageLength: 20,
-        lengthMenu: [10, 20, 25, 30, 50, 75, 100],
-        paging: true,
-        stateSave: true,
-        responsive: false,
-        scrollX: true,
-        colReorder: true,
-        keys: { blurable: false },
-        retrieve: true,
-        serverSide: true,
-        ajax: function(data, callback, settings) {
-            // fill default value for custom search 
-            for(var i in data.columns) {
-                if (data.columns[i].search.value !== '') {
-                    if (data.columns[i].data == 'join_date') $("#example-custom-search-join").val(data.columns[i].search.value);
-                    else if (data.columns[i].data == 'birth_date') $("#example-custom-search-birthdate").val(data.columns[i].search.value);
-                    else if (data.columns[i].data == 'address') $("#example-custom-search-address").val(data.columns[i].search.value);
-                    else if (data.columns[i].data == 'salary') $("#example-custom-search-salary").val(data.columns[i].search.value);
-                }
-            }
-            data.test = 'test';
-            $.ajax({
-                url: "/datatables/custom-data",
-                type: "POST",
-                data: data,
-            }).done(function (json, textStatus, jqXHR) {
-                try {                    
-                    if (typeof json !== 'object') throw "json is not object";
-                    if (!('error' in json) || !('errCode' in json.error) || !('errMsg' in json.error)) throw "error object is not exist";
-                    if (json.error.errCode !== 0) {
-                        if ('errUrl' in json.error && json.error.errUrl) {
-                            alertJump(json.error.errMsg, json.error.errUrl);
-                        } else {
-                            alert(json.error.errMsg);
-                        }
-                        console.log(json);
-                        callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
-                        return;
-                    }
-                    if (!('data' in json) || !('draw' in json.data) || !('recordsTotal' in json.data) || !('recordsFiltered' in json.data) || !('data' in json.data)) throw "data object is not exist";
-                    callback(json.data);
-                } catch (e) {
-                    alert("[:Oops!! An error has occurred.<br>Engineers comparable to advanced AI are working hard to fix it.<br>We won't let you down!!:]");
-                    console.log("ajax page returns data in wrong:", e);
-                    console.log("json:", json);
-                    console.log("textStatus:", textStatus)
-                    console.log("jqXHR:", jqXHR);
-                    callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
-                }
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                alert("[:Oops!! An error has occurred.<br>Engineers comparable to advanced AI are working hard to fix it.<br>We won't let you down!!:]");
-                console.log("ajax fail");
-                console.log("textStatus:", textStatus);
-                console.log("jqXHR:", jqXHR);
-                console.log("errorThrown:", errorThrown);
-                callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
-            });            
-        },
-        columns: [
-            { data: 'member_id',    title: 'ID',            className: 'text-center' },
-            { data: 'name',         title: '이름',          className: 'text-center' },
-            { data: 'email',        title: '이메일' },
-            { data: 'phone',        title: '전화',          className: 'text-center' },
-            { data: 'birth_date',   title: '생일',          className: 'text-center', type:'string', render:DataTable.render.date('YYYY-MM-DD')  },
-            { data: 'join_date',    title: '입사일',        className: 'text-center', type:'string', render:DataTable.render.date('YYYY-MM-DD')  },
-            { data: 'status',       title: '상태',          className: 'text-center' },
-            { data: 'address',      title: '주소' },
-            { data: 'city',         title: '도시',          className: 'text-center' },
-            { data: 'postal_code',  title: '우편번호',      className: 'text-center' },
-            { data: 'country',      title: '국가',          className: 'text-center' },
-            { data: 'notes',        title: '메모' },
-            { data: 'salary',       title: '연봉',          className: 'text-amount', searchable: false, type:'num', render:DataTable.render.number( ',' ) },
-            { data: 'last_login',   title: '마지막 로그인', type:'string', className: 'text-center', searchable: false },
-            { data: '',             title: '관리',          className: 'text-center', type:'html', 
-                render:function(data, type, row, meta) {
-                    return `
-                        <button type="button" class="btn btn-xs btn-detail btn-test-modal">상세보기</button>
-                        <button type="button" class="btn btn-xs btn-modify btn-test-modal">수정</button>
-                        <button type="button" class="btn btn-xs btn-delete btn-test-modal">삭제</button>
-                    `;
-                }
-            },
+$.fn.dataTable.ext.errMode = 'throw';
+let sfdt = {};  // DataTables Object
+
+$(document).ready(function() {
+    sfdt['example'] = new DataTable('#example', {
+        "pageLength": 20,
+        "lengthMenu": [
+            10,
+            20,
+            25,
+            30,
+            50,
+            75,
+            100
         ],
-        language: {
-            url: '/assets/libs/datatables-2.1.8/i18n/ko.json',
+        "stateSave": true,
+        "paging": true,
+        "colReorder": true,
+        "responsive": false,
+        "scrollX": true,
+        "retrieve": true,
+        "serverSide": true,
+        "keys": {
+            "blurable": true,
+            "columns": ":not(.no-keys-cursor)"
         },
-        layout: {
-            topStart: [ 'search' ], // { search: { text: '', placeholder: '검색어를 입력하세요.' } },
-            topEnd: {
-                buttons: [
-                    { extend: 'print', title : '회원명부(20241001)', customize: function (win) { $(win.document.body).find('h1').addClass('text-center'); }, exportOptions: { columns: function (idx, data, node) { return sfTbl.column(idx).visible(); }} },
-                    { extend: 'pdf', filename: '회원명부(20241001)', title: null, exportOptions: { columns: function (idx, data, node) { return sfTbl.column(idx).visible(); }} },
-                    { extend: 'excel', filename: '회원명부(20241001)', title: null, exportOptions: { columns: function (idx, data, node) { return sfTbl.column(idx).visible(); }} },
-                    { text: '열편집', action: dropdownColumnConfig, className:'btn-column-config' },
-                    //{ extend: 'copy', title : '회원명부(20241001)' },
-                    //{ extend: 'csv', filename: '회원명부(20241001)' },
-                ],                
-                div: {
-                    html: `
-                        <button type="button" class="btn btn-sm btn-add btn-test-modal">신규등록</button>
-                        <button type="button" class="btn btn-sm btn-order btn-test-modal">주문하기</button>
-                        <button type="button" class="btn btn-sm btn-refund btn-test-modal">환불요청</button>
-                    `
-                }
+        "ajax":
+            function(data, callback, settings) {
+                $.ajax({
+                    url: '/datatables/custom-data',
+                    type: 'POST',
+                    data: data,
+                }).done(function (json, textStatus, jqXHR) {
+                    try {
+                        if (typeof json !== 'object') throw "json is not object";
+                        if (!('error' in json) || !('errCode' in json.error) || !('errMsg' in json.error)) throw "error object is not exist";
+                        if (json.error.errCode !== 0) {
+                            if ('errUrl' in json.error && json.error.errUrl) {
+                                alertJump(json.error.errMsg, json.error.errUrl);
+                            } else {
+                                alert(json.error.errMsg);
+                            }
+                            //console.log(json);
+                            callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
+                            return;
+                        }
+                        if (!('data' in json) || !('draw' in json.data) || !('recordsTotal' in json.data) || !('recordsFiltered' in json.data) || !('data' in json.data)) throw "data object is not exist";
+                        callback(json.data);
+                    } catch (e) {
+                        alert("서버가 잘못된 응답을 하였습니다. 잠시 후 다시 시도해보세요.");
+                        console.log("ajax page returns data in wrong:", e);
+                        console.log("json:", json);
+                        console.log("textStatus:", textStatus)
+                        console.log("jqXHR:", jqXHR);
+                        callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
+                    }
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    alert("서버와의 통신이 원활하지 않습니다. 잠시 후 다시 시도해보세요.");
+                    console.log("ajax fail");
+                    console.log("textStatus:", textStatus);
+                    console.log("jqXHR:", jqXHR);
+                    console.log("errorThrown:", errorThrown);
+                    callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
+                });
             },
-            bottomEnd: [
-                'pageLength',
-                function() {
-                    return `
-                        <div class="d-flex align-items-center">
-                            <input type="number" name="sfdt-example-page-jump" class="form-control form-control-sm sfdt-page-jump" min="1">
-                            <div class="input-group-append"><button type="button" class="btn btn-sm sfdt-btn-pagejump">이동</button></div>
-                        </div>
-                    `;
+        "layout":
+            {
+                topStart: [ 'search', function() { return '<button type="button" class="btn btn-sfdt-search-reset" data-table-id="example"><i class="bi bi-arrow-clockwise"></i></button>'; } ],
+                topEnd: {
+                    buttons: [
+                        {
+                            extend: 'print',
+                            title : '직원 목록',
+                            action: sfdtExportAction,
+                            exportOptions: { columns: ':visible:not(.sfdt-no-export)' },
+                            customize:
+                                function (win) {
+                                    $(win.document.body).find('h1').each(function() {
+                                        $(this).replaceWith('<h3 class="text-center mb-3">' + $(this).html() + '</h3>');
+                                    });
+                                    $(win.document.body).find('table').addClass('compact').css('font-size', '9pt').css('text-align', 'center');
+                                    $(win.document.body).find('table').find('thead').find('th').css('text-align', 'center');
+                                }
+                        }, {
+                            extend: 'pdf',
+                            filename: '직원목록(2024-11-02)',
+                            action: sfdtExportAction,
+                            title: '직원 목록',
+                            exportOptions: { columns: ':visible:not(.sfdt-no-export)' },
+                            customize:
+                                function(doc) {
+                                    doc.defaultStyle.font = 'hangul';
+                                    doc.defaultStyle.fontSize = 9;
+                                    doc.defaultStyle.alignment = 'center';
+                                    doc.styles.tableHeader = { alignment: 'center', bold: true, fontSize: 9, noWrap: true };
+
+                                    let tblIdx = 0;
+                                    for(let i=0;i<doc.content.length;i++) {
+                                        if (doc.content[i].table) { tblIdx = i; break; }
+                                    }
+                                    if ($(doc.content[tblIdx].table.body[0]).length > 7) doc.pageOrientation = 'landscape';
+                                    let mr = doc.content[tblIdx].table.body.length-1; if (mr > 20) mr = 20;
+                                    let colSum = {}, colCnt = {};
+                                    for(let j=0;j<doc.content[tblIdx].table.body[0].length;j++) { colSum[j] = 0; colCnt[j] = 0; }
+                                    for(let i=1;i<=mr;i++) {
+                                        for(let j=0;j<doc.content[tblIdx].table.body[i].length;j++) {
+                                            if (doc.content[tblIdx].table.body[i][j].text.bytes() > 0) {       // String.bytes() : see sfutil.js
+                                                colCnt[j]++;
+                                                colSum[j] += doc.content[tblIdx].table.body[i][j].text.bytes();
+                                            }
+                                        }
+                                    }
+                                    let avgSum = 0, colAvg = {};
+                                    for(let j=0;j<doc.content[tblIdx].table.body[0].length;j++) { colAvg[j] = colSum[j] / colCnt[j]; avgSum += colAvg[j]; }
+                                    let widths = [];
+                                    for(let j=0;j<doc.content[tblIdx].table.body[0].length;j++) {
+                                        widths.push(((colAvg[j] / avgSum) * 100) + "%");
+                                    }
+                                    doc.content[tblIdx].table.widths = widths;
+                                }
+                        }, {
+                            extend: 'excel',
+                            filename: '직원목록(2024-11-02)',
+                            action: sfdtExportAction,
+                            title: '',
+                            exportOptions: { columns: ':visible:not(.sfdt-no-export)' }
+                        },{
+                            text: '열편집',
+                            className:'sfdt-btn-open-column-config',
+                            attr: { 'data-table-id': 'example' }
+                        }
+                    ],
+                    div: { html:`<button type="button" id="btn-extra-add" class="btn btn-sm btn-add"data-table-id='example'>신규추가</button> <button type="button" id="btn-extra-order" class="btn btn-sm btn-order">주문하기</button> <button type="button" id="btn-extra-refund" class="btn btn-sm btn-refund">환불요청</button>` },
                 },
-                'paging'
-            ],            
-        }
-    });
-
-    $(document).on("click", ".sfdt-btn-pagejump", function() {
-        let page = parseInt($(this).parents('div').prev('input').val(), 10);
-        if (page < 1 || !page) page = 1;
-        if (page > sfTbl.page.info().pages) page = sfTbl.page.info().pages;
-        sfTbl.page(page - 1).draw('page');
-        $(this).parents('div').prev('input').val(page);
-    });
-
-    $('input[name="example-custom-search-birthdate"]').daterangepicker({
-        timePicker: false, autoUpdateInput: false,
-        locale: {
-            format: 'YYYY-MM-DD', cancelLabel: '취소', applyLabel: '확인',
-            monthNames: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
-            daysOfWeek: ['일','월','화','수','목','금','토'],
-        }        
-    });
-    $('input[name="example-custom-search-birthdate"]').data('daterangepicker').setStartDate();
-
-    $('input[name="example-custom-search-birthdate"]').on("apply.daterangepicker", function(ev, picker) {
-        $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
-        sfTbl.columns(sfTbl.colReorder.transpose(4)).search($(this).val()).draw();
-    });
-
-    $('input[name="example-custom-search-birthdate"]').on("cancel.daterangepicker", function(ev, picker) {
-        $(this).val("");
-        sfTbl.columns(sfTbl.colReorder.transpose(4)).search($(this).val()).draw();        
-    });
-
-    $('input[name="example-custom-search-birthdate"]').on("keyup", function(event) {
-        if ($(this).val() === '') $(this).trigger('cancel.daterangepicker');
-        else if ($(this).val().length === 23) sfTbl.draw();
-    });
-
-    $('input[name="example-custom-search-birthdate"]').on("search", function(event) {
-        $(this).trigger('cancel.daterangepicker');
-        $(".daterangepicker:visible .cancelBtn").trigger('click.daterangepicker');
-    });
-
-    $('input[name="example-custom-search-join"]').daterangepicker({
-        timePicker: false, autoUpdateInput: false,
-        locale: {
-            format: 'YYYY-MM-DD', cancelLabel: '취소', applyLabel: '확인',
-            monthNames: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
-            daysOfWeek: ['일','월','화','수','목','금','토'],
-        }
-    });
-
-    $('input[name="example-custom-search-join"]').on("apply.daterangepicker", function(ev, picker) {
-        $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
-        sfTbl.columns(sfTbl.colReorder.transpose(5)).search($(this).val()).draw();
-    });
-
-    $('input[name="example-custom-search-join"]').on("cancel.daterangepicker", function(ev, picker) {
-        $(this).val("");
-        sfTbl.columns(sfTbl.colReorder.transpose(5)).search($(this).val()).draw();
-    });
-
-    $('input[name="example-custom-search-join"]').on("keyup", function(event) {
-        if ($(this).val() === '') $(this).trigger('cancel.daterangepicker');
-        else if ($(this).val().length === 23) sfTbl.draw();
-    });
-
-    $('input[name="example-custom-search-join"]').on("search", function(event) {
-        $(this).trigger('cancel.daterangepicker');
-        $(".daterangepicker:visible .cancelBtn").trigger('click.daterangepicker');
-    });
-
-    $('input[name="example-custom-search-address"]').on("keyup", function(event) {
-        sfTbl.columns(sfTbl.colReorder.transpose(7)).search(this.value).draw();
-    });
-
-    $('input[name="example-custom-search-address"]').on("search", function(event) {
-        $(this).val("");
-        sfTbl.columns(sfTbl.colReorder.transpose(7)).search(this.value).draw();
-    });
-
-    $('input[name="example-custom-search-salary"]').sfRangeSlide({ theme: sfGetTheme(), min: 0, max: 1500000000 });
-
-    $('input[name="example-custom-search-salary"]').on("apply.sfRangeSlide", function(event) {
-        sfTbl.columns(sfTbl.colReorder.transpose(12)).search($(this).val()).draw();
-    });
-
-    $('input[name="example-custom-search-salary2"]').sfRangeSlide({
-    });
-
-    $(document).on("click", ".btn-test-modal", function() {
-        $("#sf-modal-test").modal("show");
-    });
-
-    $(document).on("click", ".btn-column-config-up", function() {
-        var index = parseInt($(this).data("index"), 10);
-        var prev = $(this).parents("tr").prev();
-        if (prev.length === 0) return;
-        $(this).parents("tr").insertBefore(prev);
-        updateApplyBtnStatus();
-    });
-
-    $(document).on("click", ".btn-column-config-down", function() {
-        var index = parseInt($(this).data("index"), 10);
-        var next = $(this).parents("tr").next();
-        if (next.length === 0) return;
-        $(this).parents("tr").insertAfter(next);
-        updateApplyBtnStatus();
-    });
-
-    $(document).on("change", ".sf-column-config-visible", function() { updateApplyBtnStatus(); });
-
-    $(document).on("click", "#btn-column-config-init", function() {
-        confirm("초기 상태로 되돌리겠습니까?", function() {
-            sfTbl.colReorder.reset();
-            sfTbl.columns().header().columns().every(function() { this.visible(true); });
-            $("#sf-column-config").modal("hide");
-        });
-    });
-
-    $(document).on("click", "#btn-column-config-apply", function() {
-        // apply visible status
-        var columnInfo = getColumnStatus();
-        $(".sf-column-config-body tbody tr").each(function(index) {
-            var visible = $(this).find("input[type='checkbox']").prop("checked");
-            sfTbl.column(parseInt($(this).data("index"), 10)).visible(visible);
-        });
-
-        // apply order
-        var order = [];
-        $(".sf-column-config-body tbody tr").each(function(index) {
-            order.push(parseInt($(this).data("index"), 10));
-        });
-        sfTbl.colReorder.order(order, true);
-
-        $("#sf-column-config").modal("hide");
-    });
-});
-
-function getColumnStatus()
-{
-    var columnInfo = {};
-    sfTbl.columns().header().columns().every(function() {
-        columnInfo[this.init()._crOriginalIdx] = { title: this.init().sTitle, visible: this.init().bVisible };
-    });
-    return columnInfo;
-}
-
-function dropdownColumnConfig()
-{
-    $(".sf-column-config-body").empty();
-
-    var columnInfo = getColumnStatus();
-    var order = sfTbl.colReorder.order();
-
-    var tbl = `
-        <table class="table table-sm table-hover mb-0">
-            <caption class="caption-top text-nowrap text-center pt-0">컬럼의 순서 및 표시 여부를 설정합니다.</caption>
-            <thead>
-                <tr>
-                    <th class="text-center text-nowrap w-50">컬럼명</th>
-                    <th class="text-center text-nowrap">표시</th>
-                    <th colspan=2 class="text-center text-nowrap">이동</th>
-                </tr>
-            </thead>
-            <tbody>
-    `;
-    for (var i = 0; i < order.length; i++) {
-        var index = order[i];
-        var title = columnInfo[index].title;
-        var visible = columnInfo[index].visible;
-        tbl += `
-            <tr data-index="${index}">
-                <td class="text-center align-middle text-nowrap">${title}</td>
-                <td class="text-center align-middle text-nowrap">
-                    <input type="checkbox" class="form-check-input sf-column-config-visible" id="sf-column-config-visible-${index}" ${visible ? 'checked' : ''}>
-                </td>
-                <td class="text-center align-middle text-nowrap pb-2">
-                    <button type="button" class="btn btn-xs btn-primary btn-column-config-up"   data-index="${index}"><i class="fas fa-caret-up"></i></button>
-                    <button type="button" class="btn btn-xs btn-primary btn-column-config-down" data-index="${index}"><i class="fas fa-caret-down"></i></button>
-                </td>
-            </tr>
-        `;
-    }
-    tbl += `
-            </tbody>
-        </table>
-    `;
-    $(".sf-column-config-body").html(tbl);
-
-    $("#btn-column-config-apply").prop("disabled", true);
-    $("#sf-column-config").modal("show");
-}
-
-// apply 버튼 활성화 여부 체크하는 함수
-function updateApplyBtnStatus()
-{
-    var order = sfTbl.colReorder.order();
-    var changed = false;
-    $(".sf-column-config-body tbody tr").each(function(index) {
-        if (order[index] !== parseInt($(this).data("index"), 10)) {
-            changed = true;
-            return false;
-        }
-    });
-    if (!changed) {
-        // 표시 여부 체크
-        var columnInfo = getColumnStatus();
-        $(".sf-column-config-body tbody tr").each(function(index) {
-            var visible = columnInfo[parseInt($(this).data("index"), 10)].visible;
-            if (visible !== $(this).find("input[type='checkbox']").prop("checked")) {
-                changed = true;
-                return false;
+                bottomEnd: [
+                    'pageLength',
+                    function() {
+                        return `
+                            <div class="d-flex align-items-center">
+                                <input type="number" name="sfdt-example-page-jump" class="form-control form-control-sm sfdt-page-jump" min="1" data-table-id="example">
+                                <div class="input-group-append"><button type="button" class="btn btn-sm sfdt-btn-pagejump">이동</button></div>
+                            </div>
+                        `;
+                    },
+                    'paging'
+                ],
+            },
+        "columns": [
+            {
+                "name": "member_id",
+                "data": "member_id",
+                "title": "ID",
+                "className": "text-nowrap text-center no-keys-cursor",
+                "searchable": true,
+                "orderable": true
+            },
+            {
+                "name": "status",
+                "data": "status",
+                "title": "상태",
+                "className": "text-nowrap text-center no-keys-cursor",
+                "searchable": true,
+                "orderable": true
+            },
+            {
+                "name": "name",
+                "data": "name",
+                "title": "이름",
+                "className": "text-nowrap text-center no-keys-cursor",
+                "searchable": true,
+                "orderable": true
+            },
+            {
+                "name": "phone",
+                "data": "phone",
+                "title": "전화",
+                "className": "text-nowrap text-center no-keys-cursor",
+                "searchable": true,
+                "orderable": true
+            },
+            {
+                "name": "city",
+                "data": "city",
+                "title": "도시",
+                "className": "text-nowrap text-center no-keys-cursor",
+                "searchable": true,
+                "orderable": true
+            },
+            {
+                "name": "postal_code",
+                "data": "postal_code",
+                "title": "우편번호",
+                "className": "text-nowrap text-center no-keys-cursor",
+                "searchable": true,
+                "orderable": true
+            },
+            {
+                "name": "country",
+                "data": "country",
+                "title": "국가",
+                "className": "text-nowrap text-center no-keys-cursor",
+                "searchable": true,
+                "orderable": true
+            },
+            {
+                "name": "email",
+                "data": "email",
+                "title": "이메일",
+                "className": "text-nowrap no-keys-cursor",
+                "searchable": true,
+                "orderable": true
+            },
+            {
+                "name": "address",
+                "data": "address",
+                "title": "주소",
+                "className": "text-nowrap no-keys-cursor",
+                "searchable": true,
+                "orderable": true
+            },
+            {
+                "name": "notes",
+                "data": "notes",
+                "title": "메모",
+                "className": "text-nowrap no-keys-cursor",
+                "searchable": true,
+                "orderable": true
+            },
+            {
+                "name": "birth_date",
+                "data": "birth_date",
+                "title": "생일",
+                "className": "text-nowrap text-center no-keys-cursor",
+                "type": "string",
+                "searchable": true,
+                "orderable": true,
+                "render": DataTable.render.date('YYYY-MM-DD')
+            },
+            {
+                "name": "join_date",
+                "data": "join_date",
+                "title": "입사일",
+                "className": "text-nowrap text-center no-keys-cursor",
+                "type": "string",
+                "searchable": true,
+                "orderable": true,
+                "render": DataTable.render.date('YYYY-MM-DD')
+            },
+            {
+                "name": "salary",
+                "data": "salary",
+                "title": "연봉",
+                "className": "text-nowrap no-keys-cursor",
+                "type": "num",
+                "searchable": true,
+                "orderable": true,
+                "render": DataTable.render.number(',', null, null, null, null)
+            },
+            {
+                "name": "last_login",
+                "data": "last_login",
+                "title": "마지막 로그인",
+                "className": "text-nowrap text-center no-keys-cursor",
+                "type": "string",
+                "searchable": true,
+                "orderable": true,
+                "render": DataTable.render.datetime('YYYY-MM-DD HH:mm:ss')
+            },
+            {
+                "name": "btn",
+                "className": "sfdt-disable-invisible sfdt-no-export text-center no-keys-cursor",
+                "type": "html",
+                "searchable": true,
+                "orderable": true,
+                "render": function(data, type, row, meta) {
+                    return `
+                        <button type=\"button\" class=\"btn btn-xs btn-detail\" data-member-id='${row.member_id}'>상세보기</button>
+                        <button type=\"button\" class=\"btn btn-xs btn-modify\" data-member-id='${row.member_id}'>수정</button>
+                        <button type=\"button\" class=\"btn btn-xs btn-delete\" data-member-id='${row.member_id}'>삭제</button>
+                    `;
+                }
             }
-        });
+        ],
+        "language": {
+            "url": "/assets/libs/datatables-2.1.8/i18n/ko.json"
+        },
+
+        "drawCallback": function(settings) {
+
+            let state = sfdt['example'].state();
+            state.columns.forEach(function(col, index) {
+                if (col.search.search) sfdtSetSearchDefaultValue('example', sfdt['example'].column(index).dataSrc(), col.search.search);
+            });
+
+            $('#btn-extra-add').data("bs-toggle", "tooltip").attr("title", "회원을 신규 추가합니다.").tooltip();
+            $('#btn-extra-order').data("bs-toggle", "tooltip").attr("title", "주문서를 작성합니다.").tooltip();
+            $('#btn-extra-refund').data("bs-toggle", "tooltip").attr("title", "환불요청을 합니다.").tooltip();
+
+            $(".btn-sfdt-search-reset").data("bs-toggle", "tooltip").attr("title", "검색 조건 초기화").tooltip();
+            $(".sfdt-btn-open-column-config").data("bs-toggle", "tooltip").attr("title", "열 순서 및 표시 설정 변경").tooltip();
+            $(".sfdt-btn-pagejump").data("bs-toggle", "tooltip").attr("title", "입력한 페이지 번호로 바로 이동").tooltip();
+
+        }
+    });
+
+    let csStorage = localStorage.getItem('sfdt-example-custom-search-ex');
+    if (csStorage) {
+        let csEx = JSON.parse(csStorage);
+        for (let key in csEx) {
+            sfdtSetSearchDefaultValue('example', key, csEx[key]);
+        }
     }
-    $("#btn-column-config-apply").prop("disabled", !changed);;
-}
+});
 </script>
-
-
-<!--
-        // 현재 순서 가져오기
-        //console.log(sfTbl.colReorder.order());
-
-        // 순서 변경하기
-        //sfTbl.colReorder.order([ 0, 1, 2, 3, 4, 5 ], true);
-
-        // 순서 리셋 (숨긴거 다시 보이지는 않음)
-        //sfTbl.colReorder.reset();
-
-        // 컬럼 제목 가져오기, 숨기기
-        //var obj = sfTbl.column(sfTbl.colReorder.transpose(3));
-        //console.log(obj.title());
-        //obj.visible(!obj.visible());
-
-        // 컬럼 인덱스, 제목 가져오기
-        //sfTbl.columns().header().columns().every(function() {
-        //    console.log(this.index(), this.title());
-        //    //this.visible(!this.visible());
-        //});
--->
