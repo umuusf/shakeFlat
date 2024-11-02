@@ -27,7 +27,7 @@ $leftMenu = [
         "title"     => "Colors",
         "icon"      => '<i class="bi bi-bag-x"></i>',
         "link"      => "/colors/main",
-        "sub"       => null,        
+        "sub"       => null,
     ],
     [
         "title"     => "DataTables",
@@ -38,11 +38,12 @@ $leftMenu = [
             [ "title" => "basic sample", "link"  => "/datatables/basic" ],
             [ "title" => "custom - KR", "link"  => "/datatables/custom" ],
             [ "title" => "shakeFlat DataTables", "link"  => "/datatables/use-libs" ],
+            [ "title" => "Processing in one page", "link"  => "/datatables/onepage" ],
         ],
     ],
 ];
 
-$sfThemeCookie = json_decode($_COOKIE["sfTheme"] ?? "{ theme: 'light', select: 'auto' }", true); 
+$sfThemeCookie = json_decode($_COOKIE["sfTheme"] ?? "{ theme: 'light', select: 'auto' }", true);
 if (array_key_exists("select", $sfThemeCookie ?? []) && ($sfThemeCookie["select"] == "light" || $sfThemeCookie["select"] == "dark")) $sfThemeSelect = $sfThemeCookie["select"]; else $sfThemeSelect = "auto";
 ?>
 <!DOCTYPE html>
@@ -135,7 +136,7 @@ if (array_key_exists("select", $sfThemeCookie ?? []) && ($sfThemeCookie["select"
                 <div class="d-flex align-items-center me-1">
                     <div class="shakeflat-theme-dropdown dropdown">
                         <button class="btn dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown" data-bs-display="static">
-                            <?php 
+                            <?php
                             switch($sfThemeSelect) {
                                 case "light" : echo "<i class=\"bi bi-sun-fill\"></i> Light"; break;
                                 case "dark" : echo "<i class=\"bi bi-moon-stars-fill\"></i> Dark"; break;
@@ -185,8 +186,8 @@ if (array_key_exists("select", $sfThemeCookie ?? []) && ($sfThemeCookie["select"
                 <?php
                 $selectedMenuTitle = null;
                 foreach($leftMenu as $idx => $menu) :
-                    $active = "";  
-                    $opened = "";                  
+                    $active = "";
+                    $opened = "";
                     $dataToggle = "";
                     $dataLink = "";
                     if ($menu["sub"]) {
@@ -195,21 +196,21 @@ if (array_key_exists("select", $sfThemeCookie ?? []) && ($sfThemeCookie["select"
                         } else {
                             $dataToggle = " data-bs-toggle=\"collapse\" data-bs-target=\"#sfadmin-left-collapse-{$idx}\"";
                         }
-                        
+
                         foreach($menu["sub"] as $idx2 => $submenu) {
                             if (($submenu["link"] ?? null) == null) continue;
-                            list($m, $f) = explode("/", trim($submenu["link"], "/")) + [null, null];        // Add + [null, null] to suppress warning message                       
+                            list($m, $f) = explode("/", trim($submenu["link"], "/")) + [null, null];        // Add + [null, null] to suppress warning message
                             $menu["sub"][$idx2]["active"] = "";
-                            if ($router->module() == $m && $router->fnc() == $f) { 
+                            if ($router->module() == $m && $router->fnc() == $f) {
                                 $active = " active open";
                                 $menu["sub"][$idx2]["active"] = " active";
                                 $selectedMenuTitle = $menu["title"] . " <span style=\"font-size:0.7rem;\"><i class=\"bi bi-chevron-right\"></i></span> " . $submenu["title"];
                             }
-                        }     
+                        }
                 ?>
-                <?php                   
-                    } 
-                    
+                <?php
+                    }
+
                     if ($menu["link"]) {
                         list($m, $f) = explode("/", trim($menu["link"], "/")) + [null, null];
                         if ($router->module() == $m && $router->fnc() == $f) {
@@ -222,23 +223,23 @@ if (array_key_exists("select", $sfThemeCookie ?? []) && ($sfThemeCookie["select"
                     <?php echo $menu["icon"] ?? ""; ?><span class="list-group-item-text"><?php echo $menu["title"] ?? ""; ?></span>
                 </a>
                 <?php
-                    } else {            
+                    } else {
                 ?>
 
                 <div class="list-group-item<?php echo $active; ?>"<?php echo $dataToggle; ?>>
                     <?php echo $menu["icon"] ?? ""; ?><span class="list-group-item-text"><?php echo $menu["title"] ?? ""; ?></span>
                 </div>
 
-                <?php 
+                <?php
                     }
-                    if ($menu["sub"]) : 
+                    if ($menu["sub"]) :
                         $subShow = "";
                         if ($active != "" || $opened != "") $subShow = " show";
                 ?>
 
                 <div class="list-group collapse<?php echo $subShow; ?><?php echo $opened; ?>" id="sfadmin-left-collapse-<?php echo $idx; ?>">
-                    <?php 
-                    foreach($menu["sub"] as $submenu) : 
+                    <?php
+                    foreach($menu["sub"] as $submenu) :
                         $dataSubLink = "";
                         if ($submenu["link"]) {
                     ?>
@@ -253,9 +254,9 @@ if (array_key_exists("select", $sfThemeCookie ?? []) && ($sfThemeCookie["select"
                     <div class="list-group-item<?php echo $submenu["active"]; ?>">
                         <span class="list-group-item-text"><?php echo $submenu["title"]; ?></span>
                     </div>
-                    <?php 
+                    <?php
                         }
-                    endforeach; 
+                    endforeach;
                     ?>
 
                 </div>
@@ -263,9 +264,9 @@ if (array_key_exists("select", $sfThemeCookie ?? []) && ($sfThemeCookie["select"
                     endif;
                 ?>
                 <div class="list-group-gap"></div>
-                <?php 
+                <?php
                 endforeach;
-                ?>               
+                ?>
 
             </div>
         </div>

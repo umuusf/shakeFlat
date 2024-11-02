@@ -3,14 +3,16 @@ namespace shakeFlat\datatables;
 use shakeFlat\DataTables;
 use shakeFlat\DB;
 
-class dtSample extends DataTables
+class dtSampleOnePage extends DataTables
 {
     public function __construct($tableId)
     {
         parent::__construct($tableId);
         parent::containerOption("style='max-width:100%;'");
         parent::pageLength(20);
-        parent::ajaxUrl("/datatables/custom-data");
+        parent::onePage();
+        //parent::ajaxUrl("/datatables/custom-data");
+        //parent::disableTooltip();
 
         parent::exportTitle("직원 목록");
         parent::exportFilename("직원목록(" . date("Y-m-d") . ")");
@@ -44,8 +46,8 @@ class dtSample extends DataTables
         parent::customSearch("join_date")   ->widthRem(13)  ->dateRange();
         parent::customSearch("salary")      ->widthRem(15)  ->numberRange(0, 999999999);
 
-        parent::customSearch("join_date2")  ->widthRem(19)  ->ex()  ->datetimeRange()->title("입사일ex");
-        parent::customSearch("salary2")     ->widthRem(15)  ->ex()  ->numberRange(0, 999999999)->title("연봉ex");
+        parent::customSearch("join_date2")  ->widthRem(19)  ->ex("join_date")   ->datetimeRange()->title("입사일ex");
+        parent::customSearch("salary2")     ->widthRem(15)  ->ex("salary")      ->numberRange(0, 999999999)->title("연봉ex");
 
         parent::layoutCustomSearch([
             [ "name", "phone", "status" ],
@@ -59,4 +61,44 @@ class dtSample extends DataTables
             "birth_date", "join_date", "salary", "last_login", "btn"
         ]);
     }
+
+    public function opRecordsTotal()
+    {
+        $db = DB::getInstance();
+        $rs = $db->query("select count(*) as cnt from members");
+        return $db->fetch($rs)['cnt'];
+    }
+
+    public function opRecordsFiltered()
+    {
+        $db = DB::getInstance();
+        $searchQueryInfo = $this->opQuerySearch();
+        $where = $searchQueryInfo['sql']; if ($where) $where = " where {$where}";
+        $rs = $db->query("select count(*) as cnt from members{$where}", $searchQueryInfo['bind']);
+        return $db->fetch($rs)['cnt'];
+    }
+
+    public function opData()
+    {
+        $searchQueryInfo = $this->opQuerySearch();
+        $orderBy = $this->opQueryOrderBy();
+        $limitStart = $this->opQueryLimitStart();
+        $limitLength = $this->opQueryLimitLength();
+
+        $where = $searchQueryInfo['sql']; if ($where) $where = "where {$where}";
+
+        $db = DB::getInstance();
+        $rs = $db->query("
+            select * from members
+            {$where}
+            {$orderBy}
+            limit {$limitStart}, {$limitLength}
+        ", $searchQueryInfo['bind']);
+        $data = [];
+        while($row = $db->fetch($rs)) {
+            $data[] = $row;
+        }
+        return $data;
+    }
+
 }

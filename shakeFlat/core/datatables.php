@@ -1106,7 +1106,7 @@ class DataTables
                 if (!array_key_exists($alias, $this->columns)) continue;
                 $columnQuery = $this->columns[$alias]->columnQuery();
                 if ($col['searchable']) $searchableColumns[] = $columnQuery;
-                if (!$this->columns[$alias]->searchable() || $value == "") continue;
+                if (!$this->columns[$alias]->searchable() || $value === "") continue;
 
                 $this->opQuerySearchBind($alias, $value, $columnQuery, $col['search']['regex'], $whereAnd, 'cse');
             }
@@ -1115,6 +1115,7 @@ class DataTables
         // find search keyword for custom search ex
         if ($param->customSearchEx) {
             foreach($param->customSearchEx as $alias => $value) {
+                if ($value === "") continue;
                 if (!array_key_exists($alias, $this->customSearch)) continue;
                 $columnQuery = $this->customSearch[$alias]->exColumnQuery();
                 $this->opQuerySearchBind($alias, $value, $columnQuery, 'false', $whereAnd, 'cex');
