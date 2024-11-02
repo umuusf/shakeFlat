@@ -153,7 +153,7 @@ class Param extends L
     public function checkKey($key, $type, $enum = null)
     {
         $this->_setTypeEnum($key, $type, $enum);
-        if (!$this->_existKey($key, $type)) $this->exitCode("[:The parameter {$key} does not exist.:]", GCode::MISSING_PARAM);
+        if (!$this->_existKey($key, $type)) $this->exit("[:The parameter {$key} does not exist.:]");
         if ($this->_existValue($key, $type)) $this->_checkType($key, $type, $enum);
     }
 
@@ -161,19 +161,19 @@ class Param extends L
     public function checkKeyValue($key, $type, $enum = null)
     {
         $this->_setTypeEnum($key, $type, $enum);
-        if (!$this->_existKey($key, $type)) $this->exitCode("[:The parameter {$key} does not exist.:]", GCode::MISSING_PARAM);
-        if (!$this->_existValue($key, $type)) $this->exitCode("[:The value of parameter {$key} is empty.:]", GCode::PARAM_EMPTY);
+        if (!$this->_existKey($key, $type)) $this->exit("[:The parameter {$key} does not exist.:]");
+        if (!$this->_existValue($key, $type)) $this->exit("[:The value of parameter {$key} is empty.:]");
         $this->_checkType($key, $type, $enum);
     }
 
     public function checkFileType($key, $type = SELF::FILE_ALL)
     {
-        if (!$this->_existKey($key, self::TYPE_FILE)) $this->exitCode("[:The parameter {$key} does not exist.:]", GCode::MISSING_PARAM);
+        if (!$this->_existKey($key, self::TYPE_FILE)) $this->exit("[:The parameter {$key} does not exist.:]");
         if (!$this->_existValue($key, SELF::TYPE_FILE)) return;
         switch($type) {
             case SELF::FILE_ALL : break;
             case SELF::FILE_IMAGE :
-                if (!exif_imagetype($_FILES[$key]["tmp_name"])) $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);
+                if (!exif_imagetype($_FILES[$key]["tmp_name"])) $this->exit("[:The type of parameter {$key} is incorrect.:]");
                 break;
         }
         return;
@@ -248,39 +248,39 @@ class Param extends L
 
     private function _checkType($key, $type, $enum)
     {
-        if ($enum !== null && is_array($enum) && !in_array($this->params[$key], $enum)) $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);
+        if ($enum !== null && is_array($enum) && !in_array($this->params[$key], $enum)) $this->exit("[:The type of parameter {$key} is incorrect.:]");
 
         switch($type) {
             case Param::TYPE_INT :
                 $val = strval(intval($this->params[$key]));
-                if ($val != $this->params[$key]) $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);
+                if ($val != $this->params[$key]) $this->exit("[:The type of parameter {$key} is incorrect.:]");
                 $this->params[$key] = intval($this->params[$key]);
                 return;
             case Param::TYPE_FLOAT :
                 $val = strval(floatval($this->params[$key]));
-                if ($val != $this->params[$key]) $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);
+                if ($val != $this->params[$key]) $this->exit("[:The type of parameter {$key} is incorrect.:]");
                 $this->params[$key] = floatval($this->params[$key]);
                 return;
             case Param::TYPE_STRING :
-                if (!is_string($this->params[$key])) $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);
+                if (!is_string($this->params[$key])) $this->exit("[:The type of parameter {$key} is incorrect.:]");
                 $this->params[$key] = strval($this->params[$key]);
                 return;
             case Param::TYPE_BOOLEAN :
                 if (strtolower($this->params[$key]) == "true") $this->params[$key] = true;
                 if (strtolower($this->params[$key]) == "false") $this->params[$key] = false;
-                if (!is_bool($this->params[$key])) $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);
+                if (!is_bool($this->params[$key])) $this->exit("[:The type of parameter {$key} is incorrect.:]");
                 return;
             case Param::TYPE_JSON :
                 if ($this->params[$key]) {
                     if (!is_array(json_decode($this->params[$key], true))) {
                         switch (json_last_error()) {
-                            case JSON_ERROR_NONE            : $this->exitCode("[:{$key} Error in json format : No errors:]", GCode::PARAM_TYPE_JSON); break;
-                            case JSON_ERROR_DEPTH           : $this->exitCode("[:{$key} Error in json format : Maximum stack depth exceeded:]", GCode::PARAM_TYPE_JSON); break;
-                            case JSON_ERROR_STATE_MISMATCH  : $this->exitCode("[:{$key} Error in json format : Underflow or the modes mismatch:]", GCode::PARAM_TYPE_JSON); break;
-                            case JSON_ERROR_CTRL_CHAR       : $this->exitCode("[:{$key} Error in json format : Unexpected control character found:]", GCode::PARAM_TYPE_JSON); break;
-                            case JSON_ERROR_SYNTAX          : $this->exitCode("[:{$key} Error in json format : Syntax error, malformed JSON:]", GCode::PARAM_TYPE_JSON); break;
-                            case JSON_ERROR_UTF8            : $this->exitCode("[:{$key} Error in json format : Malformed UTF-8 characters, possibly incorrectly encoded:]", GCode::PARAM_TYPE_JSON); break;
-                            default                         : $this->exitCode("[:{$key} Error in json format : Unknown error:]", GCode::PARAM_TYPE_JSON); break;
+                            case JSON_ERROR_NONE            : $this->exit("[:{$key} Error in json format : No errors:]"); break;
+                            case JSON_ERROR_DEPTH           : $this->exit("[:{$key} Error in json format : Maximum stack depth exceeded:]"); break;
+                            case JSON_ERROR_STATE_MISMATCH  : $this->exit("[:{$key} Error in json format : Underflow or the modes mismatch:]"); break;
+                            case JSON_ERROR_CTRL_CHAR       : $this->exit("[:{$key} Error in json format : Unexpected control character found:]"); break;
+                            case JSON_ERROR_SYNTAX          : $this->exit("[:{$key} Error in json format : Syntax error, malformed JSON:]"); break;
+                            case JSON_ERROR_UTF8            : $this->exit("[:{$key} Error in json format : Malformed UTF-8 characters, possibly incorrectly encoded:]"); break;
+                            default                         : $this->exit("[:{$key} Error in json format : Unknown error:]"); break;
                         }
                     }
                     $this->params[$key] = json_decode($this->params[$key], true);
@@ -289,16 +289,16 @@ class Param extends L
                 }
                 return;
 
-            case Param::TYPE_ARRAY       : if (!is_array($this->params[$key]))                                              $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
-            case Param::TYPE_EMAIL       : if (filter_var($this->params[$key], FILTER_VALIDATE_EMAIL) === false)            $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
-            case Param::TYPE_URL         : if (filter_var($this->params[$key], FILTER_VALIDATE_URL) === false)              $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
-            case Param::TYPE_DOMAIN      : if (filter_var($this->params[$key], FILTER_VALIDATE_DOMAIN) === false)           $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
-            case Param::TYPE_IP          : if (filter_var($this->params[$key], FILTER_VALIDATE_IP) === false)               $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
-            case Param::TYPE_DATETIME    : if (Util::validateDate($this->params[$key]) === false)                           $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
-            case Param::TYPE_DATE        : if ($this->params[$key] != date("Y-m-d", strtotime($this->params[$key])))        $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
-            case Param::TYPE_FILE        : if (!isset($_FILES[$key]) || ($_FILES[$key]["error"] ?? 100) != 0)               $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);  return;
+            case Param::TYPE_ARRAY       : if (!is_array($this->params[$key]))                                              $this->exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_EMAIL       : if (filter_var($this->params[$key], FILTER_VALIDATE_EMAIL) === false)            $this->exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_URL         : if (filter_var($this->params[$key], FILTER_VALIDATE_URL) === false)              $this->exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_DOMAIN      : if (filter_var($this->params[$key], FILTER_VALIDATE_DOMAIN) === false)           $this->exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_IP          : if (filter_var($this->params[$key], FILTER_VALIDATE_IP) === false)               $this->exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_DATETIME    : if (Util::validateDate($this->params[$key]) === false)                           $this->exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_DATE        : if ($this->params[$key] != date("Y-m-d", strtotime($this->params[$key])))        $this->exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_FILE        : if (!isset($_FILES[$key]) || ($_FILES[$key]["error"] ?? 100) != 0)               $this->exit("[:The type of parameter {$key} is incorrect.:]");  return;
         }
-        $this->exitCode("[:The type of parameter {$key} is incorrect.:]", GCode::PARAM_TYPE_INCORRECT);
+        $this->exit("[:The type of parameter {$key} is incorrect.:]");
     }
 
     /**
@@ -312,7 +312,7 @@ class Param extends L
     public function saveFile($key, $subFolder, $rootFolder)
     {
         try {
-            if (($_FILES[$key]["error"] ?? 100) != 0) throw new Exception("upload failed.", GCode::PARAM_FILE_UPLOAD_FAILURE);
+            if (($_FILES[$key]["error"] ?? 100) != 0) throw new Exception("upload failed.");
 
             // 파일이 저장될 경로 결정
             if (substr($rootFolder, -1) == "/") $rootFolder = substr($rootFolder, 0, -1);
@@ -321,7 +321,7 @@ class Param extends L
 
             if (!is_dir($path)) {
                 // warning 에러 발생 방지를 위해 @를 붙인다.
-                if (!@mkdir($path, 0755, true)) throw new Exception("Directory creation failed.", GCode::PARAM_FILE_DIR_CREATION_FAILURE);
+                if (!@mkdir($path, 0755, true)) throw new Exception("Directory creation failed.");
             }
 
             // 파일명 결정
@@ -335,7 +335,7 @@ class Param extends L
             }
 
             if (!move_uploaded_file($_FILES[$key]["tmp_name"], $saveFilename)) {
-                throw new Exception("Failed to save file.", GCode::PARAM_FILE_SAVE_FAILURE);
+                throw new Exception("Failed to save file.");
             }
 
             return array (
@@ -345,7 +345,7 @@ class Param extends L
                 "fileSize"          => $_FILES[$key]["size"],
             );
         } catch(Exception $e) {
-            $this->exitCode("[:'{$key}' File upload error - {$e->getMessage()}:]", $e->getCode());
+            $this->exit("[:'{$key}' File upload error - {$e->getMessage()}:]", $e->getCode());
         }
     }
 

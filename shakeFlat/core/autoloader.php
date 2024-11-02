@@ -8,10 +8,7 @@
 
 require_once "config.php";
 require_once "short_fnc.php";
-require_once "global_code.php";
 require_once "gpath.php";
-
-use shakeFlat\GCode;
 
 // autoloader
 spl_autoload_register(function($class) {
