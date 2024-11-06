@@ -8,29 +8,35 @@ class DataTablesColumn
 {
     private $alias;
     private $data;
-    private $columnQuery;       // for database field name (if different from data)
-                                // select {$columnQuery} as {$data} from table...
+    private $query;         // for database field name (if different from alias)
+                            // select {$columnQuery} as {$alias} from table...
     private $title;
     private $class;
     private $render;
-    private $type;
+    private $type;          // for datatables column type
+    private $displayType;   // for detail view display type
     private $searchable;
     private $orderable;
     private $buttons;
+
+    private $detailButtonInfo;
 
     public function __construct($alias)
     {
         $this->alias = $alias;
         $this->data = $alias;
-        $this->columnQuery = $alias;
+        $this->query = $alias;
 
         $this->title = "";
         $this->class = [];
         $this->render = "";
         $this->type = "";
+        $this->displayType = "string";
         $this->searchable = true;
         $this->orderable = true;
         $this->buttons = [];
+
+        $this->detailButtonInfo = [];
     }
 
     public function alias()
@@ -38,10 +44,17 @@ class DataTablesColumn
         return $this->alias;
     }
 
-    public function columnQuery($columnQuery = null)
+    public function data($data = null)
     {
-        if ($columnQuery === null) return $this->columnQuery;
-        $this->columnQuery = $columnQuery;
+        if ($data === null) return $this->data;
+        $this->data = $data;
+        return $this;
+    }
+
+    public function query($query = null)
+    {
+        if ($query === null) return $this->query;
+        $this->query = $query;
         return $this;
     }
 
@@ -49,13 +62,6 @@ class DataTablesColumn
     {
         if ($title === null) return $this->title;
         $this->title = $title;
-        return $this;
-    }
-
-    public function data($data = null)
-    {
-        if ($data === null) return $this->data;
-        $this->data = $data;
         return $this;
     }
 
@@ -80,6 +86,13 @@ class DataTablesColumn
         return $this;
     }
 
+    public function displayType($displayType = null)
+    {
+        if ($displayType === null) return $this->displayType;
+        $this->displayType = $displayType;
+        return $this;
+    }
+
     public function searchable($searchable = null)
     {
         if ($searchable === null) return $this->searchable;
@@ -96,16 +109,17 @@ class DataTablesColumn
 
     public function onlyRender($render)
     {
-        $this->data = "";
         $this->title = "";
         $this->type = "html";
         $this->render = $render;
+        $this->searchable = false;
         return $this;
     }
 
     public function date($format = "YYYY-MM-DD")
     {
         $this->type = "string";
+        $this->displayType = "datetime:{$format}";
         $this->class("text-center");
         $this->render = "DataTable.render.date('" . $format . "')";
         return $this;
@@ -114,6 +128,7 @@ class DataTablesColumn
     public function datetime($format = "YYYY-MM-DD HH:mm:ss")
     {
         $this->type = "string";
+        $this->displayType = "datetime:{$format}";
         $this->class("text-center");
         $this->render = "DataTable.render.datetime('" . $format . "')";
         return $this;
@@ -123,6 +138,7 @@ class DataTablesColumn
     public function number($thousands = ',', $decimals = null, $precision = null, $prefix = null, $postfix = null)
     {
         $this->type = "num";
+        $this->displayType = "number";
         $this->render = "DataTable.render.number(" .
                 ($thousands !== null ? "'{$thousands}'" : "null") . ", " .
                 ($decimals !== null ? $decimals : "null") . ", " .
@@ -135,10 +151,24 @@ class DataTablesColumn
     public function textCenter() { return $this->class("text-center"); }
     public function textEnd() { return $this->class("text-end"); }
     public function textStart() { return $this->class("text-start"); }
-    public function nowrap() { return $this->class("text-nowrap"); }
+    public function noWrap() { return $this->class("text-nowrap"); }
 
     public function disableInvisible() { return $this->class("sfdt-disable-invisible"); }
     public function noExport() { return $this->class("sfdt-no-export"); }
+    public function noData() { $this->searchable = false; $this->orderable = false; return $this; }
+
+    public function detailButtonInfo() { return $this->detailButtonInfo; }
+
+    public function renderDetailButton($paramAliaes, $id = 'detail', $url = null, $text = "[:dtdetail:View:]", $class = "btn-detail") {
+        if (!is_array($paramAliaes)) $paramAliaes = [ $paramAliaes ];
+        $this->detailButtonInfo[$id] = [ 'param' => $paramAliaes, 'url' => $url ];
+        $options = [];
+        $options[] = "data-detail-id='{$id}'";
+        foreach($paramAliaes as $alias) {
+            $options[] = "data-{$alias}='\${row.{$alias}}'";
+        }
+        return $this->renderButton($text, $class, implode(" ", $options));
+    }
 
     public function renderButton($text, $class = "", $option = null) {
         $this->buttons[] = [
@@ -153,7 +183,7 @@ class DataTablesColumn
             if ($btn['option']) $option = " {$btn['option']}"; else $option = "";
             $bArr[] = <<<EOD
 
-                                    <button type=\"button\" class=\"btn btn-xs{$class}\"{$option}>{$btn['text']}</button>
+                                    <button type="button" class="btn btn-xs{$class}"{$option}>{$btn['text']}</button>
                 EOD;
         }
         $buttons = implode(" ", $bArr);
@@ -391,9 +421,11 @@ class DataTables
 
     private $columns;
     private $customSearch;
+    private $defaultOrder;
 
     private $layoutCustomSearch;
     private $layoutList;
+    private $layoutDetail;
 
     private $onePage;
     private $querySearchSQL;
@@ -412,11 +444,11 @@ class DataTables
         $this->disableTooltip = false;
 
         $this->options = [
+            "stateSave"  => true,
             "pageLength" => 20,
             "lengthMenu" => [10, 20, 25, 30, 50, 75, 100],
-            "stateSave"  => true,
-
             "paging"     => true,
+            "ordering"   => true,
             "colReorder" => true,
             "responsive" => false,
             "scrollX"    => true,
@@ -428,8 +460,11 @@ class DataTables
         $this->ajaxUrl = $_SERVER['REQUEST_URI'];
         $this->columns = [];
         $this->customSearch = [];
+        $this->defaultOrder = [];
+
         $this->layoutCustomSearch = [];
         $this->layoutList = [];
+        $this->layoutDetail = [];
 
         $this->exportActionPrint    = "sfdtExportAction";
         $this->exportActionPDF      = "sfdtExportAction";
@@ -449,37 +484,39 @@ class DataTables
         $this->querySearchBind = null;
     }
 
-    public function containerOption($option) { $this->containerOption = $option; }
+    public function containerOption($option) { $this->containerOption = $option; return $this; }
 
     /*
      * table options
      */
-    public function options($options) { $this->options = array_merge($this->options, $options); }
-    public function pageLength($length) { $this->options["pageLength"] = intval($length); }
-    public function lengthMenu($menu) { $this->options["lengthMenu"] = $menu; }
-    public function disableStateSave() { $this->options["stateSave"] = false; }
-    public function disableColReorder() { $this->options["colReorder"] = false; }
-    public function english() { $this->language = 'en'; }
-    public function ajaxUrl($url) { $this->ajaxUrl = $url; }
-    public function disableTooltip() { $this->disableTooltip = true; }
+    public function options($options) { $this->options = array_merge($this->options, $options); return $this; }
+    public function pageLength($length) { $this->options["pageLength"] = intval($length); return $this; }
+    public function lengthMenu($menu) { $this->options["lengthMenu"] = $menu; return $this; }
+    public function disableStateSave() { $this->options["stateSave"] = false; return $this; }
+    public function disableColReorder() { $this->options["colReorder"] = false; return $this; }
+    public function english() { $this->language = 'en'; return $this; }
+    public function ajaxUrl($url) { $this->ajaxUrl = $url; return $this; }
+    public function disableTooltip() { $this->disableTooltip = true; return $this; }
+    public function orderBy($alias, $dir) { $this->defaultOrder[] = [ "alias" => $alias, "dir" => $dir ]; return $this; }
+    public function disableOrdering() { $this->options["ordering"] = false; return $this; }
 
     /*
      * export option
      */
-    public function exportTitle($title) { $this->exportTitlePrint = $this->exportTitlePDF = $title; }
-    public function exportFilename($filename) { $this->exportFilenamePDF = $this->exportFilenameExcel = $filename; }
-    public function exportAction($action) { $this->exportActionPrint = $this->exportActionPDF = $this->exportActionExcel = $action; }
+    public function exportTitle($title) { $this->exportTitlePrint = $this->exportTitlePDF = $title; return $this; }
+    public function exportFilename($filename) { $this->exportFilenamePDF = $this->exportFilenameExcel = $filename; return $this; }
+    public function exportAction($action) { $this->exportActionPrint = $this->exportActionPDF = $this->exportActionExcel = $action; return $this; }
 
-    public function exportPrintAction($action) { $this->exportActionPrint = $action; }
-    public function exportPrintTitle($title) { $this->exportTitlePrint = $title; }
+    public function exportPrintAction($action) { $this->exportActionPrint = $action; return $this; }
+    public function exportPrintTitle($title) { $this->exportTitlePrint = $title; return $this; }
 
-    public function exportPDFAction($action) { $this->exportActionPDF = $action; }
-    public function exportPDFTitle($title) { $this->exportTitlePDF = $title; }
-    public function exportPDFFilename($filename) { $this->exportFilenamePDF = $filename; }
+    public function exportPDFAction($action) { $this->exportActionPDF = $action; return $this; }
+    public function exportPDFTitle($title) { $this->exportTitlePDF = $title; return $this; }
+    public function exportPDFFilename($filename) { $this->exportFilenamePDF = $filename; return $this; }
 
-    public function exportExcelAction($action) { $this->exportActionExcel = $action; }
-    public function exportExcelTitle($title) { $this->exportTitleExcel = $title; }
-    public function exportExcelFilename($filename) { $this->exportFilenameExcel = $filename; }
+    public function exportExcelAction($action) { $this->exportActionExcel = $action; return $this; }
+    public function exportExcelTitle($title) { $this->exportTitleExcel = $title; return $this; }
+    public function exportExcelFilename($filename) { $this->exportFilenameExcel = $filename; return $this; }
 
     /*
      * extra buttons
@@ -493,7 +530,7 @@ class DataTables
     /*
      * one page
      */
-    public function onePage() { $this->onePage = true; }
+    public function onePage() { $this->onePage = true; return $this; }
 
     /*
      * column options
@@ -511,10 +548,13 @@ class DataTables
     }
 
     // layout for custom search, $layout : array of column alias
-    public function layoutCustomSearch($layout) { $this->layoutCustomSearch = $layout; }
+    public function layoutCustomSearch($layout) { $this->layoutCustomSearch = $layout; return $this; }
 
     // columns order for list, $layout : array of column alias
-    public function layoutList($layout) { $this->layoutList = $layout; }
+    public function layoutList($layout) { $this->layoutList = $layout; return $this; }
+
+    // columns order for detail, $layout : array of column alias
+    public function layoutDetail($layout, $id = 'detail') { $this->layoutDetail[$id] = $layout; return $this; }
 
 
     // Create a script/html that should be output only once even if the instance is created multiple times
@@ -545,10 +585,10 @@ class DataTables
                         <div class="modal-content">
                             <div class="modal-body" id="sfdt-modal-column-config-body"></div>
                             <div class="modal-footer d-flex justify-content-between">
-                                <div><button type="button" class="btn btn-reset sfdt-btn-column-config-reset"{$tooltip}>[:dt:Reset:]</button></div>
+                                <div><button type="button" class="btn btn-sm btn-reset sfdt-btn-column-config-reset"{$tooltip}>[:dt:Reset:]</button></div>
                                 <div>
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">[:dt:Cancel:]</button>
-                                    <button type="button" class="btn btn-primary" id="sfdt-btn-column-config-apply" disabled>[:dt:Apply:]</button>
+                                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">[:dt:Cancel:]</button>
+                                    <button type="button" class="btn btn-sm btn-primary" id="sfdt-btn-column-config-apply" disabled>[:dt:Apply:]</button>
                                 </div>
                             </div>
                         </div>
@@ -646,7 +686,7 @@ class DataTables
         $render = [];
         foreach($this->columns as $alias => $column) {
             $c = [ "name" => $alias ];
-            if ($column->data())    $c["data"] = $column->data();
+            if ($column->query())   $c["data"] = $column->data();
             if ($column->title())   $c["title"] = $column->title();
             if ($column->class())   $c["className"] = implode(" ", $column->class());
             if ($column->type())    $c["type"] = $column->type();
@@ -774,6 +814,7 @@ class DataTables
 
     private function makeCodeCustomSearchItem($alias)
     {
+        if (!array_key_exists($alias, $this->customSearch)) L::system("[:dt:Custom search item({$alias}) not found.:]");
         $cs = $this->customSearch[$alias];
         $controlOption = $cs->controlOption();  if ($controlOption) $controlOption = " {$controlOption}";
 
@@ -783,6 +824,7 @@ class DataTables
         if ($cs->exColumnQuery()) {
             $forEx = " data-sfdt-custom-search-ex='true'";
         } else {
+            if (!array_key_exists($alias, $this->columns)) L::system("[:dt:Column({$alias}) not found.:]");
             if (!$title) $title = $this->columns[$alias]->title();
             $sfdtDataAlias = " data-sfdt-alias=\"{$alias}\"";
         }
@@ -911,12 +953,136 @@ class DataTables
         return $html;
     }
 
+    private function makeCodeDetailsView()
+    {
+        // detail view button
+        $detailScript = "";
+        $detailHtml = "";
+        $formatScript = "";
+        foreach($this->columns as $alias => $column) {
+            if ($column->displayType() == "number") {
+                $formatScript .= "                else if (alias == '{$alias}') txt = txt.numberFormat();\n";
+            } elseif (substr($column->displayType(), 0, 5) == "date:") {
+                $format = substr($column->displayType(), 5);
+                $formatScript .= "                else if (alias == '{$alias}') txt = txt.formatDateTime('{$format}');\n";
+            } elseif (substr($column->displayType(), 0, 9) == "datetime:") {
+                $format = substr($column->displayType(), 9);
+                $formatScript .= "                else if (alias == '{$alias}') txt = txt.formatDateTime('{$format}');\n";
+            }
+        }
+        $formatScript = trim($formatScript, "else ");
+        foreach($this->columns as $alias => $column) {
+            $detailButtons = $column->detailButtonInfo();
+            if (!$detailButtons) continue;
+            foreach($detailButtons as $id => $dbInfo) {
+                if (!($this->layoutDetail[$id] ?? false)) L::system("[:dt:Layout for detail view({$id}) is not defined.:]");
+                if (!($dbInfo['param'] ?? false)) L::system("[:dt:Parameter for detail view({$id}) is not defined.:]");
+
+                $param = "";
+                foreach($dbInfo['param'] as $alias) {
+                    $param .= "param.{$alias} = $(this).data('{$alias}');\n    ";
+                }
+                $url = $dbInfo['url'];
+                if ($url === null) {
+                    $url = $this->ajaxUrl;
+                    $param .= "param.sfdtPageMode = 'detail';\n";
+                }
+                $detailScript .= <<<EOD
+
+                    $(document).on("click", ".btn-detail[data-detail-id='{$id}']", function() {
+                        $("#sfdt-modal-{$this->tableId}-detail-view").find("input").val("");
+                        let param = {};
+                        {$param}
+                        callAjax(
+                            '{$url}',
+                            param,
+                            function(result) {
+                                if (!result.data.detailData || typeof result.data.detailData !== 'object') {
+                                    alert("[:dt:detailData does not exist in the result from {$url}:]");
+                                    return;
+                                }
+                                for(let alias in result.data.detailData) {
+                                    let txt = result.data.detailData[alias];
+                                    {$formatScript}
+                                    $("#sfdt-modal-{$this->tableId}-{$id}-detail-column-" + alias).html(txt);
+                                }
+                                $("#sfdt-modal-{$this->tableId}-detail-view").modal("show");
+                            }
+                        );
+                    });
+
+                    EOD;
+
+                $layoutHtml = "";
+                $htmlItem = function($alias) use ($id) {
+                    return <<<EOD
+                                            <div class="col-auto">
+                                                <div class="form-floating">
+                                                    <div class="form-control-plaintext text-nowrap" id="sfdt-modal-{$this->tableId}-{$id}-detail-column-{$alias}"></div>
+                                                    <label for="sfdt-detail-column-{$this->tableId}-{$alias}" class="text-nowrap">{$this->columns[$alias]->title()}</label>
+                                                </div>
+                                            </div>
+
+                        EOD;
+                };
+
+                $layout = $this->layoutDetail[$id];
+                foreach($layout as $item) {
+                    if ($item === '---') {
+                        $layoutHtml .= <<<EOD
+
+                                        <hr>
+                        EOD;
+                        continue;
+                    }
+                    $layoutHtml .= <<<EOD
+
+                                        <div class="row">
+
+                        EOD;
+                    if (is_array($item)) foreach($item as $alias) $layoutHtml .= $htmlItem($alias);
+                    else $layoutHtml .= $htmlItem($item);
+
+                    $layoutHtml .= <<<EOD
+                                        </div>
+                        EOD;
+                }
+
+                if (!$detailHtml) {
+                    $detailHtml = <<<EOD
+                        <!-- DataTable - Detail view modal for Table Id {$this->tableId} -->
+                        <div class="modal fade" tabindex="-1" id="sfdt-modal-{$this->tableId}-detail-view">
+                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-detail">
+                                        <h5 class="modal-title">[:dtdetail:Detail View:]</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        {$layoutHtml}
+
+                                    </div>
+                                    <div class="modal-footer d-flex justify-content-end">
+                                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">[:dt:Close:]</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        EOD;
+                }
+            }
+        }
+
+        return [ "html" => $detailHtml, "script" => $detailScript ];
+    }
+
     // build html, js
     public function build()
     {
         if ($this->onePage) {
             $param = Param::getInstance();
             if ($param->sfdtPageMode === "data") return $this->opAjax();
+            if ($param->sfdtPageMode === "detail") return $this->opDetail();
         }
 
         if (!array_key_exists("keys", $this->options)) {
@@ -929,6 +1095,13 @@ class DataTables
         $options["layout"] = "layout-code";
         $codeColumns = $this->makeCodeColumns();
         $options["columns"] = $codeColumns["list"];
+        if ($this->defaultOrder) {
+            foreach($this->defaultOrder as $orderInfo) {
+                $idx = array_search($orderInfo["alias"], $this->layoutList);
+                if ($idx === false) continue;
+                $options["order"][] = [ $idx, $orderInfo["dir"] ];
+            }
+        }
         if ($this->language == "kr") $options["language"] = [ "url" => "/assets/libs/datatables-2.1.8/i18n/ko.json" ];
         $options["drawCallback"] = "drawCallback-function";
 
@@ -985,14 +1158,16 @@ class DataTables
         $optionsStr = str_replace($replaceFrom, $replaceTo, $optionsStr);
 
         $htmlCustomSearch = $this->makeCodeCustomSearch();
+        $detailsView = $this->makeCodeDetailsView();
+
         $once = $this->onceOutput();
 
         $containerOption = $this->containerOption;
         if ($containerOption) $containerOption = " {$containerOption}";
 
-        $csStorage = "";
+        $scriptCsStorage = "";
         if ($this->options["stateSave"]) {
-            $csStorage = <<<EOD
+            $scriptCsStorage = <<<EOD
 
                     let csStorage = localStorage.getItem('sfdt-{$this->tableId}-custom-search-ex');
                     if (csStorage) {
@@ -1007,6 +1182,7 @@ class DataTables
 
         $this->html = <<<EOD
             {$once["html"]}
+            {$detailsView["html"]}
 
             <div{$containerOption}>
                 {$htmlCustomSearch}
@@ -1017,8 +1193,9 @@ class DataTables
             {$once["script"]}
             $(document).ready(function() {
                 sfdt['{$this->tableId}'] = new DataTable('#{$this->tableId}', {$optionsStr});
-                {$csStorage}
+                {$scriptCsStorage}
             });
+            {$detailsView["script"]}
             </script>
 
             EOD;
@@ -1060,11 +1237,50 @@ class DataTables
         $res->draw              = $param->draw;
         $res->recordsTotal      = $this->opRecordsTotal();
         $res->recordsFiltered   = $this->opRecordsFiltered();
-        $res->data              = $this->opData();
+        $res->data              = $this->opListData();
 
         $template->setMode(Template::MODE_AJAX_FOR_DATATABLE);
         $template->displayResult();
         exit;
+    }
+
+    private function opDetail()
+    {
+        $res = Response::getInstance();
+        $res->detailData = $this->opDetailData();
+        $template = Template::getInstance();
+        $template->setMode(Template::MODE_AJAX);
+        $template->displayResult();
+        exit;
+    }
+
+    // Get the data for the detailed view
+    // Use it by overriding it in the inherited class.
+    protected function opDetailData()
+    {
+        L::system("[:dt:The function(opDetailData) for detailed view is not set.:]");
+    }
+
+    // Get the parameters for the detailed view
+    protected function opDetailParams($id = 'detail')
+    {
+        $param = Param::getInstance();
+
+        $params = [];
+        foreach($this->columns as $alias => $column) {
+            $detailButtons = $column->detailButtonInfo();
+            if (!$detailButtons) continue;
+            $dbInfo = $detailButtons[$id] ?? false;
+            if (!$dbInfo) L::system("[:dt:Cannot find the detail view button with id {$id} in the opDetailParams function.:]");
+            if ($dbInfo['param'] ?? false) {
+                foreach($dbInfo['param'] as $alias) {
+                    $param->checkKeyValue($alias, Param::TYPE_STRING);
+                    $params[$alias] = $param->get($alias);
+                }
+            }
+        }
+
+        return $params;
     }
 
     // Get the total number of records
@@ -1083,9 +1299,9 @@ class DataTables
 
     // Get the data to be displayed
     // Use it by overriding it in the inherited class.
-    protected function opData()
+    protected function opListData()
     {
-        L::system("[:dt:Function for data is not set.:]");
+        L::system("[:dt:Function(opListData) for data is not set.:]");
     }
 
     // SQL where statement and binding for search
@@ -1103,11 +1319,11 @@ class DataTables
         // find search keyword for custom search (each column)
         if ($param->columns) {
             foreach($param->columns as $col) {
-                $alias = $col['data'];
+                $alias = $col['name'];
                 $value = $col['search']['value'];
-                if (!array_key_exists($alias, $this->columns)) continue;
-                $columnQuery = $this->columns[$alias]->columnQuery();
-                if ($col['searchable']) $searchableColumns[] = $columnQuery;
+                if (!array_key_exists($alias, $this->columns)) L::system("[:dt:Column({$alias}) not found.:]");
+                $columnQuery = $this->columns[$alias]->query();
+                if ($col['searchable'] === 'true') $searchableColumns[$alias] = $columnQuery;
                 if (!$this->columns[$alias]->searchable() || $value === "") continue;
 
                 $this->opQuerySearchBind($alias, $value, $columnQuery, $col['search']['regex'], $whereAnd, 'cse');
@@ -1126,7 +1342,7 @@ class DataTables
 
         // find search keyword for all searchable columns
         if ($param->search && $param->search['value'] && count($searchableColumns) > 0) {
-            foreach($searchableColumns as $columnQuery) {
+            foreach($searchableColumns as $alias => $columnQuery) {
                 $whereOr[] = "({$columnQuery}) LIKE :asc_{$alias}";
                 $this->querySearchBind[":asc_{$alias}"] = "%{$param->search['value']}%";
             }
@@ -1142,7 +1358,7 @@ class DataTables
     {
         switch ($this->customSearch($alias)->type()) {
             case DataTablesCustomSearch::TYPE_STRING :
-                $whereAnd[] = "{$alias} LIKE :{$prefix}_{$alias}";
+                $whereAnd[] = "({$columnQuery}) LIKE :{$prefix}_{$alias}";
                 $this->querySearchBind[":{$prefix}_{$alias}"] = "%{$value}%";
                 break;
             case DataTablesCustomSearch::TYPE_DATERANGE :
@@ -1189,16 +1405,26 @@ class DataTables
 
     protected function opQueryOrderBy()
     {
-        $param = Param::getInstance();
-        $order = "";
-        if ($param->order) {
-            $orders = [];
-            foreach($param->order as $ord) {
-                $orders[] = "{$param->columns[$ord['column']]['data']} {$ord['dir']}";
+        if ($this->options["ordering"] === false) {
+            $order = "";
+            if ($this->defaultOrder) {
+                $orders = [];
+                foreach($this->defaultOrder as $ord) {
+                    $orders[] = "{$this->columns[$ord['alias']]->data()} {$ord['dir']}";
+                }
+                $order = "ORDER BY " . implode(', ', $orders);
             }
-            $order = "ORDER BY " . implode(', ', $orders);
+        } else {
+            $param = Param::getInstance();
+            $order = "";
+            if ($param->order) {
+                $orders = [];
+                foreach($param->order as $ord) {
+                    $orders[] = "{$param->columns[$ord['column']]['data']} {$ord['dir']}";
+                }
+                $order = "ORDER BY " . implode(', ', $orders);
+            }
         }
-
         return $order;
     }
 

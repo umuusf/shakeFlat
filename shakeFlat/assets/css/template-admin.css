@@ -40,6 +40,11 @@
         --bs-list-group-active-border-color: #2a3042;
     }
 
+    /* modal */
+    .modal-content {
+        .form-control-plaintext { color: #000; }
+    }
+
     /* datatables */
     .dt-container {
         .dt-buttons {
@@ -177,9 +182,9 @@
 
     /* modal */
     .modal-content {
-        --bs-modal-bg: #2d2f30;
-        --bs-modal-color: #eee;
-        --bs-modal-border-color: #555;
+        --bs-modal-color: #eeeeee;
+        --bs-modal-border-color: #444;
+        .form-control-plaintext { color: #fff; }
     }
 
     /* datarangepicker */
@@ -307,10 +312,14 @@ body {
     }
 
     /* modal */
-    .modal-header .btn-close { margin-top:-22px!important; }
-    .modal-body .label-modal-detailinfo { color:#666666; }
-    .modal-body .data-modal-detailinfo { font-size:0.80rem; }
-    .modal-dialog { max-width: fit-content; min-width:30rem; margin-left: auto; margin-right: auto; }
+    .modal {
+        .modal-header .btn-close { margin-top:-22px!important; }
+        .modal-body .label-modal-detailinfo { color:#666666; }
+        .modal-body .data-modal-detailinfo { font-size:0.80rem; }
+        .modal-dialog { max-width: fit-content; min-width:30rem; margin-left: auto; margin-right: auto; }
+        .modal-footer { border-top: none; }
+        .modal-body hr { margin-top: 0.3rem; margin-bottom: 0.3rem; }
+    }
 
     /* topbar */
     .shakeflat-topbar {

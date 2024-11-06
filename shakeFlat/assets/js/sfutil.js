@@ -6,7 +6,7 @@ function callAjax(url, frm, successCallback, errorCallback, _this)
 
     if (typeof frm === 'string') { frmObj = $("#" + frm); }
     else if (frm instanceof jQuery) { frmObj = frm; }
-    else if (frm instanceof HTMLElement) { frmObj = $(frm); } 
+    else if (frm instanceof HTMLElement) { frmObj = $(frm); }
     else if (typeof frm == "object" && frm.constructor.name == "FormData") frmData = frm;
     else if (typeof frm == "object" && frm.constructor.name == "Object") {
         $.each(frm, function(k, v) {
@@ -206,6 +206,30 @@ Number.prototype.numberFormatX = function() {
     return num.toLocaleString('ko-KR');
 }
 
+// 스트링으로 된 날짜 값을 입력 받아서, 날짜 format 에 맞춘 스트링으로 스트링으로 반환해주는 함수
+// ex) var dateStr = "2020-01-01";
+//     var formattedDate = dateStr.formatDate("YYYY년 MM월 DD일 HH시 mm분 ss초");
+String.prototype.formatDateTime = function(toFormat) {
+    var dateStr = this;
+    var date = new Date(dateStr);
+    var year = date.getFullYear();
+    var month = date.getMonth() + 1;
+    var day = date.getDate();
+    var hour = date.getHours();
+    var min = date.getMinutes();
+    var sec = date.getSeconds();
+
+    var formattedDate = toFormat;
+    formattedDate = formattedDate.replace("YYYY", year);
+    formattedDate = formattedDate.replace("MM", padZero(month));
+    formattedDate = formattedDate.replace("DD", padZero(day));
+    formattedDate = formattedDate.replace("HH", padZero(hour));
+    formattedDate = formattedDate.replace("mm", padZero(min));
+    formattedDate = formattedDate.replace("ss", padZero(sec));
+
+    return formattedDate;
+}
+
 // Sorts an dictionary object's keys in descending order and returns a new sorted object.
 function sortKeysDescending(obj) {
     var items = Object.keys(obj).map(function(key) { return [key, obj[key]]; });
@@ -228,11 +252,11 @@ function checkValidityForm(frm, passwdConfirmCustomMessage = "Password does not 
 
     if (typeof frm === 'string') { frmObj = $("#" + frm); }
     else if (frm instanceof jQuery) { frmObj = frm; }
-    else if (frm instanceof HTMLElement) { frmObj = $(frm); } 
+    else if (frm instanceof HTMLElement) { frmObj = $(frm); }
     else return false;
 
     frmObj.find("input[type=password]").each(function() {
-        var elementId = $(this).attr("id") || $(this).attr("name"); 
+        var elementId = $(this).attr("id") || $(this).attr("name");
         if (elementId) {
             pwList.push({
                 id: elementId,
@@ -246,11 +270,11 @@ function checkValidityForm(frm, passwdConfirmCustomMessage = "Password does not 
             if (o.id && o.id.substr(-8) == "_confirm") {
                 var str = o.id.slice(0, -8);
                 var originalPw = pwList.find(function(pw) { return pw.id === str; });
-                
+
                 if (originalPw) {
                     var originalVal = originalPw.element.val();
                     var confirmVal = o.element.val();
-                    
+
                     if (originalVal != confirmVal) {
                         o.element[0].setCustomValidity(passwdConfirmCustomMessage);
                         return false;
@@ -268,22 +292,9 @@ function checkValidityForm(frm, passwdConfirmCustomMessage = "Password does not 
     return true;
 }
 
-// now : Date()
-function getFormattedDate(now) {
-    const year = now.getFullYear();
-    const month = padZero(now.getMonth() + 1); // Months start at 0, so add 1.
-    const day = padZero(now.getDate());
-    const hours = padZero(now.getHours());
-    const minutes = padZero(now.getMinutes());
-    const seconds = padZero(now.getSeconds());
-
-    const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-    return formattedDate;
-}
-
-// 숫자가 한 자리일 경우 앞에 0을 붙이는 함수
-function padZero(number) {
-    return number < 10 ? '0' + number : number;
+// Function to add leading zeros to a number based on desired length
+function padZero(number, length = 2) {
+    return String(number).padStart(length, '0');
 }
 
 // rem to pixel (element is optional)

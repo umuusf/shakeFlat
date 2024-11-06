@@ -1,4 +1,6 @@
 $(document).ready(function() {
+    let keypressDelayTimer = {};
+
     let monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     let daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     let cancelLabel = 'Cancel';
@@ -62,14 +64,22 @@ $(document).ready(function() {
     });
 
     $(".sfdt-custom-search-item>input[data-sfdt-custom-search-type='string'][data-sfdt-custom-search-ex!='true']").on("keyup", function() {
+        clearTimeout(keypressDelayTimer[$(this).attr("id")]);
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
-        let oriIdx = sfdtFindIndexForAlias(tableId, $(this).data("sfdt-alias"));
-        sfdt[tableId].columns(sfdt[tableId].colReorder.transpose(oriIdx)).search($(this).val()).draw();
+        let alias = $(this).data("sfdt-alias");
+        let val = $(this).val();
+        keypressDelayTimer[$(this).attr("id")] = setTimeout(function() {
+            let oriIdx = sfdtFindIndexForAlias(tableId, alias);
+            sfdt[tableId].columns(sfdt[tableId].colReorder.transpose(oriIdx)).search(val).draw();
+        }, 800);
     });
 
     $(".sfdt-custom-search-item>input[data-sfdt-custom-search-type='string'][data-sfdt-custom-search-ex='true']").on("keyup", function() {
+        clearTimeout(keypressDelayTimer[$(this).attr("id")]);
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
-        sfdt[tableId].ajax.reload();
+        keypressDelayTimer[$(this).attr("id")] = setTimeout(function() {
+            sfdt[tableId].ajax.reload();
+        }, 800);
     });
 
     $(".sfdt-custom-search-item>input[data-sfdt-custom-search-type='string']").on("search", function() {
@@ -143,7 +153,7 @@ $(document).ready(function() {
         sfdt[tableId].ajax.reload();
     });
 
-    $(".sfdt-custom-search-item>input[data-sfdt-custom-search-type='daterange'][data-sfdt-custom-search-ex!='true'], .sfdt-custom-search-item>input[data-sfdt-custom-search-type='datetimerange'][data-sfdt-custom-search-ex!='true']").on("keyup", function(event) {
+    $(".sfdt-custom-search-item>input[data-sfdt-custom-search-type='daterange'][data-sfdt-custom-search-ex!='true'], .sfdt-custom-search-item>input[data-sfdt-custom-search-type='datetimerange'][data-sfdt-custom-search-ex!='true']").on("keypress", function(event) {
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
         if ($(this).val() === '') $(this).trigger('cancel.daterangepicker');
         else if ($(this).val().length === 23) {
@@ -152,7 +162,7 @@ $(document).ready(function() {
         }
     });
 
-    $(".sfdt-custom-search-item>input[data-sfdt-custom-search-type='daterange'][data-sfdt-custom-search-ex='true'], .sfdt-custom-search-item>input[data-sfdt-custom-search-type='datetimerange'][data-sfdt-custom-search-ex='true']").on("keyup", function(event) {
+    $(".sfdt-custom-search-item>input[data-sfdt-custom-search-type='daterange'][data-sfdt-custom-search-ex='true'], .sfdt-custom-search-item>input[data-sfdt-custom-search-type='datetimerange'][data-sfdt-custom-search-ex='true']").on("keypress", function(event) {
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
         if ($(this).val() === '') $(this).trigger('cancel.daterangepicker');
         else if ($(this).val().length === 23) {
@@ -231,6 +241,7 @@ $(document).ready(function() {
         confirm(resetConfirmMsg, function() {
             sfdt[tableId].colReorder.reset();
             sfdt[tableId].columns().header().columns().every(function() { this.visible(true); });
+            sfdt[tableId].order(sfdt[tableId].init().order).draw();
             $("#sfdt-modal-column-config").modal("hide");
         });
     });
