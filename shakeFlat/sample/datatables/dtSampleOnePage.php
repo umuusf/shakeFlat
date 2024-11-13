@@ -9,18 +9,17 @@ class dtSampleOnePage extends DataTables
     {
         parent::__construct($tableId);
 
+        parent::deliverParameter("abc", 123);
+
         parent::containerOption("style='max-width:100%;'")
             ->lengthMenu([10, 20, 50, 100, 200, 500])
             ->pageLength(20)
+            ->keyCursor()
             //->disableOrdering()
-            ->orderBy("email2", "desc")
+            ->orderBy("member_id", "desc")
             ->exportTitle("직원 목록")
             ->exportFilename("직원목록(" . date("Y-m-d") . ")")
             ->onePage();
-
-        parent::extraButton("btn-extra-add")    ->title("신규추가") ->class("btn-add")      ->option("data-table-id='{$tableId}'")  -> tooltip("회원을 신규 추가합니다.");
-        parent::extraButton("btn-extra-order")  ->title("주문하기") ->class("btn-order")    ->tooltip("주문서를 작성합니다.");
-        parent::extraButton("btn-extra-refund") ->title("환불요청") ->class("btn-refund")   ->tooltip("환불요청을 합니다.");
 
         parent::column("member_id")     ->title("ID")           ->noWrap()->textCenter();
         parent::column("name")          ->title("이름")         ->noWrap()->textCenter();
@@ -36,15 +35,12 @@ class dtSampleOnePage extends DataTables
         parent::column("join_date")     ->title("입사일")       ->noWrap()->date();
         parent::column("salary")        ->title("연봉")         ->noWrap()->number();
         parent::column("last_login")    ->title("마지막 로그인")->noWrap()->datetime();
-        parent::column("btn")->disableInvisible()->noExport()->textCenter()->noData()
-            ->renderDetailButton([ 'member_id', 'name' ])
-            ->renderButton("수정", "btn-modify", "data-member-id='\${row.member_id}'")
-            ->renderButton("삭제", "btn-delete", "data-member-id='\${row.member_id}'");
+        parent::column("btn")->disableInvisible()->noExport()->textCenter()->noData()->noKeyCursor();
 
         parent::customSearch("name")        ->widthRem(12)  ->string();
         parent::customSearch("email")       ->widthRem(12)  ->string();
-        parent::customSearch("phone")       ->widthRem(12)  ->string();
-        parent::customSearch("status")      ->widthRem(6)   ->select2()         ->option(["active"=>"active", "inactive"=>"inactive", "banned"=>"banned"]);
+        parent::customSearch("phone")       ->widthRem(12)  ->string(); //->mask("999-999[9]-9999");
+        parent::customSearch("status")      ->widthRem(6)   ->select2()         ->options(["active"=>"active", "inactive"=>"inactive", "banned"=>"banned"]);
         parent::customSearch("join_date")   ->widthRem(13)  ->dateRange();
         parent::customSearch("salary")      ->widthRem(15)  ->numberRange(0, 999999999);
 
@@ -59,17 +55,81 @@ class dtSampleOnePage extends DataTables
             "member_id", "status", "name", "phone", "city",
             "postal_code", "country", "email", "address", "notes",
             "birth_date", "join_date", "salary", "last_login", "btn"
-        ])->layoutDetail([
-            [ "member_id", "status" ],
-            [ "name", "phone" ],
-            '---',
-            [ "salary", "country", "city" ],
-            [ "postal_code", "address" ],
-            "email",
-            [ "birth_date", "join_date" ],
-            "last_login",
-            "notes"
         ]);
+
+        parent::column("btn")
+            ->buttonDetail("detailView")
+                ->keyParam('member_id')
+                ->keyParam('name')
+                ->queryFunction('opColumnButtonQueryData')
+                ->layout([
+                    [ "member_id", "status" ],
+                    [ "name", "phone" ],
+                    '---',
+                    [ "salary", "country", "city" ],
+                    [ "postal_code", "address" ],
+                    "email",
+                    [ "birth_date", "join_date" ],
+                    "last_login",
+                    "notes"
+                ]);
+
+        parent::column("btn")
+            ->buttonModify("modify")
+                ->keyParam('member_id')
+                ->keyParam('name')
+                ->queryFunction('opColumnButtonQueryData')
+                ->submitFunction('submitModify')
+                ->layout([
+                    "member_id",
+                    "status",
+                    [ "name", "phone" ],
+                    "address"
+                ]);
+
+        parent::column("btn")->buttonModify("modify")->editColumn("member_id")->hidden();
+        parent::column("btn")->buttonModify("modify")->editColumn("status")->title("상태")->radio()->options(["active"=>"Active", "inactive"=>"Inactive", "banned"=>"Banned" ]);
+        parent::column("btn")->buttonModify("modify")->editColumn("name")->title("이름")->text()->required();
+        parent::column("btn")->buttonModify("modify")->editColumn("phone")->title("전화번호")->tel()->required();
+        parent::column("btn")->buttonModify("modify")->editColumn("address")->title("주소")->text()->widthRem(28)->required();
+
+
+        parent::extraButton("btn-extra-add")    ->title("신규등록") ->class("btn-add")      ->tooltip("회원을 신규 추가합니다.");
+        parent::extraButton("btn-extra-order")  ->title("주문하기") ->class("btn-order")    ->tooltip("주문서를 작성합니다.");
+        parent::extraButton("btn-extra-refund") ->title("환불요청") ->class("btn-refund")   ->tooltip("환불요청을 합니다.");
+
+        $addRecord = parent::extraButton("btn-extra-add")->addRecord()->submitFunction("submitAddRecord");
+        $addRecord->column("name")      ->title("이름")->text()->required();
+        $addRecord->column("phone")     ->title("전화번호")->tel('010')->required();//->mask("999-999[9]-9999");
+        $addRecord->column("address")   ->title("주소")->text()->required()->widthRem(25);
+        $addRecord->column("hobby")     ->title("취미")->checkbox()->options([ "a"=>"독서", "b"=>"영화감상", "c"=>"등산" ])->defaultValue("a");
+        $addRecord->column("status")    ->title("상태")->radio()->options([ "active"=>"Active", "banned"=>"Banned", "inactive"=>"Inactive" ])->defaultValue("banned");
+        $addRecord->column("city")      ->title("도시")->select()->options([ "a"=>"서울특별시", "b"=>"부산직할시", "c"=>"용인특례시" ])->defaultValue("c")->widthRem(20);
+        $addRecord->column("city2")     ->title("도시")->select()->options([ "a"=>"서울특별시", "b"=>"부산직할시", "c"=>"용인특례시", "d" => "평택시" ])->defaultValue("d")->widthRem(20);
+        $addRecord->column("attach")    ->title("첨부파일")->file();
+        $addRecord->column("jumin")     ->title("주민등록번호")->text();//->mask("999999-9999999");
+
+        $addRecord->layout([
+            [ "name", "phone" ],
+            "address",
+            '---',
+            "hobby", "status",
+            "city", "city2",
+            "attach",
+            "jumin"
+        ]);
+
+        parent::column("btn")->button("delete")->title("삭제")->class("btn-delete")->dataset("member-id", "\${row.member_id}");
+    }
+
+    public function submitAddRecord()
+    {
+        return true;
+    }
+
+    public function submitModify()
+    {
+        return true;
     }
 
     public function opRecordsTotal()
@@ -113,11 +173,8 @@ class dtSampleOnePage extends DataTables
         return $data;
     }
 
-    public function opDetailData()
+    public function opColumnButtonQueryData($params)
     {
-        $params = parent::opDetailParams();
-        $memberId = $params['member_id'];
-        $name = $params['name'];
         $db = DB::getInstance();
         $rs = $db->query("
             select
@@ -125,7 +182,7 @@ class dtSampleOnePage extends DataTables
             from members
             where member_id = :member_id
             and name = :name
-        ", [ 'member_id' => $memberId, 'name' => $name ]);
+        ", [ 'member_id' => $params["member_id"], 'name' => $params["name"] ]);
         return $db->fetch($rs);
     }
 }

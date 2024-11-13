@@ -1,18 +1,18 @@
 .btn-add {
     --bs-btn-color: #fff;
-    --bs-btn-bg: #556b2f;
-    --bs-btn-border-color: #556b2f;
+    --bs-btn-bg: #8b2f5f; /* 기본 색상 */
+    --bs-btn-border-color: #8b2f5f;
     --bs-btn-hover-color: #fff;
-    --bs-btn-hover-bg: #4a5f27;
-    --bs-btn-hover-border-color: #405322;
-    --bs-btn-focus-shadow-rgb: 85,107,47;
+    --bs-btn-hover-bg: #75284f; /* 호버 색상 */
+    --bs-btn-hover-border-color: #662243;
+    --bs-btn-focus-shadow-rgb: 139, 47, 95;
     --bs-btn-active-color: #fff;
-    --bs-btn-active-bg: #405322;
-    --bs-btn-active-border-color: #37481e;
+    --bs-btn-active-bg: #662243; /* 활성화 색상 */
+    --bs-btn-active-border-color: #5a1e3b;
     --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
     --bs-btn-disabled-color: #fff;
-    --bs-btn-disabled-bg: #556b2f;
-    --bs-btn-disabled-border-color: #556b2f;
+    --bs-btn-disabled-bg: #8b2f5f;
+    --bs-btn-disabled-border-color: #8b2f5f;
 }
 
 .btn-modify {
@@ -202,7 +202,7 @@
     --bs-btn-disabled-border-color: #CEBEE2;
 }
 
-.bg-add { --bs-bg-opacity: 1; background-color: rgba(85, 107, 47, var(--bs-bg-opacity))!important; color:#fff; }
+.bg-add { --bs-bg-opacity: 1; background-color: rgba(139, 47, 95, var(--bs-bg-opacity)) !important; color: #fff; }
 .bg-delete { --bs-bg-opacity: 1; background-color: rgba(139, 0, 0, var(--bs-bg-opacity))!important; color:#fff; }
 .bg-modify { --bs-bg-opacity: 1; background-color: rgba(25, 118, 210, var(--bs-bg-opacity)) !important; color:#fff; }
 .bg-detail { --bs-bg-opacity: 1; background-color: rgba(0, 128, 128, var(--bs-bg-opacity))!important; color:#fff; }

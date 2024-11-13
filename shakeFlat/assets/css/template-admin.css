@@ -2,6 +2,7 @@
 [data-sf-theme=light] {
     --sf-bg-color: #fefefe;
     --sf-text-color: #000000;
+    --sf-modal-text-color: #000;
     --sf-topbar-bg-color: #eaeaea;
     --sf-topbar-text-color: #000000;
     --sf-logobox-bg-color: #2a3042;
@@ -34,6 +35,8 @@
     --sf-custom-search-bg-color: #eeeef3;
     --sf-custom-search-text-color: #000000;
 
+    --bs-border-color: #aaa;
+
     .list-group {
         --bs-list-group-bg: #2a3042;
         --bs-list-group-active-bg: #2a3042;
@@ -63,16 +66,16 @@
         appearance: none;
         -webkit-appearance: none;
         -moz-appearance: none;
-        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="%23000" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z" fill-opacity="1"/></svg>') no-repeat right 0.1rem center;
-        background-color: #fefefe;
-        border: 1px solid #dddddd;
+        background-color: var(--bs-body-bg);
+        border: 1px solid var(--bs-border-color);
         color: #000;
     }
 
     .select2-container--bootstrap5 .select2-selection--single {
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
-        background-position: right 0.4rem center;
+        background-position: right 0.8rem center;
         background-color:var(--bs-body-bg);
+        border: 1px solid var(--bs-border-color);
     }
 
     .select2-container--bootstrap5 .select2-container--disabled .select2-selection,
@@ -85,6 +88,7 @@
 [data-sf-theme=dark] {
     --sf-bg-color: #191919;
     --sf-text-color: #c0c0c0;
+    --sf-modal-text-color: #fff;
     --sf-topbar-bg-color: #101010;
     --sf-topbar-text-color: #b0b0b0;
     --sf-logobox-bg-color: #101010;
@@ -257,16 +261,17 @@
         appearance: none;
         -webkit-appearance: none;
         -moz-appearance: none;
-        background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="%23fff" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z" fill-opacity="1"/></svg>') no-repeat right 0.1rem center;
-        background-color: #1d1d1d;
-        border: 1px solid #454545;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-color: var(--bs-body-bg);
+        border: 1px solid var(--bs-border-color);
         color: #fff;
     }
 
     .select2-container--bootstrap5-dark .select2-selection--single {
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
-        background-position: right 0.4rem center;
+        background-position: right 0.8rem center;
         background-color:var(--bs-body-bg);
+        border: 1px solid var(--bs-border-color);
     }
 
     .select2-container--bootstrap5-dark .select2-container--disabled .select2-selection,
@@ -434,6 +439,50 @@ body {
                 > label { margin-right:0.5rem; white-space:nowrap; }
             }
         }
+    }
+
+    /* checkbox/radio for form floating */
+    .sfdt-floating-radio, .sfdt-floating-checkbox {
+        position: relative; padding-top: 1.5rem;
+        > div.form-check-inline {
+            margin-left: 0.3rem;
+            > input[type="checkbox"], input[type="radio"] { position: relative; margin-right: 0.4rem; z-index: 1; }
+        }
+        > label {
+            position: absolute;
+            top: 0rem; left: -0.12rem;
+            padding: 0 0.2rem; pointer-events: none;
+            opacity:.65; transform: scale(.85);
+        }
+    }
+
+    /* file for form floating */
+    .sfdt-floating-file {
+        position: relative; padding-top: 1.5rem;
+        > label {
+            position: absolute;
+            top: 0rem; left: -0.12rem;
+            padding: 0 0.2rem; pointer-events: none;
+            opacity:.65; transform: scale(.85);
+        }
+    }
+
+    /* select2 for form floating */
+    .sfdt-floating-select2 {
+        position: relative;
+        label {
+            position: absolute;
+            top: 0.3rem; left: 0.42rem;
+            opacity:.65; transform: scale(.85);
+            padding: 0 0.25rem; pointer-events: none;
+        }
+        .select2-container .select2-selection {
+            height: calc(3.5rem + 2px);
+            padding-top: 1.52rem; padding-left: 0.48rem; padding-right: 0.75rem;
+        }
+        span.select2-selection--single { font-size:1rem!important; color:var(--sf-modal-text-color); }
+        .select2-selection__rendered { padding: 0; margin-top: 0.5rem; }
+        .select2-container--bootstrap5-dark .select2-selection, .select2-container--bootstrap5-dark .select2-selection--single .select2-search--dropdown .select2-search__field { border: 1px solid rgba(255, 255, 255, .3); }
     }
 
     /* select2 */

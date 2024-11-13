@@ -4,8 +4,416 @@ use shakeFlat\L;
 use shakeFlat\Translation;
 use shakeFlat\Param;
 
+class DataTablesRenderButton
+{
+    private $tableId;
+    private $columnAlias;
+    private $btnId;
+    private $type;
+    private $keyParams;
+    private $queryUrl;
+    private $submitUrl;
+    private $queryFunction;
+    private $submitFunction;
+    private $title;
+    private $class;
+    private $dataset;
+    private $style;
+    private $editColumn;
+    private $layout;
+
+    public function __construct($tableId, $columnAlias, $btnId)
+    {
+        $this->tableId = $tableId;
+        $this->columnAlias = $columnAlias;
+        $this->btnId = $btnId;
+        $this->type = "button";
+        $this->keyParams = [];
+        $this->queryUrl = "";
+        $this->submitUrl = "";
+        $this->queryFunction = "";
+        $this->submitFunction = "";
+        $this->title = "";
+        $this->class = [];
+        $this->dataset = [];
+        $this->style = [];
+        $this->editColumn = [];
+        $this->layout = [];
+
+        $this->dataset("button-id", $btnId);
+    }
+
+    public function typeDetailVlew() { $this->type = "detailView"; return $this; }
+    public function typeModify() { $this->type = "modify"; return $this; }
+
+    public function keyParams($keyParams = null)
+    {
+        if ($keyParams === null) return $this->keyParams;
+        if (is_array($keyParams)) $this->keyParams = array_merge($this->keyParams, $keyParams);
+        else $this->keyParams[] = $keyParams;
+        return $this;
+    }
+
+    public function keyParam($keyParam) { return $this->keyParams($keyParam); }
+
+    public function queryUrl($queryUrl = null)
+    {
+        if ($queryUrl === null) return $this->queryUrl;
+        $this->queryUrl = $queryUrl;
+        return $this;
+    }
+
+    public function queryFunction($queryFunction = null)
+    {
+        if ($queryFunction === null) return $this->queryFunction;
+        $this->queryFunction = $queryFunction;
+        return $this;
+    }
+
+    public function submitFunction($submitFunction = null)
+    {
+        if ($submitFunction === null) return $this->submitFunction;
+        $this->submitFunction = $submitFunction;
+        return $this;
+    }
+
+    public function title($title = null)
+    {
+        if ($title === null) return $this->title;
+        $this->title = $title;
+        return $this;
+    }
+
+    public function class($class = null)
+    {
+        if ($class === null) return $this->class;
+        else $this->class[] = $class;
+        return $this;
+    }
+
+    // data-key='value'
+    public function dataset($key = null, $value = null)
+    {
+        if ($key === null && $value === null) return $this->dataset;
+        else if ($value === null) return $this->dataset[$key];
+        else $this->dataset[$key] = $value;
+        return $this;
+    }
+
+    public function style($style = null)
+    {
+        if ($style === null) return $this->style;
+        else $this->style[] = $style;
+        return $this;
+    }
+
+    public function editColumn($alias)
+    {
+        if (!isset($this->editColumn[$alias])) $this->editColumn[$alias] = new DataTablesEditColumn($this->tableId, $this->btnId, $alias);
+        return $this->editColumn[$alias];
+    }
+
+    public function layout($layout) { $this->layout = $layout; return $this; }
+
+
+
+
+    public function render()
+    {
+        if ($this->keyParams) {
+            foreach($this->keyParams as $alias) {
+                if (!array_key_exists($alias, $this->dataset)) $this->dataset[$alias] = "\${row.{$alias}}";
+            }
+        }
+        $style = "";   if ($this->style) $style = " style=\"" . implode(" ", $this->style) . "\"";
+        $class = "";   if ($this->class) $class = " " . implode(" ", $this->class);
+        $dataset = ""; foreach($this->dataset as $key => $value) $dataset .= " data-{$key}=\"{$value}\"";
+        return "<button type=\"button\" class=\"btn btn-xs{$class}\"{$style}{$dataset}>{$this->title}</button>";
+    }
+
+    public function code($tableColumns, $ajaxUrl, $deliverParameters)
+    {
+        if ($this->type === "detailView") return $this->_codeDetailView($tableColumns, $ajaxUrl, $deliverParameters);
+        else if ($this->type === "modify") return $this->_codeModify($tableColumns, $ajaxUrl, $deliverParameters);
+
+        return [ "html" => "", "drawCallbackScript" => "", "script" => "" ];
+    }
+
+    private function _codeDetailView($tableColumns, $ajaxUrl, $deliverParameters)
+    {
+        // detail view button
+        $detailScript = "";
+        $detailHtml = "";
+        $formatScript = "";
+        foreach($tableColumns as $alias => $column) {
+            if ($column->displayType() == "number") {
+                $formatScript .= "                        else if (alias == '{$alias}') txt = txt.numberFormat();\n";
+            } elseif (substr($column->displayType(), 0, 5) == "date:") {
+                $format = substr($column->displayType(), 5);
+                $formatScript .= "                        else if (alias == '{$alias}') txt = txt.formatDateTime('{$format}');\n";
+            } elseif (substr($column->displayType(), 0, 9) == "datetime:") {
+                $format = substr($column->displayType(), 9);
+                $formatScript .= "                        else if (alias == '{$alias}') txt = txt.formatDateTime('{$format}');\n";
+            }
+        }
+        $formatScript = trim($formatScript, "else ");
+
+        if (!$this->keyParams) L::system("[:dt:Parameter for detail view({$this->btnId}) is not defined.:]");
+        $paramScript = "";
+        foreach($this->keyParams as $alias) {
+            $paramScript .= "param['{$alias}'] = $(this).data('{$alias}');\n            ";
+        }
+        $queryUrl = $this->queryUrl | $ajaxUrl;
+        if ($queryUrl === $ajaxUrl) {
+            $paramScript .= "param['sfdtPageMode'] = 'detailView';\n            ";
+        }
+        $paramScript .= "param['sfdtBtnId'] = '{$this->btnId}';\n            ";
+
+        if ($deliverParameters) {
+            foreach($deliverParameters as $k => $v) {
+                $paramScript .= "param['{$k}'] = '{$v}';\n            ";
+            }
+        }
+        $detailScript .= <<<EOD
+
+                    $(document).on("click", "button[data-button-id='{$this->btnId}']", function() {
+                        let param = {};
+                        {$paramScript}
+                        callAjax(
+                            '{$queryUrl}',
+                            param,
+                            function(result) {
+                                if (!result.data.queryData || typeof result.data.queryData !== 'object') {
+                                    alert("[:dt:queryData does not exist in the result from {$queryUrl}:]");
+                                    return;
+                                }
+                                for(let alias in result.data.queryData) {
+                                    let txt = result.data.queryData[alias];
+                                    {$formatScript}
+                                    $("#sfdt-modal-{$this->tableId}-{$this->btnId}-column-" + alias).html(txt);
+                                }
+                                $("#sfdt-modal-{$this->tableId}-{$this->btnId}").modal("show");
+                            }
+                        );
+                    });
+            EOD;
+
+        $layoutHtml = "";
+        $htmlItem = function($alias) use ($tableColumns) {
+            return <<<EOD
+                                    <div class="col-auto">
+                                        <div class="form-floating">
+                                            <div class="form-control-plaintext text-nowrap" id="sfdt-modal-{$this->tableId}-{$this->btnId}-column-{$alias}"></div>
+                                            <label class="text-nowrap">{$tableColumns[$alias]->title()}</label>
+                                        </div>
+                                    </div>
+
+                EOD;
+        };
+
+        if (!$this->layout) L::system("[:dt:Layout for detail view({$this->btnId}) is not defined.:]");
+        foreach($this->layout as $item) {
+            if ($item === '---') {
+                $layoutHtml .= <<<EOD
+
+                                <hr>
+                EOD;
+                continue;
+            }
+            $layoutHtml .= <<<EOD
+
+                                <div class="row">
+
+                EOD;
+            if (is_array($item)) foreach($item as $alias) $layoutHtml .= $htmlItem($alias);
+            else $layoutHtml .= $htmlItem($item);
+
+            $layoutHtml .= <<<EOD
+                                </div>
+                EOD;
+        }
+
+        $detailHtml = <<<EOD
+            <!-- DataTable - Detail view modal for Table Id {$this->tableId} -->
+            <div class="modal fade" tabindex="-1" id="sfdt-modal-{$this->tableId}-{$this->btnId}">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header bg-detail">
+                            <h5 class="modal-title">[:dtdetail:Detail View:]</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            {$layoutHtml}
+
+                        </div>
+                        <div class="modal-footer d-flex justify-content-end">
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">[:dt:Close:]</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            EOD;
+
+        return [ "html" => $detailHtml, "drawCallbackScript" => $detailScript, "script" => "" ];
+    }
+
+    private function _codeModify($tableColumns, $ajaxUrl, $deliverParameters)
+    {
+        // modify button
+        $modifyCallbackScript = "";
+        $modifyScript = "";
+        $modifyHtml = "";
+        if (!$this->keyParams) L::system("[:dt:Parameter for modify({$this->btnId}) is not defined.:]");
+        $paramScript = "";
+        $submitScript = "";
+        foreach($this->keyParams as $alias) {
+            $paramScript .= "param['{$alias}'] = $(this).data('{$alias}');\n            ";
+        }
+        $queryUrl = $this->queryUrl | $ajaxUrl;
+        $submitUrl = $this->submitUrl | $ajaxUrl;
+        if ($queryUrl === $ajaxUrl) $paramScript .= "param['sfdtPageMode'] = 'modify';\n            ";
+        if ($submitUrl === $ajaxUrl) $submitScript .= "formData.append('sfdtPageMode', 'submitForModify');\n    ";
+        $paramScript .= "param['sfdtBtnId'] = '{$this->btnId}';\n            ";
+        $submitScript .= "formData.append('sfdtBtnId', '{$this->btnId}');\n    ";
+
+        if ($deliverParameters) {
+            foreach($deliverParameters as $k => $v) {
+                $paramScript .= "param['{$k}'] = '{$v}';\n            ";
+                $submitScript .= "formData.append('{$k}', '{$v}');\n    ";
+            }
+        }
+
+        $setTypesScript = "";
+        foreach($this->editColumn as $alias => $editColumn) {
+            $setTypesScript .= "types['{$alias}'] = '{$editColumn->type()}';\n                    ";
+        }
+
+
+        $modifyCallbackScript .= <<<EOD
+
+                    $(document).on("click", "button[data-button-id='{$this->btnId}']", function() {
+                        let param = {};
+                        {$paramScript}
+                        callAjax(
+                            '{$queryUrl}',
+                            param,
+                            function(result) {
+                                if (!result.data.queryData || typeof result.data.queryData !== 'object') {
+                                    alert("[:dt:queryData does not exist in the result from {$queryUrl}:]");
+                                    return;
+                                }
+                                //console.log(result.data.queryData);
+                                $("#sfdt-form-{$this->tableId}-{$this->btnId}")[0].reset();
+                                let types = {};
+                                {$setTypesScript}
+                                for(let alias in result.data.queryData) {
+                                    let txt = result.data.queryData[alias];
+                                    if (types[alias] == 'radio') {
+                                        sfdtSetDefaultValue($("#sfdt-edit-{$this->tableId}-{$this->btnId}-"+alias+"-1[name='"+alias+"']"), txt);
+                                    } else if (types[alias] == 'checkbox') {
+                                        sfdtSetDefaultValue($("#sfdt-edit-{$this->tableId}-{$this->btnId}-"+alias+"-1[name='"+alias+"[]']"), txt);
+                                    } else {
+                                        sfdtSetDefaultValue($("#sfdt-edit-{$this->tableId}-{$this->btnId}-"+alias), txt);
+                                    }
+                                }
+                                $("#sfdt-modal-{$this->tableId}-{$this->btnId}").modal("show");
+                            }
+                        );
+                    });
+            EOD;
+
+        $modifyScript .= <<<EOD
+
+                // modify submit
+                $("#sfdt-btn-{$this->tableId}-{$this->btnId}-modify-submit").click(function() {
+                    if (!$("#sfdt-form-{$this->tableId}-{$this->btnId}")[0].checkValidity()) {
+                        $("#sfdt-form-{$this->tableId}-{$this->btnId}")[0].reportValidity()
+                        return false;
+                    }
+                    var formData = new FormData($("#sfdt-form-{$this->tableId}-{$this->btnId}")[0]);
+                    {$submitScript}
+                    callAjax(
+                        '{$submitUrl}',
+                        formData,
+                        function(result) {
+                            if (result.data.result != true) {
+                                alert("[:dtmodify:Failed to modify. Please try again.:]");
+                                return;
+                            }
+                            noti("[:dtmodify:Successfully modified.:]", "success");
+                            sfdt['{$this->tableId}'].ajax.reload(null, false);
+                            $("#sfdt-modal-{$this->tableId}-{$this->btnId}").modal("hide");
+                        }
+                    )
+                });
+
+                $("#sfdt-modal-{$this->tableId}-{$this->btnId} .form-floating select").filter(function() {
+                    return $(this).find("option").length > 12;
+                }).each(function() {
+                    $(this).closest(".form-floating").removeClass("form-floating").addClass("sfdt-floating-select2");
+                    if (sfGetTheme() === 'dark') {
+                        $(this).select2({theme:'bootstrap5-dark', dropdownParent:$("#sfdt-modal-{$this->tableId}-{$this->btnId}")});
+                    } else {
+                        $(this).select2({theme:'bootstrap5', dropdownParent:$("#sfdt-modal-{$this->tableId}-{$this->btnId}")});
+                    }
+                });
+            EOD;
+
+        $layoutHtml = "";
+        if (!$this->layout) L::system("[:dt:Layout for modify({$this->btnId}) is not defined.:]");
+        foreach($this->layout as $item) {
+            if ($item === '---') {
+                $layoutHtml .= <<<EOD
+
+                                <hr class="mb-3">
+                EOD;
+                continue;
+            }
+            $layoutHtml .= <<<EOD
+
+                                <div class="row mb-4">
+
+                EOD;
+            if (is_array($item)) foreach($item as $alias) $layoutHtml .= $this->editColumn[$alias]->html();
+            else $layoutHtml .= $this->editColumn[$item]->html();
+
+            $layoutHtml .= <<<EOD
+
+                                </div>
+                EOD;
+        }
+
+        $modifyHtml = <<<EOD
+
+            <!-- DataTable - modify modal for Table Id {$this->tableId} -->
+            <div class="modal fade" tabindex="-1" id="sfdt-modal-{$this->tableId}-{$this->btnId}">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header bg-modify">
+                            <h5 class="modal-title">[:dtmodaltitle:Modify:]</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="sfdt-form-{$this->tableId}-{$this->btnId}">
+                            {$layoutHtml}
+                            </form>
+                        </div>
+                        <div class="modal-footer d-flex justify-content-end">
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">[:dt:Cancel:]</button>
+                            <button type="button" class="btn btn-sm btn-primary" id="sfdt-btn-{$this->tableId}-{$this->btnId}-modify-submit">[:dtmodify:Modify:]</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            EOD;
+
+        return [ "html" => $modifyHtml, "drawCallbackScript" => $modifyCallbackScript, "script" => $modifyScript ];
+    }
+}
+
 class DataTablesColumn
 {
+    private $tableId;
     private $alias;
     private $data;
     private $query;         // for database field name (if different from alias)
@@ -17,12 +425,15 @@ class DataTablesColumn
     private $displayType;   // for detail view display type
     private $searchable;
     private $orderable;
-    private $buttons;
+    private $renderButtons;
 
-    private $detailButtonInfo;
+    //private $buttons;
+    //private $detailButtonInfo;
+    //private $modifyButtonInfo;
 
-    public function __construct($alias)
+    public function __construct($tableId, $alias)
     {
+        $this->tableId = $tableId;
         $this->alias = $alias;
         $this->data = $alias;
         $this->query = $alias;
@@ -34,9 +445,11 @@ class DataTablesColumn
         $this->displayType = "string";
         $this->searchable = true;
         $this->orderable = true;
-        $this->buttons = [];
+        $this->renderButtons = [];
 
-        $this->detailButtonInfo = [];
+        //$this->buttons = [];
+        //$this->detailButtonInfo = [];
+        //$this->modifyButtonInfo = [];
     }
 
     public function alias()
@@ -156,46 +569,25 @@ class DataTablesColumn
     public function disableInvisible() { return $this->class("sfdt-disable-invisible"); }
     public function noExport() { return $this->class("sfdt-no-export"); }
     public function noData() { $this->searchable = false; $this->orderable = false; return $this; }
+    public function noKeyCursor() { return $this->class("sfdt-no-keys-cursor"); }
 
-    public function detailButtonInfo() { return $this->detailButtonInfo; }
+    public function renderButtons() { return $this->renderButtons; }
 
-    public function renderDetailButton($paramAliaes, $id = 'detail', $url = null, $text = "[:dtdetail:View:]", $class = "btn-detail") {
-        if (!is_array($paramAliaes)) $paramAliaes = [ $paramAliaes ];
-        $this->detailButtonInfo[$id] = [ 'param' => $paramAliaes, 'url' => $url ];
-        $options = [];
-        $options[] = "data-detail-id='{$id}'";
-        foreach($paramAliaes as $alias) {
-            $options[] = "data-{$alias}='\${row.{$alias}}'";
-        }
-        return $this->renderButton($text, $class, implode(" ", $options));
+    public function button($btnId) {
+        if (!array_key_exists($btnId, $this->renderButtons)) $this->renderButtons[$btnId] = new DataTablesRenderButton($this->tableId, $this->alias, $btnId);
+        return $this->renderButtons[$btnId];
     }
 
-    public function renderButton($text, $class = "", $option = null) {
-        $this->buttons[] = [
-            "text" => $text,
-            "class" => $class,
-            "option" => $option
-        ];
+    public function buttonDetail($btnId)
+    {
+        $this->button($btnId)->typeDetailVlew()->title("[:dtdetail:View:]")->class("btn-detail");
+        return $this->button($btnId);
+    }
 
-        $bArr = [];
-        foreach($this->buttons as $btn) {
-            if ($btn['class']) $class = " {$btn['class']}"; else $class = "";
-            if ($btn['option']) $option = " {$btn['option']}"; else $option = "";
-            $bArr[] = <<<EOD
-
-                                    <button type="button" class="btn btn-xs{$class}"{$option}>{$btn['text']}</button>
-                EOD;
-        }
-        $buttons = implode(" ", $bArr);
-
-        $this->onlyRender(<<<EOD
-
-                        function(data, type, row, meta) {
-                            return `{$buttons}
-                            `;
-                        }
-            EOD);
-        return $this;
+    public function buttonModify($btnId)
+    {
+        $this->button($btnId)->typeModify()->title("[:dtmodify:Modify:]")->class("btn-modify");
+        return $this->button($btnId);
     }
 }
 
@@ -207,21 +599,27 @@ class DataTablesCustomSearch
     const TYPE_DATETIMERANGE    = 1004;
     const TYPE_NUMBERRANGE      = 1005;
 
+    private $tableId;
     private $alias;
     private $title;
     private $type;
     private $controlOption;
+    private $controlStyle;
+    private $enableInputMask;
     private $options;
     private $numberRangeOption;
     private $select2;
     private $exColumnQuery;     // for database field name for search(where statement)
 
-    public function __construct($alias)
+    public function __construct($tableId, $alias)
     {
+        $this->tableId = $tableId;
         $this->alias = $alias;
         $this->title = "";
         $this->type = self::TYPE_STRING;
-        $this->controlOption = "";
+        $this->controlOption = [];
+        $this->controlStyle = [];
+        $this->enableInputMask = false;
         $this->numberRangeOption = [ "min" => 0, "max" => 100 ];
         $this->options = [];
         $this->select2 = false;
@@ -254,23 +652,35 @@ class DataTablesCustomSearch
     public function controlOption($option = null)
     {
         if ($option === null) return $this->controlOption;
-        $this->controlOption = $option;
+        $this->controlOption[] = $option;
         return $this;
     }
 
-    public function widthPx($px) { $this->controlOption .= " style='width:{$px}px;'"; return $this; }
-    public function widthRem($rem) { $this->controlOption .= " style='width:{$rem}rem;'"; return $this; }
-    public function widthEm($em) { $this->controlOption .= " style='width:{$em}em;'"; return $this; }
-
-    public function option($key = null, $value = null)
+    public function mask($maskOption)
     {
-        if ($key === null && $value === null) return $this->options;
+        $this->enableInputMask = true;
+        return $this->controlOption("data-inputmask=\"'mask':'{$maskOption}'\"");
+    }
 
-        if (is_array($key) && $value === null) {
-            $this->options = array_merge($this->options, $key);
-        } else {
-            $this->options[$key] = $value;
-        }
+    public function isEnableInputMask() { return $this->enableInputMask; }
+
+    public function controlStyle($style = null)
+    {
+        if ($style === null) return $this->controlStyle;
+        $this->controlStyle[] = $style;
+        return $this;
+    }
+
+    public function widthPx($px) { $this->controlStyle[] = "width:{$px}px;"; return $this; }
+    public function widthRem($rem) { $this->controlStyle[] = "width:{$rem}rem;"; return $this; }
+    public function widthEm($em) { $this->controlStyle[] = "width:{$em}em;"; return $this; }
+    public function widthPercent($p) { $this->controlStyle[] = "width:{$p}%;"; return $this; }
+
+    public function option($key, $value = null)
+    {
+        if (!is_string($key) || !array_key_exists($key, $this->options)) L::system("[:dt:DataTablesCustomSearch option() parameter error.:]");
+        if ($value === null) return $this->options[$key];
+        $this->options[$key] = $value;
         return $this;
     }
 
@@ -314,6 +724,7 @@ class DataTablesCustomSearch
             "alias"             => $this->alias,
             "type"              => $this->type,
             "controlOption"     => $this->controlOption,
+            "controlStyle"      => $this->controlStyle,
             "option"            => $this->options,
             "numberRangeOption" => $this->numberRangeOption,
             "select2"           => $this->select2
@@ -323,24 +734,33 @@ class DataTablesCustomSearch
 
 class DataTablesExtraButton
 {
+    private $tableId;
     private $btnId;
     private $title;
     private $class;
     private $option;
     private $action;
     private $tooltip;
+    private $addRecord;       // add new record
 
-    public function __construct($btnId)
+    public function __construct($tableId, $btnId)
     {
+        $this->tableId = $tableId;
         $this->btnId = $btnId;
         $this->title = $btnId;
         $this->class = [];
         $this->action = "";
         $this->option = [];
         $this->tooltip = "";
+        $this->addRecord = null;
     }
 
-    public function btnId() { return $this->btnId; }
+    public static function getInstance($tableId, $btnId)
+    {
+        static $instance;
+        if (!isset($instance[$tableId][$btnId])) $instance[$tableId][$btnId] = new DataTablesExtraButton($tableId, $btnId);
+        return $instance[$tableId][$btnId];
+    }
 
     public function title($title = null)
     {
@@ -377,14 +797,22 @@ class DataTablesExtraButton
         return $this;
     }
 
-    public function html()
+    public function addRecord()
+    {
+        if (!$this->addRecord) $this->addRecord = new DataTablesAddRecord($this->tableId, $this->btnId);
+        return $this->addRecord;
+    }
+
+    public function isAddRecord() { return $this->addRecord !== null; }
+
+    public function htmlCode()
     {
         $class = implode(" ", $this->class);
         $option = implode(" ", $this->option);
         return "<button type=\"button\" id=\"{$this->btnId}\" class=\"btn btn-sm {$class}\"{$option}>{$this->title}</button>";
     }
 
-    public function tooltipScript()
+    public function drawCallbackScript()
     {
         if (!$this->tooltip()) return "";
         $tp = str_replace('"', '\"', $this->tooltip());
@@ -392,6 +820,402 @@ class DataTablesExtraButton
 
                 $('#{$this->btnId}').data("bs-toggle", "tooltip").attr("title", "{$tp}").tooltip();
         EOD;
+    }
+}
+
+class DataTablesEditColumn
+{
+    private $tableId;
+    private $editId;
+    private $alias;
+    private $title;
+    private $class;
+    private $required;
+    private $type;
+    private $options;
+    private $controlOption;
+    private $controlStyle;
+    private $enableInputMask;
+    private $defaultValue;
+
+    public function __construct($tableId, $editId, $alias)
+    {
+        $this->tableId = $tableId;
+        $this->editId = $editId;
+        $this->alias = $alias;
+        $this->title = "";
+        $this->class = [];
+        $this->required = false;
+        $this->type = "";
+        $this->defaultValue = "";
+        $this->controlOption = [];
+        $this->controlStyle = [];
+        $this->enableInputMask = false;
+        $this->options = [];
+    }
+
+
+    public function title($title = null)
+    {
+        if ($title === null) return $this->title;
+        $this->title = $title;
+        return $this;
+    }
+
+    public function class($class = null)
+    {
+        if ($class === null) return $this->class;
+        if (!in_array($class, $this->class)) $this->class[] = $class;
+        return $this;
+    }
+
+    public function required() { $this->required = true; return $this; }
+
+    public function type($type = null)
+    {
+        if ($type === null) return $this->type;
+        $this->type = $type;
+        return $this;
+    }
+
+    public function controlOption($option = null)
+    {
+        if ($option === null) return $this->controlOption;
+        $this->controlOption[] = $option;
+        return $this;
+    }
+
+    public function mask($maskOption)
+    {
+        $this->enableInputMask = true;
+        return $this->controlOption("data-inputmask=\"'mask':'{$maskOption}'\"");
+    }
+
+    public function isEnableInputMask() { return $this->enableInputMask; }
+
+    public function controlStyle($style = null)
+    {
+        if ($style === null) return $this->controlStyle;
+        $this->controlStyle[] = $style;
+        return $this;
+    }
+
+    public function widthPx($px) { $this->controlStyle[] = "width:{$px}px;"; return $this; }
+    public function widthRem($rem) { $this->controlStyle[] = "width:{$rem}rem;"; return $this; }
+    public function widthEm($em) { $this->controlStyle[] = "width:{$em}em;"; return $this; }
+    public function widthPercent($p) { $this->controlStyle[] = "width:{$p}%;"; return $this; }
+
+    public function hidden($defaultValue = null)    { $this->type("hidden");   if ($defaultValue !== null) $this->defaultValue($defaultValue); return $this; }
+    public function text($defaultValue = null)      { $this->type("text");     if ($defaultValue !== null) $this->defaultValue($defaultValue); return $this; }
+    public function number($defaultValue = null)    { $this->type("number");   if ($defaultValue !== null) $this->defaultValue($defaultValue); return $this; }
+    public function email($defaultValue = null)     { $this->type("email");    if ($defaultValue !== null) $this->defaultValue($defaultValue); return $this; }
+    public function url($defaultValue = null)       { $this->type("url");      if ($defaultValue !== null) $this->defaultValue($defaultValue); return $this; }
+    public function date($defaultValue = null)      { $this->type("date");     if ($defaultValue !== null) $this->defaultValue($defaultValue); return $this; }
+    public function time($defaultValue = null)      { $this->type("time");     if ($defaultValue !== null) $this->defaultValue($defaultValue); return $this; }
+    public function month($defaultValue = null)     { $this->type("month");    if ($defaultValue !== null) $this->defaultValue($defaultValue); return $this; }
+    public function password($defaultValue = null)  { $this->type("password"); if ($defaultValue !== null) $this->defaultValue($defaultValue); return $this; }
+    public function tel($defaultValue = null)       { $this->type("tel");      if ($defaultValue !== null) $this->defaultValue($defaultValue); return $this; }
+    public function file($defaultValue = null)      { $this->type("file");     if ($defaultValue !== null) $this->defaultValue($defaultValue); return $this; }
+    public function checkbox($defaultValue = null)  { $this->type("checkbox"); if ($defaultValue !== null) $this->defaultValue($defaultValue); return $this; }
+    public function radio($defaultValue = null)     { $this->type("radio");    if ($defaultValue !== null) $this->defaultValue($defaultValue); return $this; }
+    public function select($defaultValue = null)    { $this->type("select");   if ($defaultValue !== null) $this->defaultValue($defaultValue); return $this; }
+
+    public function defaultValue($value = null)
+    {
+        if ($value === null) return $this->defaultValue;
+        $this->defaultValue = $value;
+        return $this;
+    }
+
+    public function option($value, $text = null)
+    {
+        if (!array_key_exists($value, $this->options)) L::system("[:dtedit:DataTablesEditColumn {$this->editId} option parameter error.:]");
+        if ($text === null) return $this->options[$value];
+        $this->options[$value] = $text;
+        return $this;
+    }
+
+    public function options($options = null)
+    {
+        if ($options === null) return $this->options;
+        if (!is_array($options)) L::system("[:dtedit:DataTablesEditColumn {$this->editId} options parameter error.:]");
+
+        foreach($options as $value => $text) {
+            $this->options[$value] = $text;
+        }
+        return $this;
+    }
+
+    public function html()
+    {
+        $class = implode(" ", $this->class);    if ($class) $class = " " . $class;
+        $controlOption = "";  if ($this->controlOption) $controlOption = " " . implode(" ", $this->controlOption);
+        $controlStyle = "";  if ($this->controlStyle) $controlStyle = " style=\"" . implode(" ", $this->controlStyle) . "\"";
+        switch($this->type) {
+            case "hidden" :
+                return <<<EOD
+                                    <input type="hidden" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}" value="{$this->defaultValue}"{$controlOption}>
+
+                EOD;
+            case "text" :
+            case "number" :
+            case "email" :
+            case "url" :
+            case "date" :
+            case "time" :
+            case "month" :
+            case "password" :
+            case "tel" :
+                if ($this->required) $required = " required"; else $required = "";
+                return <<<EOD
+
+                                    <div class="col-auto">
+                                        <div class="form-floating">
+                                            <input type="{$this->type}" class="form-control{$class}" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}" placeholder="" value="{$this->defaultValue}"{$required}{$controlOption}{$controlStyle} autocomplete="off">
+                                            <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}">{$this->title()}</label>
+                                        </div>
+                                    </div>
+                    EOD;
+            case "file" :
+                if ($this->required) $required = " required"; else $required = "";
+                return <<<EOD
+
+                                    <div class="col-auto">
+                                        <div class="sfdt-floating-file">
+                                            <input type="file" class="form-control{$class}" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}" placeholder="" value="{$this->defaultValue}"{$required}{$controlOption}{$controlStyle} autocomplete="off">
+                                            <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}">{$this->title()}</label>
+                                        </div>
+                                    </div>
+                    EOD;
+            case "checkbox" :
+                $html = "";
+                $idx = 1;
+                if (!$this->options) L::system("[:dtedit:DataTablesEditColumn {$this->editId} {$this->alias} checkbox options not defined.:]");
+                if (count($this->options) > 1) $name = "{$this->alias}[]"; else $name = "{$this->alias}";
+                foreach($this->options as $value => $text) {
+                    if ($value === $this->defaultValue) $checked = " checked"; else $checked = "";
+                    $html .= <<<EOD
+
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="checkbox" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-{$idx}" name="{$name}" value="{$value}"{$checked}{$controlOption}{$controlStyle}>
+                                                    <label class="form-check-label" for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-{$idx}">{$text}</label>
+                                                </div>
+                        EOD;
+                    $idx++;
+                }
+                return <<<EOD
+
+                                    <div class="col-auto me-3">
+                                        <div class="sfdt-floating-checkbox">
+                                            <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-1">{$this->title()}</label>
+                                            {$html}
+                                        </div>
+                                    </div>
+                    EOD;
+            case "radio" :
+                $html = "";
+                $idx = 1;
+                if (!$this->options) L::system("[:dtedit:DataTablesEditColumn {$this->editId} {$this->alias} radio options not defined.:]");
+                foreach($this->options as $value => $text) {
+                    if ($value === $this->defaultValue) $checked = " checked"; else $checked = "";
+                    $html .= <<<EOD
+
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="radio" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-{$idx}" name="{$this->alias}" value="{$value}"{$checked}{$controlOption}{$controlStyle}>
+                                                    <label class="form-check-label" for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-{$idx}">{$text}</label>
+                                                </div>
+                        EOD;
+                    $idx ++;
+                }
+                return <<<EOD
+
+                                    <div class="col-auto me-3">
+                                        <div class="sfdt-floating-radio">
+                                            <label class="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-1">{$this->title()}</label>
+                                            {$html}
+                                        </div>
+                                    </div>
+                    EOD;
+            case "select" :
+                $optionArr = [];
+                if (!$this->options) L::system("[:dtedit:DataTablesEditColumn {$this->editId} {$this->alias} select options not defined.:]");
+                if (!$this->required) $optionArr[] = "<option value=''>[:dtedit:Select:]</option>";
+                foreach($this->options as $value => $text) {
+                    if ($value === $this->defaultValue) $selected = " selected"; else $selected = "";
+                    $optionArr[] = "<option value='{$value}'{$selected}>{$text}</option>";
+                }
+                $optionHtml = implode("\n                            ", $optionArr);
+                return <<<EOD
+
+                                        <div class="col-auto">
+                                            <div class="form-floating">
+                                                <select class="form-select" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}"{$controlOption}{$controlStyle}>
+                                                {$optionHtml}
+                                                </select>
+                                                <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}">{$this->title()}</label>
+                                            </div>
+                                        </div>
+                    EOD;
+        }
+    }
+}
+
+class DataTablesAddRecord
+{
+    private $tableId;
+    private $btnId;
+
+    private $layout;
+    private $columns;
+    private $submitFunction;
+
+    public function __construct($tableId, $btnId)
+    {
+        $this->tableId = $tableId;
+        $this->btnId = $btnId;
+        $this->layout = [];
+        $this->columns = [];
+        $this->submitFunction = "";
+    }
+
+    public function layout($layout = null)
+    {
+        if ($layout === null) return $this->layout;
+        $this->layout = $layout;
+        return $this;
+    }
+
+    public function isEnableInputMask()
+    {
+        foreach($this->columns as $alias => $column) {
+            if ($column->isEnableInputMask()) return true;
+        }
+        return false;
+    }
+
+    public function submitFunction($submitFunction = null)
+    {
+        if ($submitFunction === null) return $this->submitFunction;
+        $this->submitFunction = $submitFunction;
+        return $this;
+    }
+
+    public function column($alias)
+    {
+        if (!isset($this->columns[$alias])) $this->columns[$alias] = new DataTablesEditColumn($this->tableId, $this->btnId, $alias);
+        return $this->columns[$alias];
+    }
+
+    public function html()
+    {
+        $controlHtml = "";
+        if (!$this->columns) L::system("[:dtaddrecord:No columns defined for DataTablesAddRecord.:]");
+        if (!$this->layout) L::system("[:dtaddrecord:No layout defined for DataTablesAddRecord.:]");
+        foreach($this->layout as $item) {
+            if ($item === '---') {
+                $controlHtml .= <<<EOD
+
+                                <hr class="mb-3">
+                EOD;
+                continue;
+            }
+            $controlHtml .= <<<EOD
+
+                                <div class="row mb-4">
+                EOD;
+            if (is_array($item)) foreach($item as $alias) $controlHtml .= $this->column($alias)->html();
+            else $controlHtml .= $this->column($item)->html();
+
+            $controlHtml .= <<<EOD
+
+                                </div>
+                EOD;
+        }
+
+        $html = <<<EOD
+            <!-- DataTable - add record modal for Table Id {$this->tableId} -->
+            <div class="modal fade" tabindex="-1" id="sfdt-modal-{$this->tableId}-{$this->btnId}">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header bg-add">
+                            <h5 class="modal-title">[:dtaddrecord:Add New:]</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="sfdt-form-{$this->tableId}-{$this->btnId}">
+                            {$controlHtml}
+                            </form>
+                        </div>
+                        <div class="modal-footer d-flex justify-content-end">
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">[:dt:Cancel:]</button>
+                            <button type="button" class="btn btn-sm btn-add" id="sfdt-btn-{$this->tableId}-{$this->btnId}-add-submit">[:dtaddrecord:Submit:]</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            EOD;
+
+        return $html;
+    }
+
+    public function drawCallbackScript()
+    {
+        return <<<EOD
+
+                    $("#{$this->btnId}").click(function() {
+                        $("#sfdt-form-{$this->tableId}-{$this->btnId}")[0].reset();
+                        $("#sfdt-modal-{$this->tableId}-{$this->btnId}").modal("show");
+                    });
+            EOD;
+    }
+
+    public function script($queryUrl, $deliverParameters)
+    {
+        $deliverParametersScript = "";
+        if ($deliverParameters) {
+            foreach($deliverParameters as $k => $v) {
+                $deliverParametersScript .= "formData.append(\"{$k}\", \"{$v}\");\n            ";
+            }
+        }
+
+        return <<<EOD
+
+                $("#sfdt-modal-{$this->tableId}-{$this->btnId} .form-floating select").filter(function() {
+                    return $(this).find("option").length > 12;
+                }).each(function() {
+                    $(this).closest(".form-floating").removeClass("form-floating").addClass("sfdt-floating-select2");
+                    if (sfGetTheme() === 'dark') {
+                        $(this).select2({theme:'bootstrap5-dark', dropdownParent:$("#sfdt-modal-{$this->tableId}-{$this->btnId}")});
+                    } else {
+                        $(this).select2({theme:'bootstrap5', dropdownParent:$("#sfdt-modal-{$this->tableId}-{$this->btnId}")});
+                    }
+                });
+
+                // add record submit
+                $("#sfdt-btn-{$this->tableId}-{$this->btnId}-add-submit").click(function() {
+                    if (!$("#sfdt-form-{$this->tableId}-{$this->btnId}")[0].checkValidity()) {
+                        $("#sfdt-form-{$this->tableId}-{$this->btnId}")[0].reportValidity()
+                        return false;
+                    }
+                    var formData = new FormData($("#sfdt-form-{$this->tableId}-{$this->btnId}")[0]);
+                    formData.append("sfdtPageMode", "submitForAddRecord");
+                    formData.append("sfdtBtnId", "{$this->btnId}");
+                    {$deliverParametersScript}
+                    callAjax(
+                        '{$queryUrl}',
+                        formData,
+                        function(result) {
+                            if (result.data.result != true) {
+                                alert("[:dtaddrecord:Failed to add record. Please try again.:]");
+                                return;
+                            }
+                            noti("[:dtaddrecord:Record added successfully.:]");
+                            sfdt['{$this->tableId}'].ajax.reload();
+                            $("#sfdt-modal-{$this->tableId}-{$this->btnId}").modal("hide");
+                        }
+                    )
+                });
+            EOD;
     }
 }
 
@@ -403,6 +1227,8 @@ class DataTables
     private $tableId;
     private $containerOption;
     private $disableTooltip;
+    private $deliverParameters;
+    private $drawCallbackScript;
 
     private $options;
     private $language;
@@ -426,6 +1252,8 @@ class DataTables
     private $layoutCustomSearch;
     private $layoutList;
     private $layoutDetail;
+    private $layoutModify;
+    private $modifyColumns;
 
     private $onePage;
     private $querySearchSQL;
@@ -442,6 +1270,7 @@ class DataTables
         $this->tableId = $tableId;
         $this->containerOption = "";
         $this->disableTooltip = false;
+        $this->deliverParameters = [];
 
         $this->options = [
             "stateSave"  => true,
@@ -461,10 +1290,13 @@ class DataTables
         $this->columns = [];
         $this->customSearch = [];
         $this->defaultOrder = [];
+        $this->drawCallbackScript = [];
 
         $this->layoutCustomSearch = [];
         $this->layoutList = [];
         $this->layoutDetail = [];
+        $this->layoutModify = [];
+        $this->modifyColumns = [];
 
         $this->exportActionPrint    = "sfdtExportAction";
         $this->exportActionPDF      = "sfdtExportAction";
@@ -486,6 +1318,10 @@ class DataTables
 
     public function containerOption($option) { $this->containerOption = $option; return $this; }
 
+
+    // Defines parameters that must be passed(deliver) when calling the ajax module. (for onePage)
+    public function deliverParameter($k, $v) { $this->deliverParameters[$k] = $v; }
+
     /*
      * table options
      */
@@ -499,6 +1335,12 @@ class DataTables
     public function disableTooltip() { $this->disableTooltip = true; return $this; }
     public function orderBy($alias, $dir) { $this->defaultOrder[] = [ "alias" => $alias, "dir" => $dir ]; return $this; }
     public function disableOrdering() { $this->options["ordering"] = false; return $this; }
+    public function keyCursor() { $this->options["keys"] = [ "blurable" => true, "columns" => ':not(.sfdt-no-keys-cursor)' ]; return $this; }
+
+    /*
+     * callback script
+     */
+    public function drawCallbackScript($script) { $this->drawCallbackScript[] = $script; return $this; }
 
     /*
      * export option
@@ -523,7 +1365,7 @@ class DataTables
      */
     public function extraButton($btnId)
     {
-        $this->extraButtons[$btnId] = new DataTablesExtraButton($btnId);
+        if (!isset($this->extraButtons[$btnId])) $this->extraButtons[$btnId] = new DataTablesExtraButton($this->tableId, $btnId);
         return $this->extraButtons[$btnId];
     }
 
@@ -537,13 +1379,13 @@ class DataTables
      */
     public function column($alias)
     {
-        if (!isset($this->columns[$alias])) $this->columns[$alias] = new DataTablesColumn($alias);
+        if (!isset($this->columns[$alias])) $this->columns[$alias] = new DataTablesColumn($this->tableId, $alias);
         return $this->columns[$alias];
     }
 
     // custom search, $aliases : array of column alias
     public function customSearch($alias) {
-        if (!isset($this->customSearch[$alias])) $this->customSearch[$alias] = new DataTablesCustomSearch($alias);
+        if (!isset($this->customSearch[$alias])) $this->customSearch[$alias] = new DataTablesCustomSearch($this->tableId, $alias);
         return $this->customSearch[$alias];
     }
 
@@ -556,6 +1398,13 @@ class DataTables
     // columns order for detail, $layout : array of column alias
     public function layoutDetail($layout, $id = 'detail') { $this->layoutDetail[$id] = $layout; return $this; }
 
+    // columns order for modify, $layout : array of column alias
+    public function layoutModify($layout, $editId = 'modify') { $this->layoutModify[$editId] = $layout; return $this; }
+    public function modifyColumn($alias, $editId = 'modify')
+    {
+        if (!isset($this->modifyColumns[$editId][$alias])) $this->modifyColumns[$editId][$alias] = new DataTablesEditColumn($this->tableId, $editId, $alias);
+        return $this->modifyColumns[$editId][$alias];
+    }
 
     // Create a script/html that should be output only once even if the instance is created multiple times
     private function onceOutput()
@@ -594,7 +1443,6 @@ class DataTables
                         </div>
                     </div>
                 </div>
-
                 EOD;
         }
 
@@ -621,7 +1469,6 @@ class DataTables
                                 {$exstr}
                                 data.customSearchEx = csEx;
                                 localStorage.setItem('sfdt-{$this->tableId}-custom-search-ex', JSON.stringify(csEx));
-
                     EOD;
             }
         }
@@ -632,14 +1479,21 @@ class DataTables
             $scriptCustomExSearch .= <<<EOD
 
                                 data.sfdtPageMode = 'data';
-
                     EOD;
+        }
+
+        $deliverParameters = "";
+        if ($this->deliverParameters) {
+            foreach($this->deliverParameters as $k => $v) {
+                $deliverParameters .= "data.{$k} = '{$v}';\n            ";
+            }
         }
 
         return <<<EOD
 
                     function(data, callback, settings) {
                         {$scriptCustomExSearch}
+                        {$deliverParameters}
                         $.ajax({
                             url: '{$url}',
                             type: 'POST',
@@ -684,6 +1538,9 @@ class DataTables
     {
         $code = [];
         $render = [];
+        $html = "";
+        $drawCallbackScript = "";
+        $script = "";
         foreach($this->columns as $alias => $column) {
             $c = [ "name" => $alias ];
             if ($column->query())   $c["data"] = $column->data();
@@ -692,7 +1549,19 @@ class DataTables
             if ($column->type())    $c["type"] = $column->type();
             $c["searchable"] = $column->searchable();
             $c["orderable"] = $column->orderable();
-            if ($column->render()) {
+
+            if ($column->renderButtons()) {
+                $c["render"] = "rendering-{$alias}";
+                $render[$alias] = "\n                function(data, type, row, meta) {\n                    return `\n                        ";
+                foreach($column->renderButtons() as $btnId => $rb) {
+                    if ($rb->render()) $render[$alias] .= trim($rb->render()) . "\n                        ";
+                    $rbCode = $rb->code($this->columns, $this->ajaxUrl, $this->deliverParameters);
+                    $html .= $rbCode["html"];
+                    $drawCallbackScript .= $rbCode["drawCallbackScript"];
+                    $script .= $rbCode["script"];
+                }
+                $render[$alias] .= "`;\n                }";
+            } else if ($column->render()) {
                 $c["render"] = "rendering-{$alias}";
                 $render[$alias] = trim($column->render());
             }
@@ -705,7 +1574,7 @@ class DataTables
         foreach($this->layoutList as $alias) {
             if (isset($code[$alias])) $list[] = $code[$alias];
         }
-        return [ "list" => $list, "render" => $render ];
+        return [ "list" => $list, "render" => $render, "html" => $html, "drawCallbackScript" => $drawCallbackScript, "script" => $script ];
     }
 
     private function makeCodeLayout()
@@ -725,7 +1594,9 @@ class DataTables
         }
 
         if ($this->extraButtons) {
-            foreach($this->extraButtons as $btnId => $eb) $ebArr[] = $eb->html();
+            foreach($this->extraButtons as $btnId => $eb) {
+                $ebArr[] = $eb->htmlCode();
+            }
         }
 
         if ($ebArr) $extraButtons = "div: { html:`" . implode(" ", $ebArr) . "` },";
@@ -816,7 +1687,8 @@ class DataTables
     {
         if (!array_key_exists($alias, $this->customSearch)) L::system("[:dt:Custom search item({$alias}) not found.:]");
         $cs = $this->customSearch[$alias];
-        $controlOption = $cs->controlOption();  if ($controlOption) $controlOption = " {$controlOption}";
+        $controlOption = ""; if ($cs->controlOption()) $controlOption = " " . implode(" ", $cs->controlOption());
+        $controlStyle = ""; if ($cs->controlStyle()) $controlStyle = " style=\"" . implode("; ", $cs->controlStyle()) . "\"";
 
         $forEx = "";
         $title = $cs->title();
@@ -835,14 +1707,14 @@ class DataTables
 
                                 <div class="sfdt-custom-search-item">
                                     <label for="sfdt-{$this->tableId}-custom-search-{$alias}">{$title} :</label>
-                                    <input type="search" class="form-control form-control-sm sfdt-{$this->tableId}-custom-search" name="sfdt-{$this->tableId}-custom-search-{$alias}" id="sfdt-{$this->tableId}-custom-search-{$alias}" data-sfdt-custom-search-type="string"{$sfdtDataAlias}{$forEx} autocomplete="off"{$controlOption}>
+                                    <input type="search" class="form-control form-control-sm sfdt-{$this->tableId}-custom-search" name="sfdt-{$this->tableId}-custom-search-{$alias}" id="sfdt-{$this->tableId}-custom-search-{$alias}" data-sfdt-custom-search-type="string"{$sfdtDataAlias}{$forEx} autocomplete="off"{$controlOption}{$controlStyle}>
                                 </div>
 
                     EOD;
 
             case DataTablesCustomSearch::TYPE_SELECT :
-                $option = $cs->option();
-                if ($cs->isSelect2() || count($option) > 10) $controlOption .= " data-sfselect2='true'";
+                $option = $cs->options();
+                if ($cs->isSelect2() || count($option) > 12) $controlOption .= " data-sfselect2='true'";
                 $optionStr = "";
                 foreach($option as $key => $value) {
                     $optionStr .= "<option value=\"{$key}\">{$value}</option>";
@@ -851,7 +1723,7 @@ class DataTables
 
                                 <div class="sfdt-custom-search-item">
                                     <label for="sfdt-{$this->tableId}-custom-search-{$alias}">{$title} :</label>
-                                    <select class="form-control form-control-sm sfdt-{$this->tableId}-custom-search" name="sfdt-{$this->tableId}-custom-search-{$alias}" id="sfdt-{$this->tableId}-custom-search-{$alias}"{$sfdtDataAlias}{$forEx}{$controlOption}>
+                                    <select class="form-control form-control-sm sfdt-{$this->tableId}-custom-search" name="sfdt-{$this->tableId}-custom-search-{$alias}" id="sfdt-{$this->tableId}-custom-search-{$alias}"{$sfdtDataAlias}{$forEx}{$controlOption}{$controlStyle}>
                                         <option value="">[:dtcustomsearch:All:]</option>
                                         {$optionStr}
                                     </select>
@@ -864,7 +1736,7 @@ class DataTables
 
                                 <div class="sfdt-custom-search-item">
                                     <label for="sfdt-{$this->tableId}-custom-search-{$alias}">{$title} :</label>
-                                    <input type="search" class="form-control form-control-sm sfdt-{$this->tableId}-custom-search" name="sfdt-{$this->tableId}-custom-search-{$alias}" id="sfdt-{$this->tableId}-custom-search-{$alias}" data-sfdt-custom-search-type="daterange"{$sfdtDataAlias} autocomplete="off"{$forEx}{$controlOption}>
+                                    <input type="search" class="form-control form-control-sm sfdt-{$this->tableId}-custom-search" name="sfdt-{$this->tableId}-custom-search-{$alias}" id="sfdt-{$this->tableId}-custom-search-{$alias}" data-sfdt-custom-search-type="daterange"{$sfdtDataAlias} autocomplete="off"{$forEx}{$controlOption}{$controlStyle}>
                                 </div>
 
                     EOD;
@@ -874,7 +1746,7 @@ class DataTables
 
                                 <div class="sfdt-custom-search-item">
                                     <label for="sfdt-{$this->tableId}-custom-search-{$alias}">{$title} :</label>
-                                    <input type="search" class="form-control form-control-sm sfdt-{$this->tableId}-custom-search" name="sfdt-{$this->tableId}-custom-search-{$alias}" id="sfdt-{$this->tableId}-custom-search-{$alias}" data-sfdt-custom-search-type="datetimerange"{$sfdtDataAlias} autocomplete="off"{$forEx}{$controlOption}>
+                                    <input type="search" class="form-control form-control-sm sfdt-{$this->tableId}-custom-search" name="sfdt-{$this->tableId}-custom-search-{$alias}" id="sfdt-{$this->tableId}-custom-search-{$alias}" data-sfdt-custom-search-type="datetimerange"{$sfdtDataAlias} autocomplete="off"{$forEx}{$controlOption}{$controlStyle}>
                                 </div>
 
                     EOD;
@@ -886,7 +1758,7 @@ class DataTables
                                 <div class="sfdt-custom-search-item">
                                     <label for="sfdt-{$this->tableId}-custom-search-{$alias}">{$title} :</label>
                                     <div class="input-group input-group-sm">
-                                        <input type="search" class="form-control sfdt-{$this->tableId}-custom-search" name="sfdt-{$this->tableId}-custom-search-{$alias}" id="sfdt-{$this->tableId}-custom-search-{$alias}" data-sfdt-custom-search-type="numberrange"{$sfdtDataAlias} data-sfdt-numberrange-min="{$numberRangeOption['min']}" data-sfdt-numberrange-max="{$numberRangeOption['max']}"{$forEx} autocomplete="off"{$controlOption}>
+                                        <input type="search" class="form-control sfdt-{$this->tableId}-custom-search" name="sfdt-{$this->tableId}-custom-search-{$alias}" id="sfdt-{$this->tableId}-custom-search-{$alias}" data-sfdt-custom-search-type="numberrange"{$sfdtDataAlias} data-sfdt-numberrange-min="{$numberRangeOption['min']}" data-sfdt-numberrange-max="{$numberRangeOption['max']}"{$forEx} autocomplete="off"{$controlOption}{$controlStyle}>
                                     </div>
                                 </div>
 
@@ -902,6 +1774,7 @@ class DataTables
 
         $html = "";
         $noGroup = "";
+        $isEnableInputMask = false;
         foreach($this->layoutCustomSearch as $arr) {
             if (is_array($arr)) {
                 if ($noGroup) {
@@ -918,6 +1791,7 @@ class DataTables
                 $item = "";
                 foreach($arr as $alias) {
                     $item .= $this->makeCodeCustomSearchItem($alias);
+                    if ($this->customSearch[$alias]->isEnableInputMask()) $isEnableInputMask = true;
                 }
                 $html .= <<<EOD
 
@@ -928,6 +1802,7 @@ class DataTables
                     EOD;
             } else {
                 $noGroup .= $this->makeCodeCustomSearchItem($arr);
+                if ($this->customSearch[$arr]->isEnableInputMask()) $isEnableInputMask = true;
             }
         }
 
@@ -950,149 +1825,30 @@ class DataTables
                 </div>
 
             EOD;
-        return $html;
-    }
-
-    private function makeCodeDetailsView()
-    {
-        // detail view button
-        $detailScript = "";
-        $detailHtml = "";
-        $formatScript = "";
-        foreach($this->columns as $alias => $column) {
-            if ($column->displayType() == "number") {
-                $formatScript .= "                else if (alias == '{$alias}') txt = txt.numberFormat();\n";
-            } elseif (substr($column->displayType(), 0, 5) == "date:") {
-                $format = substr($column->displayType(), 5);
-                $formatScript .= "                else if (alias == '{$alias}') txt = txt.formatDateTime('{$format}');\n";
-            } elseif (substr($column->displayType(), 0, 9) == "datetime:") {
-                $format = substr($column->displayType(), 9);
-                $formatScript .= "                else if (alias == '{$alias}') txt = txt.formatDateTime('{$format}');\n";
-            }
-        }
-        $formatScript = trim($formatScript, "else ");
-        foreach($this->columns as $alias => $column) {
-            $detailButtons = $column->detailButtonInfo();
-            if (!$detailButtons) continue;
-            foreach($detailButtons as $id => $dbInfo) {
-                if (!($this->layoutDetail[$id] ?? false)) L::system("[:dt:Layout for detail view({$id}) is not defined.:]");
-                if (!($dbInfo['param'] ?? false)) L::system("[:dt:Parameter for detail view({$id}) is not defined.:]");
-
-                $param = "";
-                foreach($dbInfo['param'] as $alias) {
-                    $param .= "param.{$alias} = $(this).data('{$alias}');\n    ";
-                }
-                $url = $dbInfo['url'];
-                if ($url === null) {
-                    $url = $this->ajaxUrl;
-                    $param .= "param.sfdtPageMode = 'detail';\n";
-                }
-                $detailScript .= <<<EOD
-
-                    $(document).on("click", ".btn-detail[data-detail-id='{$id}']", function() {
-                        $("#sfdt-modal-{$this->tableId}-detail-view").find("input").val("");
-                        let param = {};
-                        {$param}
-                        callAjax(
-                            '{$url}',
-                            param,
-                            function(result) {
-                                if (!result.data.detailData || typeof result.data.detailData !== 'object') {
-                                    alert("[:dt:detailData does not exist in the result from {$url}:]");
-                                    return;
-                                }
-                                for(let alias in result.data.detailData) {
-                                    let txt = result.data.detailData[alias];
-                                    {$formatScript}
-                                    $("#sfdt-modal-{$this->tableId}-{$id}-detail-column-" + alias).html(txt);
-                                }
-                                $("#sfdt-modal-{$this->tableId}-detail-view").modal("show");
-                            }
-                        );
-                    });
-
-                    EOD;
-
-                $layoutHtml = "";
-                $htmlItem = function($alias) use ($id) {
-                    return <<<EOD
-                                            <div class="col-auto">
-                                                <div class="form-floating">
-                                                    <div class="form-control-plaintext text-nowrap" id="sfdt-modal-{$this->tableId}-{$id}-detail-column-{$alias}"></div>
-                                                    <label for="sfdt-detail-column-{$this->tableId}-{$alias}" class="text-nowrap">{$this->columns[$alias]->title()}</label>
-                                                </div>
-                                            </div>
-
-                        EOD;
-                };
-
-                $layout = $this->layoutDetail[$id];
-                foreach($layout as $item) {
-                    if ($item === '---') {
-                        $layoutHtml .= <<<EOD
-
-                                        <hr>
-                        EOD;
-                        continue;
-                    }
-                    $layoutHtml .= <<<EOD
-
-                                        <div class="row">
-
-                        EOD;
-                    if (is_array($item)) foreach($item as $alias) $layoutHtml .= $htmlItem($alias);
-                    else $layoutHtml .= $htmlItem($item);
-
-                    $layoutHtml .= <<<EOD
-                                        </div>
-                        EOD;
-                }
-
-                if (!$detailHtml) {
-                    $detailHtml = <<<EOD
-                        <!-- DataTable - Detail view modal for Table Id {$this->tableId} -->
-                        <div class="modal fade" tabindex="-1" id="sfdt-modal-{$this->tableId}-detail-view">
-                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                                <div class="modal-content">
-                                    <div class="modal-header bg-detail">
-                                        <h5 class="modal-title">[:dtdetail:Detail View:]</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        {$layoutHtml}
-
-                                    </div>
-                                    <div class="modal-footer d-flex justify-content-end">
-                                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">[:dt:Close:]</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        EOD;
-                }
-            }
-        }
-
-        return [ "html" => $detailHtml, "script" => $detailScript ];
+        return [ "html" => $html, "isEnableInputMask" => $isEnableInputMask ];
     }
 
     // build html, js
     public function build()
     {
+        // Setting up a branch for one page
         if ($this->onePage) {
             $param = Param::getInstance();
-            if ($param->sfdtPageMode === "data") return $this->opAjax();
-            if ($param->sfdtPageMode === "detail") return $this->opDetail();
+            switch($param->sfdtPageMode) {
+                case "data" : return $this->opAjax();
+                case "submitForAddRecord" : return $this->opSubmitForAddRecord();
+                case "modify" : return $this->opModify();
+                case "submitForModify" : return $this->opSubmitForModify();
+                case "detailView" : return $this->opDetailView();
+            }
         }
 
-        if (!array_key_exists("keys", $this->options)) {
-            foreach($this->columns as $alias => $column) $column->class("no-keys-cursor");
-            $this->options["keys"] = [ "blurable" => false, "columns" => ':not(.no-keys-cursor)' ];
-        }
+        // Organize options
         $options = $this->options;
 
         $options["ajax"] = "ajax-function";
         $options["layout"] = "layout-code";
+
         $codeColumns = $this->makeCodeColumns();
         $options["columns"] = $codeColumns["list"];
         if ($this->defaultOrder) {
@@ -1105,66 +1861,84 @@ class DataTables
         if ($this->language == "kr") $options["language"] = [ "url" => "/assets/libs/datatables-2.1.8/i18n/ko.json" ];
         $options["drawCallback"] = "drawCallback-function";
 
+        // Convert the options to a JSON string.
         $optionsStr = json_encode($options, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
 
+
+        // Replace the parts of PHP's array that cannot be converted directly to JSON.
         $replaceFrom = $replaceTo = [];
 
         $replaceFrom[] = "\"ajax\": \"ajax-function\"";     $replaceTo[] = "\"ajax\": {$this->makeCodeAjax()}";
         $replaceFrom[] = "\"layout\": \"layout-code\"";     $replaceTo[] = "\"layout\": {$this->makeCodeLayout()}";
         if ($codeColumns["render"]) {
-            foreach($codeColumns["render"] as $alias => $render) {
+            foreach($codeColumns["render"] as $alias => $to) {
                 $replaceFrom[] = "\"rendering-{$alias}\"";
-                $replaceTo[] = $render;
+                $replaceTo[] = $to;
+            }
+        }
+
+        // Organize the callback script. The callback script is also part of the replace target.
+        $drawCallbackScript = "";
+        $drawCallbackInputMask = false;
+        $addRecordHtml = "";        // Action part for add new button
+        $addRecordScript = "";      // Script part for add new button
+
+        if ($this->drawCallbackScript) $drawCallbackScript .= implode("\n", $this->drawCallbackScript);
+        if ($codeColumns["drawCallbackScript"]) $drawCallbackScript .= $codeColumns["drawCallbackScript"];
+
+        if ($this->extraButtons) {
+            foreach($this->extraButtons as $btnId => $eb) {
+                if (!$this->disableTooltip) $drawCallbackScript .= $eb->drawCallbackScript();
+                if ($eb->isAddRecord()) {
+                    $addRecordHtml = $eb->AddRecord()->html();
+                    $drawCallbackScript .= $eb->AddRecord()->drawCallbackScript();
+                    $addRecordScript .= $eb->AddRecord()->script($this->ajaxUrl, $this->deliverParameters);
+                    if (!$drawCallbackInputMask && $eb->AddRecord()->isEnableInputMask()) $drawCallbackInputMask = true;
+                }
             }
         }
 
         if ($this->options["stateSave"]) {
-            $callBackStateSave = <<<EOD
+            $drawCallbackScript .= <<<EOD
 
                         let state = sfdt['{$this->tableId}'].state();
                         state.columns.forEach(function(col, index) {
-                            if (col.search.search) sfdtSetSearchDefaultValue('{$this->tableId}', sfdt['{$this->tableId}'].column(index).dataSrc(), col.search.search);
+                            if (col.search.search) sfdtSetDefaultValue($("#sfdt-{$this->tableId}-custom-search-" + sfdt['{$this->tableId}'].column(index).dataSrc()), col.search.search);
                         });
                 EOD;
-        } else $callBackStateSave = "";
+        }
 
-        $callBackTooltip = "";
         if (!$this->disableTooltip) {
-            if ($this->extraButtons) {
-                foreach($this->extraButtons as $btnId => $eb) {
-                    $callBackTooltip .= $eb->tooltipScript();
-                }
-                $callBackTooltip .= "\n";
-            }
-            $callBackTooltip .= <<<EOD
+            $drawCallbackScript .= <<<EOD
 
                         $(".btn-sfdt-search-reset").data("bs-toggle", "tooltip").attr("title", "[:dt:Reset search conditions:]").tooltip();
                         $(".sfdt-btn-open-column-config").data("bs-toggle", "tooltip").attr("title", "[:dt:Change column order and visibility settings:]").tooltip();
                         $(".sfdt-btn-pagejump").data("bs-toggle", "tooltip").attr("title", "[:dt:Go directly to the page number you entered:]").tooltip();
-
                 EOD;
         }
+
+        // for custom search
+        $codeCustomSearch = $this->makeCodeCustomSearch();
+
+        // input mask initialization
+        $drawCallbackInputMask = $drawCallbackInputMask | $codeCustomSearch["isEnableInputMask"]; //  | $modifyView["isEnableInputMask"]
+        if ($drawCallbackInputMask) $drawCallbackScript .= "$(\":input[data-inputmask]\").inputmask();";
 
         $replaceFrom[] = "\"drawCallback\": \"drawCallback-function\"";
         $replaceTo[] = <<<EOD
 
                 "drawCallback": function(settings) {
-                    {$callBackStateSave}
-                    {$callBackTooltip}
+                    {$drawCallbackScript}
                 }
             EOD;
 
+        // After cleaning up the indentation, run replace.
         $replaceFrom[] = "\n"; $replaceTo[] = "\n    ";
         $optionsStr = str_replace($replaceFrom, $replaceTo, $optionsStr);
 
-        $htmlCustomSearch = $this->makeCodeCustomSearch();
-        $detailsView = $this->makeCodeDetailsView();
-
-        $once = $this->onceOutput();
 
         $containerOption = $this->containerOption;
         if ($containerOption) $containerOption = " {$containerOption}";
-
         $scriptCsStorage = "";
         if ($this->options["stateSave"]) {
             $scriptCsStorage = <<<EOD
@@ -1173,19 +1947,25 @@ class DataTables
                     if (csStorage) {
                         let csEx = JSON.parse(csStorage);
                         for (let key in csEx) {
-                            sfdtSetSearchDefaultValue('{$this->tableId}', key, csEx[key]);
+                            sfdtSetDefaultValue($("#sfdt-{$this->tableId}-custom-search-" + key), csEx[key]);
                         }
                     }
 
                 EOD;
         }
 
+        // A script that should be output only once on the current web page.
+        $once = $this->onceOutput();
+
+
+        // Finallay, create the HTML to be output.
         $this->html = <<<EOD
             {$once["html"]}
-            {$detailsView["html"]}
+            {$codeColumns["html"]}
+            {$addRecordHtml}
 
             <div{$containerOption}>
-                {$htmlCustomSearch}
+                {$codeCustomSearch["html"]}
                 <table id="{$this->tableId}" class="table table-hover table-striped text-nowrap"></table>
             </div>
 
@@ -1194,8 +1974,10 @@ class DataTables
             $(document).ready(function() {
                 sfdt['{$this->tableId}'] = new DataTable('#{$this->tableId}', {$optionsStr});
                 {$scriptCsStorage}
+
+                {$addRecordScript}
+                {$codeColumns["script"]}
             });
-            {$detailsView["script"]}
             </script>
 
             EOD;
@@ -1244,43 +2026,99 @@ class DataTables
         exit;
     }
 
-    private function opDetail()
+    private function opRenderButton($btnId)
     {
+        $crb = null;
+        foreach($this->columns as $ars => $column) {
+            $crbs = $column->renderButtons();
+            if (!$crbs || !array_key_exists($btnId, $crbs)) continue;
+            if (!$crbs[$btnId]) L::system("[:dt:Button {$btnId} is not defined.:]");
+            $crb = $crbs[$btnId];
+        }
+        if (!$crb) L::system("[:dt:Button {$btnId} is not defined.:]");
+        return $crb;
+    }
+
+    // Find the render button of the column and get the query function related information for the render button.
+    private function opQueryParams()
+    {
+        $param = Param::getInstance();
+        $param->checkKeyValue('sfdtBtnId', Param::TYPE_STRING);
+
+        $crb = $this->opRenderButton($param->sfdtBtnId);
+        if (!$crb->queryFunction()) L::system("[:dt:Query function(queryFunction) for button {$param->sfdtBtnId} is not defined.:]");
+        if (!is_callable([ $this, $crb->queryFunction() ])) L::system("[:dt:Query function {$crb->queryFunction()} for button {$param->sfdtBtnId} is not callable.:]");
+
+        $params = [];
+        $kp = $crb->keyParams();
+        if (!$kp) L::system("[:dt:Key parameters for button {$param->sfdtBtnId} is not defined.:]");
+        foreach($kp as $alias) {
+            $param->checkKeyValue($alias, Param::TYPE_STRING);
+            $params[$alias] = $param->get($alias);
+        }
+        if (!$params) L::system("[:dt:Button {$param->sfdtBtnId} is not defined.:]");
+
+        return [ $param->sfdtBtnId, $crb->queryFunction(), $params ];
+    }
+
+    private function opDetailView()
+    {
+        list($btnId, $queryFunction, $params) = $this->opQueryParams();
         $res = Response::getInstance();
-        $res->detailData = $this->opDetailData();
+        $res->queryData = call_user_func_array([ $this, $queryFunction ], [ $params, $btnId ]);
         $template = Template::getInstance();
         $template->setMode(Template::MODE_AJAX);
         $template->displayResult();
         exit;
     }
 
-    // Get the data for the detailed view
-    // Use it by overriding it in the inherited class.
-    protected function opDetailData()
+    private function opModify()
     {
-        L::system("[:dt:The function(opDetailData) for detailed view is not set.:]");
+        list($btnId, $queryFunction, $params) = $this->opQueryParams();
+        $res = Response::getInstance();
+        $res->queryData = call_user_func_array([ $this, $queryFunction ], [ $params, $btnId ]);
+        $template = Template::getInstance();
+        $template->setMode(Template::MODE_AJAX);
+        $template->displayResult();
+        exit;
     }
 
-    // Get the parameters for the detailed view
-    protected function opDetailParams($id = 'detail')
+    private function opSubmitForModify()
     {
         $param = Param::getInstance();
+        $param->checkKeyValue('sfdtBtnId', Param::TYPE_STRING);
 
-        $params = [];
-        foreach($this->columns as $alias => $column) {
-            $detailButtons = $column->detailButtonInfo();
-            if (!$detailButtons) continue;
-            $dbInfo = $detailButtons[$id] ?? false;
-            if (!$dbInfo) L::system("[:dt:Cannot find the detail view button with id {$id} in the opDetailParams function.:]");
-            if ($dbInfo['param'] ?? false) {
-                foreach($dbInfo['param'] as $alias) {
-                    $param->checkKeyValue($alias, Param::TYPE_STRING);
-                    $params[$alias] = $param->get($alias);
-                }
-            }
-        }
+        $crb = $this->opRenderButton($param->sfdtBtnId);
+        if (!$crb->submitFunction()) L::system("[:dt:Submit function(submitFunction) for button {$param->sfdtBtnId} is not defined.:]");
+        if (!is_callable([ $this, $crb->submitFunction() ])) L::system("[:dt:Submit function {$crb->submitFunction()} for button {$param->sfdtBtnId} is not callable.:]");
 
-        return $params;
+        $result = call_user_func([ $this, $crb->submitFunction() ]);
+
+        $res = Response::getInstance();
+        $res->result = $result;
+        $template = Template::getInstance();
+        $template->setMode(Template::MODE_AJAX);
+        $template->displayResult();
+        exit;
+    }
+
+    // for handling everything on one page
+    // Receives an ajax call from the submit action of the add record form and returns a response to it.
+    private function opSubmitForAddRecord()
+    {
+        $param = Param::getInstance();
+        $btnId = $param->sfdtBtnId;
+        if (!isset($this->extraButtons[$btnId])) L::system("[:dtaddrecord:Extra button {$btnId} not found.:]");
+        if (!$this->extraButtons[$btnId]->isAddRecord()) L::system("[:dtaddrecord:Extra button {$btnId} is not AddRecord.:]");
+        if (!$this->extraButtons[$btnId]->AddRecord()->submitFunction() || !is_callable([ $this, $this->extraButtons[$btnId]->AddRecord()->submitFunction() ])) L::system("[:dtaddrecord:Extra button {$btnId} submitFunction is not callable.:]");
+        $result = call_user_func([ $this, $this->extraButtons[$btnId]->AddRecord()->submitFunction() ]);
+
+        $res = Response::getInstance();
+        $res->result = $result;
+        $template = Template::getInstance();
+        $template->setMode(Template::MODE_AJAX);
+        $template->displayResult();
+        exit;
     }
 
     // Get the total number of records

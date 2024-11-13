@@ -364,7 +364,7 @@ $(document).ready(function() {
 
             let state = sfdt['example'].state();
             state.columns.forEach(function(col, index) {
-                if (col.search.search) sfdtSetSearchDefaultValue('example', sfdt['example'].column(index).dataSrc(), col.search.search);
+                if (col.search.search) sfdtSetDefaultValue($("#sfdt-example-custom-search-" + sfdt['example'].column(index).dataSrc()), col.search.search);
             });
 
             $('#btn-extra-add').data("bs-toggle", "tooltip").attr("title", "회원을 신규 추가합니다.").tooltip();
@@ -382,7 +382,7 @@ $(document).ready(function() {
     if (csStorage) {
         let csEx = JSON.parse(csStorage);
         for (let key in csEx) {
-            sfdtSetSearchDefaultValue('example', key, csEx[key]);
+            sfdtSetDefaultValue($("#sfdt-example-custom-search-"+key), csEx[key]);
         }
     }
 });

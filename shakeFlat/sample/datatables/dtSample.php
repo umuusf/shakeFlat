@@ -40,7 +40,7 @@ class dtSample extends DataTables
 
         parent::customSearch("name")        ->widthRem(12)  ->string();
         parent::customSearch("phone")       ->widthRem(12)  ->string();
-        parent::customSearch("status")      ->widthRem(6)   ->select2()         ->option(["active"=>"active", "inactive"=>"inactive", "banned"=>"banned"]);
+        parent::customSearch("status")      ->widthRem(6)   ->select2()         ->options(["active"=>"active", "inactive"=>"inactive", "banned"=>"banned"]);
         parent::customSearch("join_date")   ->widthRem(13)  ->dateRange();
         parent::customSearch("salary")      ->widthRem(15)  ->numberRange(0, 999999999);
 

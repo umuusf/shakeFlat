@@ -2,7 +2,6 @@ function callAjax(url, frm, successCallback, errorCallback, _this)
 {
     var frmObj = null;
     var frmData = new FormData();
-    var includeFiles = false;
 
     if (typeof frm === 'string') { frmObj = $("#" + frm); }
     else if (frm instanceof jQuery) { frmObj = frm; }
@@ -12,7 +11,6 @@ function callAjax(url, frm, successCallback, errorCallback, _this)
         $.each(frm, function(k, v) {
             if (typeof v == "object" && v.constructor.name == "File") {
                 frmData.append(k, $("#"+k)[0].files[0]);
-                includeFiles = true;
             } else {
                 frmData.append(k, v);
             }
@@ -24,7 +22,6 @@ function callAjax(url, frm, successCallback, errorCallback, _this)
             //console.log($(this).attr("type"), $(this).attr("name"), $(this).val());
             if ($(this).attr("type") == "file") {
                 frmData.append($(this).attr("name"), $("input[name="+$(this).attr("name")+"]")[0].files[0]);
-                includeFiles = true;
             } else {
                 //console.log("frm.append : ", $(this).attr("name"), $(this).val(), $(this).is(":checked"));
                 // In the case of a checkbox, if it is not checked, the value is not passed.

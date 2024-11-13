@@ -297,19 +297,36 @@ function sfdtFindIndexForAlias(tableId, alias)
     return -1;
 }
 
-function sfdtSetSearchDefaultValue(tableId, alias, value)
+function sfdtSetDefaultValue(input, value)
 {
-    let input = $("#sfdt-"+tableId+"-custom-search-" + alias);
     switch(input.prop("tagName")) {
         case "SELECT":
-            if (input.data("sfselect2")) {
+            if (input.hasClass("select2-hidden-accessible")) {
                 input.val(value).trigger("change.select2");
             } else {
                 input.val(value);
             }
             break;
         case "INPUT":
-            input.val(value);
+            // checkbox and radio are only used in editColumn
+            // customSearch only has select
+            if (input.attr("type") === 'checkbox') {
+                let checkboxGroup = $("#" + input.attr("id")).closest(".sfdt-floating-checkbox").find("input[type='checkbox'][name='"+input.attr("name")+"']");
+                checkboxGroup.each(function() {
+                    if (typeof value === 'string') {
+                        if ($(this).val() == value) $(this).prop("checked", true);
+                    } else if (typeof value === 'object') {
+                        if (value.includes($(this).val())) $(this).prop("checked", true);
+                    }
+                });
+            } else if (input.attr("type") === 'radio') {
+                let radioGroup = $("#" + input.attr("id")).closest(".sfdt-floating-radio").find("input[type='radio'][name='"+input.attr("name")+"']");
+                radioGroup.each(function() {
+                    if ($(this).val() == value) $(this).prop("checked", true);
+                });
+            } else {
+                input.val(value);
+            }
             break;
     }
 }

@@ -165,9 +165,19 @@
             "kr": "데이터를 가져오는 함수(opListData)가 설정되어 있지 않습니다."
         }
     },
-    "The function(opDetailData) for detailed view is not set." : {
+    "The function(opModifyData) for modify view is not set." : {
         "dt": {
-            "kr": "상세보기를 위한 함수(opDetailData)가 설정되어 있지 않습니다."
+            "kr": "수정을 위한 함수(opModifyData)가 설정되어 있지 않습니다."
+        }
+    },
+    "Button $1 is not defined." : {
+        "dt": {
+            "kr": "버튼 $1 이 정의되어 있지 않습니다."
+        }
+    },
+    "Key parameters for button $1 is not defined." : {
+        "dt": {
+            "kr": "버튼 $1 의 키 파라미터가 정의되어 있지 않습니다."
         }
     },
     "Column($1) not found." : {
@@ -180,24 +190,109 @@
             "kr": "사용자 정의 검색 컬럼($1)을 찾을 수 없습니다."
         }
     },
-    "Cannot find the detail view button with id $1 in the opDetailParams function.": {
+    "queryData does not exist in the result from $1": {
         "dt": {
-            "kr": "opDetailParams 함수에서 id가 $1인 상세보기 버튼을 찾을 수 없습니다."
+            "kr": "$1 에서 queryData가 존재하지 않습니다."
         }
     },
-    "detailData does not exist in the result from $1": {
+    "Layout for $2($1) is not defined.": {
         "dt": {
-            "kr": "$1 에서 detailData가 존재하지 않습니다."
+            "kr": "$2($1) 레이아웃이 정의되어 있지 않습니다."
         }
     },
-    "Layout for detail view($1) is not defined.": {
+    "Parameter for $2($1) is not defined.": {
         "dt": {
-            "kr": "상세보기 레이아웃($1)이 정의되어 있지 않습니다."
+            "kr": "$2($1) 파라미터가 정의되어 있지 않습니다."
         }
     },
-    "Parameter for detail view({$1}) is not defined.": {
+    "DataTablesCustomSearch option() parameter error." : {
         "dt": {
-            "kr": "상세보기 파라미터({$1})가 정의되어 있지 않습니다."
+            "kr": "DataTablesCustomSearch option() 파라미터 오류."
+        }
+    },
+    "Query function(queryFunction) for button $1 is not defined." : {
+        "dt": {
+            "kr": "버튼 $1 에 대한 Query 함수(queryFunction)가 정의되어 있지 않습니다."
+        }
+    },
+    "Submit function(submitFunction) for button $1 is not defined." : {
+        "dt": {
+            "kr": "버튼 $1 에 대한 Submit 함수(submitFunction)가 정의되어 있지 않습니다."
+        }
+    },
+    "Query function $1 for button $2 is not callable." : {
+        "dt": {
+            "kr": "버튼 $2 에 대한 쿼리 함수 $1 이 호출 가능한 상태가 아닙니다."
+        }
+    },
+    "Submit function $1 for button $2 is not callable." : {
+        "dt": {
+            "kr": "버튼 $2 에 대한 Submit 함수 $1 이 호출 가능한 상태가 아닙니다."
+        }
+    },
+    "DataTablesEditColumn $1 $2 parameter error.": {
+        "dtedit": {
+            "kr": "$1 $2 파라미터 오류."
+        }
+    },
+    "DataTablesEditColumn $1 $2 $3 options not defined." : {
+        "dtedit": {
+            "kr": "$1 $2 $3 옵션이 정의되어 있지 않습니다."
+        }
+    },
+    "Select": {
+        "dtedit": {
+            "kr": "선택하세요"
+        }
+    },
+    "No columns defined for DataTablesAddRecord." : {
+        "dtaddrecord": {
+            "kr": "DataTablesAddRecord에 컬럼이 정의되어 있지 않습니다."
+        }
+    },
+    "No layout defined for DataTablesAddRecord." : {
+        "dtaddrecord": {
+            "kr": "DataTablesAddRecord에 레이아웃이 정의되어 있지 않습니다."
+        }
+    },
+    "Extra button $1 not found." : {
+        "dtaddrecord": {
+            "kr": "Extra Button : $1 을 찾을 수 없습니다."
+        }
+    },
+    "Extra button $1 is not AddRecord." : {
+        "dtaddrecord": {
+            "kr": "Extra Button : $1 은 AddRecord가 아닙니다."
+        }
+    },
+    "Extra button $1 submitFunction is not callable." : {
+        "dtaddrecord": {
+            "kr": "Extra Button : $1 의 submitFunction이 호출 가능한 상태가 아닙니다."
+        }
+    },
+    "Function(opSubmitForAddRecordData) for AddRecord is not set." : {
+        "dtaddrecord": {
+            "kr": "AddRecord를 위한 함수(opSubmitForAddRecordData)가 설정되어 있지 않습니다."
+        }
+    },
+    "Failed to add record. Please try again." : {
+        "dtaddrecord": {
+            "kr": "등록에 실패하였습니다. 잠시 후 다시 시도해주세요."
+        }
+    },
+    "Record added successfully." : {
+        "dtaddrecord": {
+            "kr": "등록되었습니다."
+        }
+    },
+    "Failed to modify. Please try again." : {
+        "dtmodify": {
+            "kr": "수정에 실패하였습니다. 잠시 후 다시 시도해주세요."
+        }
+    },
+    "Successfully modified." : {
+        "dtmodify": {
+            "kr": "수정되었습니다."
         }
     },
     "View": {
@@ -208,6 +303,24 @@
     "Detail View": {
         "dtdetail": {
             "kr": "상세보기"
+        }
+    },
+    "Add New": {
+        "dtaddrecord": {
+            "kr": "신규 등록"
+        }
+    },
+    "Modify": {
+        "dtmodify": {
+            "kr": "수정"
+        },
+        "dtmodaltitle": {
+            "kr": "수정하기"
+        }
+    },
+    "Submit": {
+        "dtaddrecord": {
+            "kr": "등록"
         }
     },
     "Reset" : {
