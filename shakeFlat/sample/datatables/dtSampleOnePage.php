@@ -24,7 +24,7 @@ class dtSampleOnePage extends DataTables
         parent::column("member_id")     ->title("ID")           ->noWrap()->textCenter();
         parent::column("name")          ->title("이름")         ->noWrap()->textCenter();
         parent::column("phone")         ->title("전화")         ->noWrap()->textCenter();
-        parent::column("status")        ->title("상태")         ->noWrap()->textCenter();
+        //parent::column("status")        ->title("상태")         ->noWrap()->textCenter();
         parent::column("city")          ->title("도시")         ->noWrap()->textCenter();
         parent::column("postal_code")   ->title("우편번호")     ->noWrap()->textCenter();
         parent::column("country")       ->title("국가")         ->noWrap()->textCenter();
@@ -40,7 +40,7 @@ class dtSampleOnePage extends DataTables
         parent::customSearch("name")        ->widthRem(12)  ->string();
         parent::customSearch("email")       ->widthRem(12)  ->string();
         parent::customSearch("phone")       ->widthRem(12)  ->string(); //->mask("999-999[9]-9999");
-        parent::customSearch("status")      ->widthRem(6)   ->select2()         ->options(["active"=>"active", "inactive"=>"inactive", "banned"=>"banned"]);
+        //parent::customSearch("status")      ->widthRem(6)   ->select2()         ->options(["active"=>"active", "inactive"=>"inactive", "banned"=>"banned"]);
         parent::customSearch("join_date")   ->widthRem(13)  ->dateRange();
         parent::customSearch("salary")      ->widthRem(15)  ->numberRange(0, 999999999);
 
@@ -48,11 +48,11 @@ class dtSampleOnePage extends DataTables
         parent::customSearch("salary2")     ->widthRem(15)  ->ex("salary")      ->numberRange(0, 999999999)->title("연봉ex");
 
         parent::layoutCustomSearch([
-            [ "name", "phone", "status" ],
+            [ "name", "phone" ], // "status" ],
             [ "join_date", "salary", "email" ],
             [ "join_date2", "salary2" ]
         ])->layoutList([
-            "member_id", "status", "name", "phone", "city",
+            "member_id", "name", "phone", "city",   // "status",
             "postal_code", "country", "email", "address", "notes",
             "birth_date", "join_date", "salary", "last_login", "btn"
         ]);
@@ -63,7 +63,7 @@ class dtSampleOnePage extends DataTables
                 ->keyParam('name')
                 ->queryFunction('opColumnButtonQueryData')
                 ->layout([
-                    [ "member_id", "status" ],
+                    [ "member_id" ], //, "status" ],
                     [ "name", "phone" ],
                     '---',
                     [ "salary", "country", "city" ],
@@ -91,7 +91,7 @@ class dtSampleOnePage extends DataTables
         parent::column("btn")->buttonModify("modify")->editColumn("status")->title("상태")->radio()->options(["active"=>"Active", "inactive"=>"Inactive", "banned"=>"Banned" ]);
         parent::column("btn")->buttonModify("modify")->editColumn("name")->title("이름")->text()->required();
         parent::column("btn")->buttonModify("modify")->editColumn("phone")->title("전화번호")->tel()->required();
-        parent::column("btn")->buttonModify("modify")->editColumn("address")->title("주소")->text()->widthRem(28)->required();
+        parent::column("btn")->buttonModify("modify")->editColumn("address")->title("주소")->text()->widthRem(28);
 
 
         parent::extraButton("btn-extra-add")    ->title("신규등록") ->class("btn-add")      ->tooltip("회원을 신규 추가합니다.");
@@ -99,24 +99,25 @@ class dtSampleOnePage extends DataTables
         parent::extraButton("btn-extra-refund") ->title("환불요청") ->class("btn-refund")   ->tooltip("환불요청을 합니다.");
 
         $addRecord = parent::extraButton("btn-extra-add")->addRecord()->submitFunction("submitAddRecord");
-        $addRecord->column("name")      ->title("이름")->text()->required();
-        $addRecord->column("phone")     ->title("전화번호")->tel('010')->required();//->mask("999-999[9]-9999");
-        $addRecord->column("address")   ->title("주소")->text()->required()->widthRem(25);
+        $addRecord->column("name")      ->text()->required();
+        $addRecord->column("phone")     ->title("전화번호")->tel()->required();//->mask("999-999[9]-9999");
+        $addRecord->column("address")   ->title("주소")->text()->widthRem(25);
         $addRecord->column("hobby")     ->title("취미")->checkbox()->options([ "a"=>"독서", "b"=>"영화감상", "c"=>"등산" ])->defaultValue("a");
-        $addRecord->column("status")    ->title("상태")->radio()->options([ "active"=>"Active", "banned"=>"Banned", "inactive"=>"Inactive" ])->defaultValue("banned");
-        $addRecord->column("city")      ->title("도시")->select()->options([ "a"=>"서울특별시", "b"=>"부산직할시", "c"=>"용인특례시" ])->defaultValue("c")->widthRem(20);
-        $addRecord->column("city2")     ->title("도시")->select()->options([ "a"=>"서울특별시", "b"=>"부산직할시", "c"=>"용인특례시", "d" => "평택시" ])->defaultValue("d")->widthRem(20);
+        $addRecord->column("status")    ->title("상태")->radio()->options([ "active"=>"Active", "banned"=>"Banned", "inactive"=>"Inactive" ])->defaultValue("Active");
+        $addRecord->column("city")      ->title("도시")->select()->options([ "a"=>"서울특별시", "b"=>"부산직할시", "c"=>"용인특례시" ])->widthRem(20);
         $addRecord->column("attach")    ->title("첨부파일")->file();
-        $addRecord->column("jumin")     ->title("주민등록번호")->text();//->mask("999999-9999999");
+        $addRecord->column("jumin")     ->title("주민등록번호")->text()->mask("999999-9999999");
+        $addRecord->column("bigo")      ->title("설명")->textarea()->required()->widthRem(30)->heightRem(15);
 
         $addRecord->layout([
             [ "name", "phone" ],
             "address",
             '---',
             "hobby", "status",
-            "city", "city2",
+            "city",
             "attach",
-            "jumin"
+            "jumin",
+            "bigo"
         ]);
 
         parent::column("btn")->button("delete")->title("삭제")->class("btn-delete")->dataset("member-id", "\${row.member_id}");

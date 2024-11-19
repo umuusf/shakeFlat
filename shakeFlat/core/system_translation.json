@@ -150,6 +150,11 @@
             "kr": "열의 순서와 표시 여부를 처음 상태로 되돌립니다."
         }
     },
+    "Save or load the order and visibility of columns.": {
+        "dt": {
+            "kr": "열의 순서와 표시 여부를 저장 하거나 불러 옵니다."
+        }
+    },
     "Query for total number of records is not set.": {
         "dt": {
             "kr": "전체 레코드 수를 구하는 쿼리가 설정되어 있지 않습니다."
@@ -228,6 +233,11 @@
     "Submit function $1 for button $2 is not callable." : {
         "dt": {
             "kr": "버튼 $2 에 대한 Submit 함수 $1 이 호출 가능한 상태가 아닙니다."
+        }
+    },
+    "Column alias($1) does not exist in tableColumns." : {
+        "dt": {
+            "kr": "테이블 컬럼에 컬럼 별칭($1)이 존재하지 않습니다."
         }
     },
     "DataTablesEditColumn $1 $2 parameter error.": {

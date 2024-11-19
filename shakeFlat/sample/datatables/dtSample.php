@@ -11,6 +11,7 @@ class dtSample extends DataTables
         parent::containerOption("style='max-width:100%;'");
         parent::pageLength(20);
         parent::ajaxUrl("/datatables/custom-data");
+        parent::orderBy("member_id", "desc");
 
         parent::exportTitle("직원 목록");
         parent::exportFilename("직원목록(" . date("Y-m-d") . ")");
@@ -33,10 +34,11 @@ class dtSample extends DataTables
         parent::column("join_date")     ->title("입사일")       ->noWrap()->date();
         parent::column("salary")        ->title("연봉")         ->noWrap()->number();
         parent::column("last_login")    ->title("마지막 로그인")->noWrap()->datetime();
-        parent::column("btn")->disableInvisible()->noExport()->textCenter()
-            ->renderButton("상세보기", "btn-detail", "data-member-id='\${row.member_id}'")
-            ->renderButton("수정", "btn-modify", "data-member-id='\${row.member_id}'")
-            ->renderButton("삭제", "btn-delete", "data-member-id='\${row.member_id}'");
+        parent::column("btn")->disableInvisible()->noExport()->textCenter();
+        parent::column("btn")->button("detail")->title("상세보기")->class("btn-detail")->dataset("member-id", "\${row.member_id}");
+        parent::column("btn")->button("edit")->title("수정")->class("btn-modify")->dataset("member-id", "\${row.member_id}");
+        parent::column("btn")->button("delete")->title("삭제")->class("btn-delete")->dataset("member-id", "\${row.member_id}");
+
 
         parent::customSearch("name")        ->widthRem(12)  ->string();
         parent::customSearch("phone")       ->widthRem(12)  ->string();

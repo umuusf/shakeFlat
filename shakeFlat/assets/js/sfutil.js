@@ -323,7 +323,7 @@ String.prototype.stringWidth = function(font, fontSize) {
     var max_tt = "";
     for(i=0;i<tt.length;i++) if (max_tt.length < tt[i].length) max_tt = tt[i];
 
-    var fs = "1.2em";
+    var fs = "1.2rem";
     if (fontSize) fs = fontSize;
     var f = font || fs + " 'Nanum Gothic'",
         o = $('<div></div>')

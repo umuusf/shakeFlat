@@ -200,6 +200,7 @@ class DataTablesRenderButton
 
         $layoutHtml = "";
         $htmlItem = function($alias) use ($tableColumns) {
+            if (!array_key_exists($alias, $tableColumns)) L::system("[:dt:Column alias({$alias}) does not exist in tableColumns.:]");
             return <<<EOD
                                     <div class="col-auto">
                                         <div class="form-floating">
@@ -330,7 +331,7 @@ class DataTablesRenderButton
                         $("#sfdt-form-{$this->tableId}-{$this->btnId}")[0].reportValidity()
                         return false;
                     }
-                    var formData = new FormData($("#sfdt-form-{$this->tableId}-{$this->btnId}")[0]);
+                    let formData = new FormData($("#sfdt-form-{$this->tableId}-{$this->btnId}")[0]);
                     {$submitScript}
                     callAjax(
                         '{$submitUrl}',
@@ -374,8 +375,8 @@ class DataTablesRenderButton
                                 <div class="row mb-4">
 
                 EOD;
-            if (is_array($item)) foreach($item as $alias) $layoutHtml .= $this->editColumn[$alias]->html();
-            else $layoutHtml .= $this->editColumn[$item]->html();
+            if (is_array($item)) foreach($item as $alias) $layoutHtml .= $this->editColumn[$alias]->html($tableColumns);
+            else $layoutHtml .= $this->editColumn[$item]->html($tableColumns);
 
             $layoutHtml .= <<<EOD
 
@@ -905,7 +906,13 @@ class DataTablesEditColumn
     public function widthEm($em) { $this->controlStyle[] = "width:{$em}em;"; return $this; }
     public function widthPercent($p) { $this->controlStyle[] = "width:{$p}%;"; return $this; }
 
+    public function heightPx($px) { $this->controlStyle[] = "height:{$px}px;"; return $this; }
+    public function heightRem($rem) { $this->controlStyle[] = "height:{$rem}rem;"; return $this; }
+    public function heightEm($em) { $this->controlStyle[] = "height:{$em}em;"; return $this; }
+    public function heightPercent($p) { $this->controlStyle[] = "height:{$p}%;"; return $this; }
+
     public function hidden($defaultValue = null)    { $this->type("hidden");   if ($defaultValue !== null) $this->defaultValue($defaultValue); return $this; }
+    public function textarea($defaultValue = null)  { $this->type("textarea"); if ($defaultValue !== null) $this->defaultValue($defaultValue); return $this; }
     public function text($defaultValue = null)      { $this->type("text");     if ($defaultValue !== null) $this->defaultValue($defaultValue); return $this; }
     public function number($defaultValue = null)    { $this->type("number");   if ($defaultValue !== null) $this->defaultValue($defaultValue); return $this; }
     public function email($defaultValue = null)     { $this->type("email");    if ($defaultValue !== null) $this->defaultValue($defaultValue); return $this; }
@@ -946,16 +953,18 @@ class DataTablesEditColumn
         return $this;
     }
 
-    public function html()
+    public function html($tableColumns)
     {
         $class = implode(" ", $this->class);    if ($class) $class = " " . $class;
-        $controlOption = "";  if ($this->controlOption) $controlOption = " " . implode(" ", $this->controlOption);
-        $controlStyle = "";  if ($this->controlStyle) $controlStyle = " style=\"" . implode(" ", $this->controlStyle) . "\"";
+        $controlOption = "";    if ($this->controlOption) $controlOption = " " . implode(" ", $this->controlOption);
+        $controlStyle = "";     if ($this->controlStyle) $controlStyle = " style=\"" . implode(" ", $this->controlStyle) . "\"";
+        $required = "";         if ($this->required) $required = " required";
+        $title = $this->title;  if (!$title) $title = $tableColumns[$this->alias]->title();
         switch($this->type) {
             case "hidden" :
                 return <<<EOD
-                                    <input type="hidden" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}" value="{$this->defaultValue}"{$controlOption}>
 
+                                    <input type="hidden" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}" value="{$this->defaultValue}"{$controlOption}>
                 EOD;
             case "text" :
             case "number" :
@@ -966,24 +975,32 @@ class DataTablesEditColumn
             case "month" :
             case "password" :
             case "tel" :
-                if ($this->required) $required = " required"; else $required = "";
                 return <<<EOD
 
                                     <div class="col-auto">
                                         <div class="form-floating">
                                             <input type="{$this->type}" class="form-control{$class}" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}" placeholder="" value="{$this->defaultValue}"{$required}{$controlOption}{$controlStyle} autocomplete="off">
-                                            <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}">{$this->title()}</label>
+                                            <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}">{$title}</label>
+                                        </div>
+                                    </div>
+                    EOD;
+            case "textarea" :
+                return <<<EOD
+
+                                    <div class="col-auto">
+                                        <div class="form-floating">
+                                            <textarea type="{$this->type}" class="form-control{$class}" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}" placeholder="" {$required}{$controlOption}{$controlStyle} autocomplete="off">{$this->defaultValue}</textarea>
+                                            <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}">{$title}</label>
                                         </div>
                                     </div>
                     EOD;
             case "file" :
-                if ($this->required) $required = " required"; else $required = "";
                 return <<<EOD
 
                                     <div class="col-auto">
-                                        <div class="sfdt-floating-file">
+                                        <div class="sfdt-floating-file{$required}">
                                             <input type="file" class="form-control{$class}" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}" placeholder="" value="{$this->defaultValue}"{$required}{$controlOption}{$controlStyle} autocomplete="off">
-                                            <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}">{$this->title()}</label>
+                                            <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}">{$title}</label>
                                         </div>
                                     </div>
                     EOD;
@@ -1006,8 +1023,8 @@ class DataTablesEditColumn
                 return <<<EOD
 
                                     <div class="col-auto me-3">
-                                        <div class="sfdt-floating-checkbox">
-                                            <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-1">{$this->title()}</label>
+                                        <div class="sfdt-floating-checkbox{$required}">
+                                            <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-1">{$title}</label>
                                             {$html}
                                         </div>
                                     </div>
@@ -1021,7 +1038,7 @@ class DataTablesEditColumn
                     $html .= <<<EOD
 
                                                 <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="radio" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-{$idx}" name="{$this->alias}" value="{$value}"{$checked}{$controlOption}{$controlStyle}>
+                                                    <input class="form-check-input" type="radio" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-{$idx}" name="{$this->alias}" value="{$value}"{$required}{$checked}{$controlOption}{$controlStyle}>
                                                     <label class="form-check-label" for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-{$idx}">{$text}</label>
                                                 </div>
                         EOD;
@@ -1030,16 +1047,16 @@ class DataTablesEditColumn
                 return <<<EOD
 
                                     <div class="col-auto me-3">
-                                        <div class="sfdt-floating-radio">
-                                            <label class="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-1">{$this->title()}</label>
+                                        <div class="sfdt-floating-radio{$required}">
+                                            <label class="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-1">{$title}</label>
                                             {$html}
                                         </div>
                                     </div>
                     EOD;
             case "select" :
-                $optionArr = [];
                 if (!$this->options) L::system("[:dtedit:DataTablesEditColumn {$this->editId} {$this->alias} select options not defined.:]");
-                if (!$this->required) $optionArr[] = "<option value=''>[:dtedit:Select:]</option>";
+                $optionArr = [];
+                $optionArr[] = "<option value=''>[:dtedit:Select:]</option>";
                 foreach($this->options as $value => $text) {
                     if ($value === $this->defaultValue) $selected = " selected"; else $selected = "";
                     $optionArr[] = "<option value='{$value}'{$selected}>{$text}</option>";
@@ -1049,10 +1066,10 @@ class DataTablesEditColumn
 
                                         <div class="col-auto">
                                             <div class="form-floating">
-                                                <select class="form-select" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}"{$controlOption}{$controlStyle}>
+                                                <select class="form-select" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}"{$required}{$controlOption}{$controlStyle}>
                                                 {$optionHtml}
                                                 </select>
-                                                <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}">{$this->title()}</label>
+                                                <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}">{$title}</label>
                                             </div>
                                         </div>
                     EOD;
@@ -1106,7 +1123,7 @@ class DataTablesAddRecord
         return $this->columns[$alias];
     }
 
-    public function html()
+    public function html($tableColumns)
     {
         $controlHtml = "";
         if (!$this->columns) L::system("[:dtaddrecord:No columns defined for DataTablesAddRecord.:]");
@@ -1123,8 +1140,8 @@ class DataTablesAddRecord
 
                                 <div class="row mb-4">
                 EOD;
-            if (is_array($item)) foreach($item as $alias) $controlHtml .= $this->column($alias)->html();
-            else $controlHtml .= $this->column($item)->html();
+            if (is_array($item)) foreach($item as $alias) $controlHtml .= $this->column($alias)->html($tableColumns);
+            else $controlHtml .= $this->column($item)->html($tableColumns);
 
             $controlHtml .= <<<EOD
 
@@ -1197,7 +1214,7 @@ class DataTablesAddRecord
                         $("#sfdt-form-{$this->tableId}-{$this->btnId}")[0].reportValidity()
                         return false;
                     }
-                    var formData = new FormData($("#sfdt-form-{$this->tableId}-{$this->btnId}")[0]);
+                    let formData = new FormData($("#sfdt-form-{$this->tableId}-{$this->btnId}")[0]);
                     formData.append("sfdtPageMode", "submitForAddRecord");
                     formData.append("sfdtBtnId", "{$this->btnId}");
                     {$deliverParametersScript}
@@ -1424,8 +1441,6 @@ class DataTables
 
         if (!self::$checkOnceHtmlColReorder && $this->options["colReorder"]) {
             self::$checkOnceHtmlColReorder = true;
-            if (!$this->disableTooltip) $tooltip = ` data-bs-toggle="tooltip" title="[:dt:Restore the initial state of column order and visibility.:]"`; else $tooltip = "";
-
             $html .= <<<EOD
 
                 <!-- DataTables Column Config Modal -->
@@ -1434,12 +1449,17 @@ class DataTables
                         <div class="modal-content">
                             <div class="modal-body" id="sfdt-modal-column-config-body"></div>
                             <div class="modal-footer d-flex justify-content-between">
-                                <div><button type="button" class="btn btn-sm btn-reset sfdt-btn-column-config-reset"{$tooltip}>[:dt:Reset:]</button></div>
+                                <div>
+                                    <button type="button" class="btn btn-sm btn-reset" id="sfdt-btn-column-config-reset">[:dt:Reset:]</button>
+                                    <button type="button" class="btn btn-sm btn-save" id="sfdt-btn-column-config-save"><i class="bi bi-floppy"></i></button>
+                                </div>
                                 <div>
                                     <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">[:dt:Cancel:]</button>
                                     <button type="button" class="btn btn-sm btn-primary" id="sfdt-btn-column-config-apply" disabled>[:dt:Apply:]</button>
                                 </div>
                             </div>
+                        </div>
+                        <div id="sfdt-modal-column-config-save">
                         </div>
                     </div>
                 </div>
@@ -1604,7 +1624,10 @@ class DataTables
         return <<<EOD
 
                     {
-                        topStart: [ 'search', function() { return '<button type="button" class="btn btn-sfdt-search-reset" data-table-id="{$this->tableId}"><i class="bi bi-arrow-clockwise"></i></button>'; } ],
+                        topStart: [
+                            'search',
+                            function() { return '<button type="button" class="btn btn-sfdt-search-reset" data-table-id="{$this->tableId}"><i class="bi bi-arrow-clockwise"></i></button>'; }
+                        ],
                         topEnd: {
                             buttons: [
                                 {
@@ -1678,7 +1701,7 @@ class DataTables
                                 `;
                             },
                             'paging'
-                        ],
+                        ]
                     }
             EOD;
     }
@@ -1890,7 +1913,7 @@ class DataTables
             foreach($this->extraButtons as $btnId => $eb) {
                 if (!$this->disableTooltip) $drawCallbackScript .= $eb->drawCallbackScript();
                 if ($eb->isAddRecord()) {
-                    $addRecordHtml = $eb->AddRecord()->html();
+                    $addRecordHtml = $eb->AddRecord()->html($this->columns);
                     $drawCallbackScript .= $eb->AddRecord()->drawCallbackScript();
                     $addRecordScript .= $eb->AddRecord()->script($this->ajaxUrl, $this->deliverParameters);
                     if (!$drawCallbackInputMask && $eb->AddRecord()->isEnableInputMask()) $drawCallbackInputMask = true;
@@ -1913,6 +1936,8 @@ class DataTables
 
                         $(".btn-sfdt-search-reset").data("bs-toggle", "tooltip").attr("title", "[:dt:Reset search conditions:]").tooltip();
                         $(".sfdt-btn-open-column-config").data("bs-toggle", "tooltip").attr("title", "[:dt:Change column order and visibility settings:]").tooltip();
+                        $("#sfdt-btn-column-config-reset").data("bs-toggle", "tooltip").attr("title", "[:dt:Restore the initial state of column order and visibility.:]").tooltip();
+                        $("#sfdt-btn-column-config-save").data("bs-toggle", "tooltip").attr("title", "[:dt:Save or load the order and visibility of columns.:]").tooltip();
                         $(".sfdt-btn-pagejump").data("bs-toggle", "tooltip").attr("title", "[:dt:Go directly to the page number you entered:]").tooltip();
                 EOD;
         }
@@ -1974,7 +1999,6 @@ class DataTables
             $(document).ready(function() {
                 sfdt['{$this->tableId}'] = new DataTable('#{$this->tableId}', {$optionsStr});
                 {$scriptCsStorage}
-
                 {$addRecordScript}
                 {$codeColumns["script"]}
             });

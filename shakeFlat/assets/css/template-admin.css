@@ -48,20 +48,6 @@
         .form-control-plaintext { color: #000; }
     }
 
-    /* datatables */
-    .dt-container {
-        .dt-buttons {
-            button.btn { background-color: #e9ecef; color: #000; border-color: #d9dcdf; }
-            button.btn:hover { background-color: #d9dcdf; }
-        }
-        .sfdt-btn-pagejump { background-color: #e9ecef; color: #000; border-color: #d9dcdf; }
-        .sfdt-btn-pagejump:hover { background-color: #d9dcdf; }
-        table.dataTable>thead>tr>th:hover { background-color: #ddd; }
-        .dt-search { input { border-color: #303030; } }
-    }
-
-    #sfdt-modal-column-config { table thead tr th { background-color: #e1e1e1; } }
-
     select {
         appearance: none;
         -webkit-appearance: none;
@@ -224,39 +210,6 @@
         .applyBtn:hover,.cancelBtn:hover { background-color: #777; }
     }
 
-    /* datatables */
-    .dt-container {
-        table.table.table-striped>tbody>tr:nth-of-type(2n+1)>* { box-shadow: inset 0 0 0 9999px rgba(255, 255, 255, 0.02); }
-        table.table.table-hover>tbody>tr:hover>td { background-color: #333; }
-        table.dataTable>thead>tr>th:hover { background-color: #444; }
-
-        .dt-buttons {
-            button.btn { background-color: #454545; color: #ddd; border-color: #3d3d3d; }
-            button.btn:hover { background-color: #333; }
-        }
-        .sfdt-btn-pagejump { background-color: #454545; color: #ddd; border-color: #3d3d3d; }
-        .sfdt-btn-pagejump:hover { background-color: #333; }
-
-        .dt-paging {
-            button.page-link {
-                --bs-pagination-active-bg:#444;
-                --bs-pagination-active-color:#eee;
-                --bs-pagination-active-border-color:#333;
-                --bs-pagination-color:#ddd;
-            }
-            .pagination {
-                button.page-link { --bs-pagination-hover-color:#fff; }
-            }
-        }
-        .table {
-            --bs-table-color:#ddd;
-            --bs-table-striped-color:#ddd;
-        }
-
-        .dt-search { input { border-color: #a0a0a0; } }
-    }
-    #sfdt-modal-column-config { table thead tr th { background-color: #444444; } }
-
     select {
         appearance: none;
         -webkit-appearance: none;
@@ -410,81 +363,6 @@ body {
         .shakeflat-copyright-me { font-size:0.6rem; white-space:nowrap; }
     }
 
-    /* datatables */
-    .dt-container {
-        .dt-buttons {
-            button.btn { --bs-btn-padding-y:0.26rem; --bs-btn-padding-x:0.75rem; --bs-btn-font-size:0.85rem; }
-        }
-        .dt-paging {
-            button.page-link { --bs-pagination-padding-y:0.14rem; --bs-pagination-padding-x:0.7rem; }
-        }
-        .dt-search { input { min-width:15rem; } margin-right:0.3rem!important; }
-        .btn-sfdt-search-reset { font-size:1.2rem; --bs-btn-padding-x:0.5rem!important; --bs-btn-padding-y:0!important; padding-top:3px; }
-
-        .table > thead > tr > th, .table > tfoot > tr > th { border-top: 2px solid #ccc; border-bottom: 2px solid #ccc; padding-top: 0.4rem; padding-bottom: 0.4rem; }
-
-        input.sfdt-page-jump { width: 55px; margin-right:0.3rem; }
-    }
-
-    /* custom search area for datatables */
-    .sfdt-custom-search {
-        padding: 0.5rem 1rem 0.1rem 1rem;
-        background-color: var(--sf-custom-search-bg-color); color:var(--sf-custom-search-text-color);
-        border-radius: 0.25rem;
-
-        > div.sfdt-custom-search-group {
-            display:flex; flex-wrap:wrap; row-gap: 0.5rem; margin-bottom: 0.5rem;
-            > div.sfdt-custom-search-item {
-                display:flex; align-items:center; margin-right:1.2rem;
-                > label { margin-right:0.5rem; white-space:nowrap; }
-            }
-        }
-    }
-
-    /* checkbox/radio for form floating */
-    .sfdt-floating-radio, .sfdt-floating-checkbox {
-        position: relative; padding-top: 1.5rem;
-        > div.form-check-inline {
-            margin-left: 0.3rem;
-            > input[type="checkbox"], input[type="radio"] { position: relative; margin-right: 0.4rem; z-index: 1; }
-        }
-        > label {
-            position: absolute;
-            top: 0rem; left: -0.12rem;
-            padding: 0 0.2rem; pointer-events: none;
-            opacity:.65; transform: scale(.85);
-        }
-    }
-
-    /* file for form floating */
-    .sfdt-floating-file {
-        position: relative; padding-top: 1.5rem;
-        > label {
-            position: absolute;
-            top: 0rem; left: -0.12rem;
-            padding: 0 0.2rem; pointer-events: none;
-            opacity:.65; transform: scale(.85);
-        }
-    }
-
-    /* select2 for form floating */
-    .sfdt-floating-select2 {
-        position: relative;
-        label {
-            position: absolute;
-            top: 0.3rem; left: 0.42rem;
-            opacity:.65; transform: scale(.85);
-            padding: 0 0.25rem; pointer-events: none;
-        }
-        .select2-container .select2-selection {
-            height: calc(3.5rem + 2px);
-            padding-top: 1.52rem; padding-left: 0.48rem; padding-right: 0.75rem;
-        }
-        span.select2-selection--single { font-size:1rem!important; color:var(--sf-modal-text-color); }
-        .select2-selection__rendered { padding: 0; margin-top: 0.5rem; }
-        .select2-container--bootstrap5-dark .select2-selection, .select2-container--bootstrap5-dark .select2-selection--single .select2-search--dropdown .select2-search__field { border: 1px solid rgba(255, 255, 255, .3); }
-    }
-
     /* select2 */
     span.select2-container--bootstrap5,span.select2-container--bootstrap5-dark { width: auto; }
     span.select2-container,span.select2-container--bootstrap5,span.select2-container--bootstrap5-dark,span.select2-selection--single { font-size:0.875rem!important; }
@@ -493,14 +371,6 @@ body {
         height: calc(1.5em + 0.47rem + 2px);
         padding: 0.235rem 1.75rem 0.235rem 0.3rem;
         line-height: 1.25;
-    }
-
-    #sfdt-modal-column-config {
-        #sfdt-modal-column-config-body {
-            table button {
-                width:1.8rem; margin-top:2px; padding-top:0; padding-bottom:0;
-            }
-        }
     }
 
     /* datarangepicker */
