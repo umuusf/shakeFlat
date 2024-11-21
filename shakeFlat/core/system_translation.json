@@ -250,6 +250,11 @@
             "kr": "$1 $2 $3 옵션이 정의되어 있지 않습니다."
         }
     },
+    "Column config load/save function is not callable." : {
+        "dt": {
+            "kr": "열 설정 불러오기/저장하기 함수(columnConfigFunction)가 호출 가능한 상태가 아닙니다."
+        }
+    },
     "Select": {
         "dtedit": {
             "kr": "선택하세요"

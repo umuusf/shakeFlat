@@ -1,7 +1,7 @@
-function callAjax(url, frm, successCallback, errorCallback, _this)
+function _ajaxOpt(url, frm)
 {
-    var frmObj = null;
-    var frmData = new FormData();
+    let frmObj = null;
+    let frmData = new FormData();
 
     if (typeof frm === 'string') { frmObj = $("#" + frm); }
     else if (frm instanceof jQuery) { frmObj = frm; }
@@ -30,7 +30,7 @@ function callAjax(url, frm, successCallback, errorCallback, _this)
         });
     }
 
-    var opt = {
+    return {
         url: url,
         method: "POST",
         data: frmData,
@@ -48,6 +48,11 @@ function callAjax(url, frm, successCallback, errorCallback, _this)
         processData: false,
         contentType: false,
     };
+}
+
+function callAjax(url, frm, successCallback, errorCallback, _this)
+{
+    let opt = _ajaxOpt(url, frm);
 
     //console.log(typeof frmData, opt);return;
 
@@ -93,11 +98,24 @@ function callAjax(url, frm, successCallback, errorCallback, _this)
     });
 }
 
+async function ajaxResult(url, frm)
+{
+    let opt = _ajaxOpt(url, frm);
+    try {
+        let response = await $.ajax(opt);
+        return response;
+    } catch (error) {
+        alert("서버 호출시 문제가 발생하였습니다. 잠시 후 다시 시도해주세요.");
+        console.log(error);
+        return false;
+    }
+}
+
 function valueForSelect(id, defaultValue) {
-    var obj = null;
+    let obj = null;
     if (typeof id == "string") obj = $("#"+id);
     if (typeof id == "object") obj = id;
-    var v = obj.val();
+    let v = obj.val();
     if (v == undefined) return defaultValue;
     if (v) return v;
     return defaultValue;
@@ -109,7 +127,7 @@ function escapeHtml(str)
 {
     if (!str) return '';
     if (typeof(str) != "string") return str;
-	var map = {
+	let map = {
 		'&': '&amp;',
 		'<': '&lt;',
 		'>': '&gt;',
@@ -122,9 +140,9 @@ function escapeHtml(str)
 // Read a page's GET URL variables and return them as an associative array.
 function getParam(k, defaultValue)
 {
-    var vars = [], hash;
-    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
-    for(var i = 0; i < hashes.length; i++)
+    let vars = [], hash;
+    let hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(let i = 0; i < hashes.length; i++)
     {
         hash = hashes[i].split('=');
         vars.push(hash[0]);
@@ -143,27 +161,27 @@ function getParam(k, defaultValue)
 }
 
 // retrieves the computed CSS styles of an HTML element and converts them into a JavaScript object
-// example : var styles = $("#element").getStyleObject();
+// example : let styles = $("#element").getStyleObject();
 // styles : {width: "100px", height: "100px", ...}
 jQuery.prototype.getStyleObject = function (str) {
-    var dom = this.get(0);
-    var style;
-    var returns = {};
+    let dom = this.get(0);
+    let style;
+    let returns = {};
     if(window.getComputedStyle){
-        var camelize = function(a,b){
+        let camelize = function(a,b){
             return b.toUpperCase();
         };
         style = window.getComputedStyle(dom, null);
-        for(var i = 0, l = style.length; i < l; i++){
-            var prop = style[i];
-            var camel = prop.replace(/\-([a-z])/g, camelize);
-            var val = style.getPropertyValue(prop);
+        for(let i = 0, l = style.length; i < l; i++){
+            let prop = style[i];
+            let camel = prop.replace(/\-([a-z])/g, camelize);
+            let val = style.getPropertyValue(prop);
             returns[camel] = val;
         };
         return returns;
     };
     if(style = dom.currentStyle){
-        for(var prop in style){
+        for(let prop in style){
             returns[prop] = style[prop];
         };
         return returns;
@@ -173,9 +191,9 @@ jQuery.prototype.getStyleObject = function (str) {
 
 // Cut to length of string. (Korean processing)
 String.prototype.cut = function(len) {
-    var str = this;
-    var s = 0;
-    for (var i=0; i<str.length; i++) {
+    let str = this;
+    let s = 0;
+    for (let i=0; i<str.length; i++) {
         s += (str.charCodeAt(i) > 128) ? 2 : 1;
         if (s > len) return str.substring(0,i) + "...";
     }
@@ -184,39 +202,39 @@ String.prototype.cut = function(len) {
 
 // Returns the length of the string in bytes (handling Korean 2 bytes)
 String.prototype.bytes = function() {
-    var str = this;
-    var s = 0;
-    for (var i=0; i<str.length; i++) s += (str.charCodeAt(i) > 128) ? 2 : 1;
+    let str = this;
+    let s = 0;
+    for (let i=0; i<str.length; i++) s += (str.charCodeAt(i) > 128) ? 2 : 1;
     return s;
 }
 
 // like number_format() for PHP
 Number.prototype.numberFormat = function() {
-    var num = this;
+    let num = this;
     return num.toLocaleString('ko-KR');
 }
 
 // zero to blank.
 Number.prototype.numberFormatX = function() {
-    var num = this;
+    let num = this;
     if (num == 0) return "";
     return num.toLocaleString('ko-KR');
 }
 
 // 스트링으로 된 날짜 값을 입력 받아서, 날짜 format 에 맞춘 스트링으로 스트링으로 반환해주는 함수
-// ex) var dateStr = "2020-01-01";
-//     var formattedDate = dateStr.formatDate("YYYY년 MM월 DD일 HH시 mm분 ss초");
+// ex) let dateStr = "2020-01-01";
+//     let formattedDate = dateStr.formatDate("YYYY년 MM월 DD일 HH시 mm분 ss초");
 String.prototype.formatDateTime = function(toFormat) {
-    var dateStr = this;
-    var date = new Date(dateStr);
-    var year = date.getFullYear();
-    var month = date.getMonth() + 1;
-    var day = date.getDate();
-    var hour = date.getHours();
-    var min = date.getMinutes();
-    var sec = date.getSeconds();
+    let dateStr = this;
+    let date = new Date(dateStr);
+    let year = date.getFullYear();
+    let month = date.getMonth() + 1;
+    let day = date.getDate();
+    let hour = date.getHours();
+    let min = date.getMinutes();
+    let sec = date.getSeconds();
 
-    var formattedDate = toFormat;
+    let formattedDate = toFormat;
     formattedDate = formattedDate.replace("YYYY", year);
     formattedDate = formattedDate.replace("MM", padZero(month));
     formattedDate = formattedDate.replace("DD", padZero(day));
@@ -229,13 +247,13 @@ String.prototype.formatDateTime = function(toFormat) {
 
 // Sorts an dictionary object's keys in descending order and returns a new sorted object.
 function sortKeysDescending(obj) {
-    var items = Object.keys(obj).map(function(key) { return [key, obj[key]]; });
+    let items = Object.keys(obj).map(function(key) { return [key, obj[key]]; });
     items.sort(function(first, second) { return second[0].localeCompare(first[0]); });
 
-    var sorted_obj = {};
+    let sorted_obj = {};
     $.each(items, function(index, value) {
-        var key = value[0];
-        var val = value[1];
+        let key = value[0];
+        let val = value[1];
         sorted_obj[key] = val;
     });
 
@@ -244,8 +262,8 @@ function sortKeysDescending(obj) {
 
 // perform form validation checks, and if the end of id or named is _confirm, we check if the password matches.
 function checkValidityForm(frm, passwdConfirmCustomMessage = "Password does not match") {
-    var frmObj = null;
-    var pwList = [];
+    let frmObj = null;
+    let pwList = [];
 
     if (typeof frm === 'string') { frmObj = $("#" + frm); }
     else if (frm instanceof jQuery) { frmObj = frm; }
@@ -253,7 +271,7 @@ function checkValidityForm(frm, passwdConfirmCustomMessage = "Password does not 
     else return false;
 
     frmObj.find("input[type=password]").each(function() {
-        var elementId = $(this).attr("id") || $(this).attr("name");
+        let elementId = $(this).attr("id") || $(this).attr("name");
         if (elementId) {
             pwList.push({
                 id: elementId,
@@ -265,12 +283,12 @@ function checkValidityForm(frm, passwdConfirmCustomMessage = "Password does not 
     if (pwList.length > 0) {
         pwList.forEach(function(o) {
             if (o.id && o.id.substr(-8) == "_confirm") {
-                var str = o.id.slice(0, -8);
-                var originalPw = pwList.find(function(pw) { return pw.id === str; });
+                let str = o.id.slice(0, -8);
+                let originalPw = pwList.find(function(pw) { return pw.id === str; });
 
                 if (originalPw) {
-                    var originalVal = originalPw.element.val();
-                    var confirmVal = o.element.val();
+                    let originalVal = originalPw.element.val();
+                    let confirmVal = o.element.val();
 
                     if (originalVal != confirmVal) {
                         o.element[0].setCustomValidity(passwdConfirmCustomMessage);
@@ -295,7 +313,7 @@ function padZero(number, length = 2) {
 }
 
 // rem to pixel (element is optional)
-// ex) var pixel = convertRemToPixels(3, document.getElementById('myElement'));
+// ex) let pixel = convertRemToPixels(3, document.getElementById('myElement'));
 function convertRemToPixels(rem, element) {
     if (!element) element = document.documentElement;
     return rem * parseFloat(getComputedStyle(element).fontSize);
@@ -308,24 +326,24 @@ function convertPixelToRem(pixel, element) {
 }
 
 // width(pixel) for string with font
-// ex) var charWidth = getStringPixelWidth('text', document.getElementById('myElement'));
+// ex) let charWidth = getStringPixelWidth('text', document.getElementById('myElement'));
 function getStringPixelWidth(str, element) {
-    var canvas = document.createElement('canvas');
-    var context = canvas.getContext('2d');
+    let canvas = document.createElement('canvas');
+    let context = canvas.getContext('2d');
     context.font =  window.getComputedStyle(element).getPropertyValue('font-size') + " " +  window.getComputedStyle(element).getPropertyValue('font-family');
-    var metrics = context.measureText(str);
+    let metrics = context.measureText(str);
     return metrics.width;
 }
 
 // width(pixel) for string with font
 String.prototype.stringWidth = function(font, fontSize) {
-    var tt = this.toLowerCase().split(/<br>|<br\/>|<br \/>|<p>/);
-    var max_tt = "";
+    let tt = this.toLowerCase().split(/<br>|<br\/>|<br \/>|<p>/);
+    let max_tt = "";
     for(i=0;i<tt.length;i++) if (max_tt.length < tt[i].length) max_tt = tt[i];
 
-    var fs = "1.2rem";
+    let fs = "1.2rem";
     if (fontSize) fs = fontSize;
-    var f = font || fs + " 'Nanum Gothic'",
+    let f = font || fs + " 'Nanum Gothic'",
         o = $('<div></div>')
             .text(max_tt)
             .css({'position': 'absolute', 'float': 'left', 'white-space': 'nowrap', 'visibility': 'hidden', 'font': f})

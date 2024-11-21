@@ -19,12 +19,13 @@ class dtSampleOnePage extends DataTables
             ->orderBy("member_id", "desc")
             ->exportTitle("직원 목록")
             ->exportFilename("직원목록(" . date("Y-m-d") . ")")
-            ->onePage();
+            ->onePage()
+            ->columnConfigFunction("columnConfigLoad", "columnConfigSave");
 
         parent::column("member_id")     ->title("ID")           ->noWrap()->textCenter();
         parent::column("name")          ->title("이름")         ->noWrap()->textCenter();
         parent::column("phone")         ->title("전화")         ->noWrap()->textCenter();
-        //parent::column("status")        ->title("상태")         ->noWrap()->textCenter();
+        parent::column("status")        ->title("상태")         ->noWrap()->textCenter();
         parent::column("city")          ->title("도시")         ->noWrap()->textCenter();
         parent::column("postal_code")   ->title("우편번호")     ->noWrap()->textCenter();
         parent::column("country")       ->title("국가")         ->noWrap()->textCenter();
@@ -40,7 +41,7 @@ class dtSampleOnePage extends DataTables
         parent::customSearch("name")        ->widthRem(12)  ->string();
         parent::customSearch("email")       ->widthRem(12)  ->string();
         parent::customSearch("phone")       ->widthRem(12)  ->string(); //->mask("999-999[9]-9999");
-        //parent::customSearch("status")      ->widthRem(6)   ->select2()         ->options(["active"=>"active", "inactive"=>"inactive", "banned"=>"banned"]);
+        parent::customSearch("status")      ->widthRem(6)   ->select2()         ->options(["active"=>"active", "inactive"=>"inactive", "banned"=>"banned"]);
         parent::customSearch("join_date")   ->widthRem(13)  ->dateRange();
         parent::customSearch("salary")      ->widthRem(15)  ->numberRange(0, 999999999);
 
@@ -48,11 +49,11 @@ class dtSampleOnePage extends DataTables
         parent::customSearch("salary2")     ->widthRem(15)  ->ex("salary")      ->numberRange(0, 999999999)->title("연봉ex");
 
         parent::layoutCustomSearch([
-            [ "name", "phone" ], // "status" ],
+            [ "name", "phone", "status" ],
             [ "join_date", "salary", "email" ],
             [ "join_date2", "salary2" ]
         ])->layoutList([
-            "member_id", "name", "phone", "city",   // "status",
+            "member_id", "name", "phone", "city", "status",
             "postal_code", "country", "email", "address", "notes",
             "birth_date", "join_date", "salary", "last_login", "btn"
         ]);
@@ -63,7 +64,7 @@ class dtSampleOnePage extends DataTables
                 ->keyParam('name')
                 ->queryFunction('opColumnButtonQueryData')
                 ->layout([
-                    [ "member_id" ], //, "status" ],
+                    [ "member_id", "status" ],
                     [ "name", "phone" ],
                     '---',
                     [ "salary", "country", "city" ],
@@ -185,5 +186,19 @@ class dtSampleOnePage extends DataTables
             and name = :name
         ", [ 'member_id' => $params["member_id"], 'name' => $params["name"] ]);
         return $db->fetch($rs);
+    }
+
+    public function columnConfigLoad()
+    {
+        $db = DB::getInstance();
+        $rs = $db->query("select data from table_column_config where table_id = 'example'");
+        return $db->fetch($rs)["data"] ?? null;
+    }
+
+    public function columnConfigSave($data)
+    {
+        $db = DB::getInstance();
+        $db->query("replace into table_column_config (table_id, data) values ('example', :data)", [ 'data' => $data ]);
+        return true;
     }
 }

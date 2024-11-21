@@ -3,7 +3,7 @@ let sfdtDaysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 let sfdtCancelLabel = 'Cancel';
 let sfdtApplyLabel = 'Apply';
 let sfdtResetConfirmMsg = 'Do you want to revert to the initial state?';
-let sfdtColumnConfigSaveMsg = 'Enter the name of the configuration to save.';
+let sfdtColumnConfigServerSideSaveMsg = 'Enter the name of the configuration to save.';
 let sfdtColumnConfigDeleteMsg = 'Do you want to delete the saved configuration?';
 let sfdtColumnConfigTxtTitleMessage = 'Set the order and visibility of the columns.';
 let sfdtColumnConfigTxtColumn = 'Column';
@@ -20,7 +20,7 @@ $(document).ready(function() {
         sfdtCancelLabel = '취소';
         sfdtApplyLabel = '적용';
         sfdtResetConfirmMsg = '처음 상태로 되돌리겠습니까?';
-        sfdtColumnConfigSaveMsg = '저장할 구성의 이름을 입력하세요.';
+        sfdtColumnConfigServerSideSaveMsg = '저장할 구성의 이름을 입력하세요.';
         sfdtColumnConfigDeleteMsg = '저장된 구성을 삭제하시겠습니까?';
         sfdtColumnConfigTxtTitleMessage = '열의 순서와 표시 여부를 설정합니다.';
         sfdtColumnConfigTxtColumn = '열';
@@ -212,7 +212,7 @@ $(document).ready(function() {
             let $tr = $("<tr/>").attr("data-index", order[i]).attr("draggable", "true");
             let $td1 = $("<td/>").addClass("text-center align-middle text-nowrap").text(columnInfo[order[i]].title || '-');
             let $td2 = $("<td/>").addClass("text-center align-middle text-nowrap");
-            let $input = $("<input/>").attr("type", "checkbox").addClass("form-check-input sfdt-column-config-visible").prop("checked", columnInfo[order[i]].visible).prop("disabled", columnInfo[order[i]].disableInvisible);
+            let $input = $("<input/>").attr("type", "checkbox").attr("name", "column-config-item-"+i).addClass("form-check-input sfdt-column-config-visible").prop("checked", columnInfo[order[i]].visible).prop("disabled", columnInfo[order[i]].disableInvisible);
             $td2.append($input);
             let $td3 = $("<td/>").addClass("text-center align-middle text-nowrap pb-2");
             let $btn1 = $("<button/>").attr("type", "button").addClass("btn btn-xs btn-primary me-1 sfdt-btn-column-config-up").attr("data-index", order[i]).html("<i class=\"fas fa-caret-up\"></i>");
@@ -250,7 +250,7 @@ $(document).ready(function() {
         $("#sfdt-modal-column-config-body").html($table);
         $("#sfdt-btn-column-config-apply").prop("disabled", true);
 
-        sfdtUpdateColumnConfigSave(tableId);
+        sfdtUpdateColumnConfig(tableId);
 
         $("#sfdt-modal-column-config").modal("show");
     });
@@ -269,14 +269,18 @@ $(document).ready(function() {
         let tableId = $("#sfdt-modal-column-config-body").data("table-id");
 
         inputConfirm({
-            messageText: sfdtColumnConfigSaveMsg,
+            messageText: sfdtColumnConfigServerSideSaveMsg,
             inputWidth: '15rem'
-        },function(result) {
+        },async function(result) {
             if (result) {
-                let savedConfigs = JSON.parse(localStorage.getItem("sfdt-"+tableId+"-column-configs")) || {};
+                let savedConfigs = await sfdtColumnConfigLoad(tableId);
                 savedConfigs[tableId] = savedConfigs[tableId] || [];
 
-                let idx = savedConfigs[tableId].length + 1;
+                let maxIdx = 0;
+                for (let i = 0; i < savedConfigs[tableId].length; i++) {
+                    if (savedConfigs[tableId][i].idx > maxIdx) maxIdx = savedConfigs[tableId][i].idx;
+                }
+                let idx = maxIdx + 1;
                 let visible = [];
                 let order = [];
                 $("#sfdt-modal-column-config-body tbody tr").each(function(index) {
@@ -284,16 +288,15 @@ $(document).ready(function() {
                     order.push(parseInt($(this).data("index"), 10));
                 });
 
-                let savedConfig = {
+                savedConfigs[tableId].push({
                     idx: idx,
                     name: result,
                     date: new Date().toISOString(),
                     visible: visible,
                     order: order,
-                };
-                savedConfigs[tableId].push(savedConfig);
-                localStorage.setItem("sfdt-"+tableId+"-column-configs", JSON.stringify(savedConfigs));
-                sfdtUpdateColumnConfigSave(tableId);
+                });
+                await sfdtColumnConfigSave(tableId, savedConfigs);
+                sfdtUpdateColumnConfig(tableId);
                 return true;
             }
         });
@@ -338,6 +341,10 @@ $(document).ready(function() {
 
         $("#sfdt-modal-column-config").modal("hide");
     });
+
+    $(document).on("hide.bs.modal", ".modal", function() {
+        if (document.activeElement) document.activeElement.blur();
+    });
 });
 
 function sfdtGetDragAfterElement(container, y) {
@@ -353,10 +360,10 @@ function sfdtGetDragAfterElement(container, y) {
     }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
 
-function sfdtUpdateColumnConfigSave(tableId)
+async function sfdtUpdateColumnConfig(tableId)
 {
     $("#sfdt-modal-column-config-save").html("");
-    let savedConfigs = JSON.parse(localStorage.getItem("sfdt-"+tableId+"-column-configs")) || {};
+    let savedConfigs = await sfdtColumnConfigLoad(tableId);
     if (savedConfigs[tableId] && savedConfigs[tableId].length > 0) {
         let $divList = $("<div/>").addClass("d-flex flex-column");
         for (let i = 0; i < savedConfigs[tableId].length; i++) {
@@ -364,23 +371,23 @@ function sfdtUpdateColumnConfigSave(tableId)
             let $divItem = $("<div/>").addClass("sfdt-ccs-item").data("idx", savedConfig.idx);
             let $divText = $("<div/>").addClass("sfdt-css-text text-nowrap").text(savedConfig.name);
             let $btn = $("<button/>").addClass("sfdt-css-btn btn btn-sm").html("<i class=\"bi bi-trash-fill\"></i>");
-            $btn.on("click", function(e) {
+            $btn.on("click", async function(e) {
                 let obj = $(this).parents(".sfdt-ccs-item");
                 let idx = obj.data("idx");
-                let savedConfigs = JSON.parse(localStorage.getItem("sfdt-"+tableId+"-column-configs")) || {};
-                confirm(sfdtColumnConfigDeleteMsg, function() {
+                let savedConfigs = await sfdtColumnConfigLoad(tableId);
+                confirm(sfdtColumnConfigDeleteMsg, async function() {
                     savedConfigs[tableId] = savedConfigs[tableId] || [];
                     savedConfigs[tableId] = savedConfigs[tableId].filter(function(item) { return item.idx !== idx; });
-                    localStorage.setItem("sfdt-"+tableId+"-column-configs", JSON.stringify(savedConfigs));
+                    await sfdtColumnConfigSave(tableId, savedConfigs);
                     obj.remove();
                     if ($(".sfdt-ccs-item").length === 0) $("#sfdt-modal-column-config-save").hide();
                 });
                 e.stopPropagation();
             });
             $divItem.append($divText).append($btn);
-            $divItem.on("click", function() {
+            $divItem.on("click", async function() {
                 let idx = $(this).data("idx");
-                let savedConfigs = JSON.parse(localStorage.getItem("sfdt-"+tableId+"-column-configs")) || {};
+                let savedConfigs = await sfdtColumnConfigLoad(tableId);
                 let savedConfig = savedConfigs[tableId].find(function(item) { return item.idx == idx; });
                 if (savedConfig) {
                     let order = savedConfig.order;
@@ -393,19 +400,19 @@ function sfdtUpdateColumnConfigSave(tableId)
                             let index = order[i];
                             let title = sfdt[tableId].settings().init().columns[index].title || '-';
                             let disableInvisible = (sfdtGetColumnStatus(tableId)[index].disableInvisible) ? ' disabled' : '';
-                            let tbl = `
-                                <tr data-index="${index}">
-                                    <td class="text-center align-middle text-nowrap">${title}</td>
-                                    <td class="text-center align-middle text-nowrap">
-                                        <input type="checkbox" class="form-check-input sfdt-column-config-visible" ${visible[i] ? 'checked' : ''}${disableInvisible}>
-                                    </td>
-                                    <td class="text-center align-middle text-nowrap pb-2">
-                                        <button type="button" class="btn btn-xs btn-primary sfdt-btn-column-config-up"   data-index="${index}"><i class="fas fa-caret-up"></i></button>
-                                        <button type="button" class="btn btn-xs btn-primary sfdt-btn-column-config-down" data-index="${index}"><i class="fas fa-caret-down"></i></button>
-                                    </td>
-                                </tr>
-                            `;
-                            $("#sfdt-modal-column-config-body tbody").append(tbl);
+
+                            let $tr = $("<tr/>").attr("data-index", order[i]).attr("draggable", "true");
+                            let $td1 = $("<td/>").addClass("text-center align-middle text-nowrap").text(title);
+                            let $td2 = $("<td/>").addClass("text-center align-middle text-nowrap");
+                            let $input = $("<input/>").attr("type", "checkbox").attr("name", "column-config-item-"+i).addClass("form-check-input sfdt-column-config-visible").prop("checked", visible[i]).prop("disabled", disableInvisible);
+                            $td2.append($input);
+                            let $td3 = $("<td/>").addClass("text-center align-middle text-nowrap pb-2");
+                            let $btn1 = $("<button/>").attr("type", "button").addClass("btn btn-xs btn-primary me-1 sfdt-btn-column-config-up").attr("data-index", order[i]).html("<i class=\"fas fa-caret-up\"></i>");
+                            let $btn2 = $("<button/>").attr("type", "button").addClass("btn btn-xs btn-primary sfdt-btn-column-config-down").attr("data-index", order[i]).html("<i class=\"fas fa-caret-down\"></i>");
+                            $td3.append($btn1).append($btn2);
+                            $tr.append($td1).append($td2).append($td3);
+
+                            $("#sfdt-modal-column-config-body tbody").append($tr);
                         }
                         sfdtUpdateApplyBtnStatus(tableId);
                     }
@@ -527,4 +534,41 @@ function sfdtExportAction(e, dt, button, config, cb) {
     });
     // Requery the server with the new one-time export settings
     dt.ajax.reload();
+}
+
+async function sfdtColumnConfigLoad(tableId)
+{
+    let serverSide = $("button.sfdt-btn-open-column-config[data-table-id='"+tableId+"']").data("server-side");
+    if (!serverSide) {
+        return JSON.parse(localStorage.getItem('sfdt-'+tableId+'-column-configs')) || {};
+    } else {
+        let res = await ajaxResult(
+            window.location.pathname,
+            {
+                sfdtPageMode: 'columnConfigLoad',
+                tableId: tableId
+            }
+        );
+        if (!('data' in res) || !('result' in res.data) || !res.data.result) return {};
+        let ret = JSON.parse(res.data.result) || {};
+        return ret;
+    }
+}
+
+async function sfdtColumnConfigSave(tableId, data)
+{
+    let serverSide = $("button.sfdt-btn-open-column-config[data-table-id='"+tableId+"']").data("server-side");
+    if (!serverSide) {
+        localStorage.setItem('sfdt-'+tableId+'-column-configs', JSON.stringify(data));
+    } else {
+        let res = await ajaxResult(
+            window.location.pathname,
+            {
+                sfdtPageMode: 'columnConfigSave',
+                tableId: tableId,
+                data: JSON.stringify(data)
+            }
+        );
+        return res;
+    }
 }

@@ -120,7 +120,6 @@ let __sfAlertLanguage = {
     },
 };
 let __sfAlertIdx = 0;
-let __sfAlertCount = 0;
 function __sfAlert(options)
 {
 	let deferredObject = $.Deferred();
@@ -147,13 +146,12 @@ function __sfAlert(options)
 	}
 	$.extend(defaults, options);
 
-
 	let _show = function(alertIdx){
         let widthTag = defaults.messageText.stringWidth() + "px";
         if (defaults.width) widthTag = defaults.width;
         if (defaults.iconSize) iconSize = defaults.iconSize;
 
-        let $sfAlert = $("<div/>", { "id":"sfAlerts-" + alertIdx, "class":"modal fade", "tabindex":"-1", "data-bs-keyboard":"true", "data-bs-backdrop":"true" });
+        let $sfAlert = $("<div/>", { "id":"sfAlerts-" + alertIdx, "class":"modal fade", "tabindex":"-1", "data-bs-keyboard":"true", "data-bs-backdrop":"true", "aria-modal":"true", "aria-labelledby":"sfAlerts-" + alertIdx, "aria-describedby":"sfAlerts-" + alertIdx, "aria-hidden":"true" });
         $sfAlert.css("z-index", "10000");
 
         if (defaults.customStyle) $sfAlert.attr("style", defaults.customStyle);
@@ -205,35 +203,29 @@ function __sfAlert(options)
 
 		switch (defaults.type) {
 			case "alert":
-                let $okBtn = $("<button/>", { "class":"btn btn-" + defaults.alertType + " ms-1", "data-bs-dismiss":"modal" }).html(__sfAlertLanguage[defaults.language].ok);
-                $sfAlertBtnArea.append($okBtn);
+                let $okBtn = $("<button/>", { "class":"btn btn-" + defaults.alertType + " ms-1", "data-bs-dismiss":"modal", "aria-label":"Close" }).html(__sfAlertLanguage[defaults.language].ok);
                 if (defaults.okCallback) $okBtn.on('click', function () { defaults.okCallback(); });
+                $sfAlertBtnArea.append($okBtn);
 				break;
 			case "confirm":
                 $sfAlert.attr("data-bs-backdrop", "false");      // Prevent clicking outside the modal
                 $sfAlert.attr("data-bs-keyboard", "false");      // Prevent keyboard esc input
 
                 let $yesBtn = $("<button/>", { "class":"btn btn-primary me-1", "data-bs-dismiss":"modal" }).html(__sfAlertLanguage[defaults.language].yes);
-                let $noBtn = $("<button/>", { "class":"btn btn-secondary ms-1", "data-bs-dismiss":"modal" }).html(__sfAlertLanguage[defaults.language].no);
-                $sfAlertBtnArea.append($yesBtn);
-                $sfAlertBtnArea.append($noBtn);
+                let $noBtn = $("<button/>", { "class":"btn btn-secondary ms-1", "data-bs-dismiss":"modal", "aria-label":"Close" }).html(__sfAlertLanguage[defaults.language].no);
 				if (defaults.yesCallback) $yesBtn.on('click', function () { defaults.yesCallback(); });
                 if (defaults.noCallback) $noBtn.on('click', function () { defaults.noCallback(); });
+                $sfAlertBtnArea.append($yesBtn);
+                $sfAlertBtnArea.append($noBtn);
 				break;
             case "input":
                 let $inputDiv = $("<div/>", { "class":"mb-3 d-flex justify-content-center"});
                 let $input = $("<input/>", { "class":"form-control", "type":"text", "id":"prompt", "name":"prompt", "style":"width:" + defaults.inputWidth, "placeholder":defaults.inputPlaceholder });
                 $input.attr("autocomplete", "off");
-                $inputDiv.append($input);
 
                 let $validationMessage = $("<div/>", { "class":"text-danger mb-3", "css":{ "font-size":"0.8rem" } });
                 let $okBtn2 = $("<button/>", { "class":"btn btn-" + defaults.alertType + " ms-1" }).html(__sfAlertLanguage[defaults.language].ok);
-                let $cancelBtn = $("<button/>", { "class":"btn btn-secondary ms-1", "data-bs-dismiss":"modal" }).html(__sfAlertLanguage[defaults.language].cancel);
-
-                $sfAlertBtnArea.append($inputDiv);
-                $sfAlertBtnArea.append($validationMessage);
-                $sfAlertBtnArea.append($okBtn2);
-                $sfAlertBtnArea.append($cancelBtn);
+                let $cancelBtn = $("<button/>", { "class":"btn btn-secondary ms-1", "data-bs-dismiss":"modal", "aria-label":"Close" }).html(__sfAlertLanguage[defaults.language].cancel);
 
                 if (defaults.yesCallback) $okBtn2.click(function () {
                     if (defaults.inputRequired && $input.val() == "") {
@@ -245,6 +237,12 @@ function __sfAlert(options)
                         $sfAlert.modal('hide');
                     }
                 });
+
+                $inputDiv.append($input);
+                $sfAlertBtnArea.append($inputDiv);
+                $sfAlertBtnArea.append($validationMessage);
+                $sfAlertBtnArea.append($okBtn2);
+                $sfAlertBtnArea.append($cancelBtn);
                 break;
 		}
 
@@ -260,25 +258,29 @@ function __sfAlert(options)
                 "left": "0",
                 "width": "100%",
                 "height": "100%",
-                "background-color": "rgba(0, 0, 0, 0.2)",
+                "background-color": "rgba(0, 0, 0, 0.3)",
                 "z-index": "9999",
                 "display": "none",
             }});
             $("body").append($sfAlertOverlay);
         }
 
-		$sfAlert.modal().on('hidden.bs.modal', function (e) {
+		$sfAlert.modal().on('hidden.bs.modal', function () {
 			$(this).remove();
-            if (defaults.okCallback) deferredObject.resolve(defaults.okCallback()); else deferredObject.resolve();
+            deferredObject.resolve();
         }).on('hide.bs.modal', function() {
-            $("#sfAlertOverlay").css("display", "none");
-		}).on('shown.bs.modal', function () {
-			if ($('#prompt').length > 0) $('#prompt').focus();
+            if($("#sfAlertOverlay").length) $("#sfAlertOverlay").remove();
+            if (document.activeElement) document.activeElement.blur();
+		}).on('hidePrevented.bs.modal', function() {
+        }).on('shown.bs.modal', function () {
+			if ($('#prompt').length) $('#prompt').focus();
 		}).on('show.bs.modal', function () {
             $("#sfAlertOverlay").css("display", "block");
-        }).modal('show');
+        });
 
         $("body").append($sfAlert);
+
+        $sfAlert.modal('show');
 	}
 
     __sfAlertIdx ++;

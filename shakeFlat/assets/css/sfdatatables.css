@@ -134,6 +134,26 @@ body {
     .form-floating textarea:required:focus + label::after,
     .form-floating textarea:required:not(:placeholder-shown) + label::after,
     .form-floating select:required:not(:placeholder-shown) + label::after,
+    .sfdt-floating {
+        position: relative;
+        margin-left: .5rem;
+        > div.sfdt-plaintext {
+            padding: 1.625rem 0 .625rem .3rem;
+            display: block;
+            width: 100%;
+            margin-bottom: 0;
+            height: calc(3.5rem + calc(var(--bs-border-width)* 2));
+            line-height: 1.25;
+        }
+        > div.sfdt-label {
+            position: absolute;
+            pointer-events: none;
+            top: .2rem;
+            left: .3rem;
+            opacity:.65;
+            font-size: 0.85rem;
+        }
+    }
     .sfdt-floating-checkbox.required > label::after,
     .sfdt-floating-radio.required > label::after,
     .sfdt-floating-file.required > label::after {
@@ -157,7 +177,7 @@ body {
             pointer-events: auto;
 
             div.sfdt-ccs-item {
-                min-width:10rem;
+                min-width:8rem;
                 display: flex;
                 flex-direction: row;
                 justify-content: space-between;

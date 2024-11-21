@@ -203,9 +203,9 @@ class DataTablesRenderButton
             if (!array_key_exists($alias, $tableColumns)) L::system("[:dt:Column alias({$alias}) does not exist in tableColumns.:]");
             return <<<EOD
                                     <div class="col-auto">
-                                        <div class="form-floating">
-                                            <div class="form-control-plaintext text-nowrap" id="sfdt-modal-{$this->tableId}-{$this->btnId}-column-{$alias}"></div>
-                                            <label class="text-nowrap">{$tableColumns[$alias]->title()}</label>
+                                        <div class="sfdt-floating">
+                                            <div class="sfdt-plaintext text-nowrap" id="sfdt-modal-{$this->tableId}-{$this->btnId}-column-{$alias}"></div>
+                                            <div class="sfdt-label text-nowrap">{$tableColumns[$alias]->title()}</div>
                                         </div>
                                     </div>
 
@@ -236,7 +236,7 @@ class DataTablesRenderButton
 
         $detailHtml = <<<EOD
             <!-- DataTable - Detail view modal for Table Id {$this->tableId} -->
-            <div class="modal fade" tabindex="-1" id="sfdt-modal-{$this->tableId}-{$this->btnId}">
+            <div class="modal fade" tabindex="-1" id="sfdt-modal-{$this->tableId}-{$this->btnId}" aria-labelledby="Detail View" aria-describedby="Detail View" aria-hidden="true" aria-modal="true">
                 <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                     <div class="modal-content">
                         <div class="modal-header bg-detail">
@@ -387,7 +387,7 @@ class DataTablesRenderButton
         $modifyHtml = <<<EOD
 
             <!-- DataTable - modify modal for Table Id {$this->tableId} -->
-            <div class="modal fade" tabindex="-1" id="sfdt-modal-{$this->tableId}-{$this->btnId}">
+            <div class="modal fade" tabindex="-1" id="sfdt-modal-{$this->tableId}-{$this->btnId}" aria-labelledby="Modify" aria-describedby="Modify" aria-hidden="true" aria-modal="true">
                 <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                     <div class="modal-content">
                         <div class="modal-header bg-modify">
@@ -1048,7 +1048,7 @@ class DataTablesEditColumn
 
                                     <div class="col-auto me-3">
                                         <div class="sfdt-floating-radio{$required}">
-                                            <label class="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-1">{$title}</label>
+                                            <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-1">{$title}</label>
                                             {$html}
                                         </div>
                                     </div>
@@ -1151,7 +1151,7 @@ class DataTablesAddRecord
 
         $html = <<<EOD
             <!-- DataTable - add record modal for Table Id {$this->tableId} -->
-            <div class="modal fade" tabindex="-1" id="sfdt-modal-{$this->tableId}-{$this->btnId}">
+            <div class="modal fade" tabindex="-1" id="sfdt-modal-{$this->tableId}-{$this->btnId}" aria-labelledby="add new record" aria-describedby="add new record" aria-hidden="true" aria-modal="true">
                 <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                     <div class="modal-content">
                         <div class="modal-header bg-add">
@@ -1272,6 +1272,9 @@ class DataTables
     private $layoutModify;
     private $modifyColumns;
 
+    private $columnConfigSaveFunction;
+    private $columnConfigLoadFunction;
+
     private $onePage;
     private $querySearchSQL;
     private $querySearchBind;
@@ -1314,6 +1317,9 @@ class DataTables
         $this->layoutDetail = [];
         $this->layoutModify = [];
         $this->modifyColumns = [];
+
+        $this->columnConfigSaveFunction = "";
+        $this->columnConfigLoadFunction = "";
 
         $this->exportActionPrint    = "sfdtExportAction";
         $this->exportActionPDF      = "sfdtExportAction";
@@ -1423,6 +1429,10 @@ class DataTables
         return $this->modifyColumns[$editId][$alias];
     }
 
+    // column config load/save function
+    public function columnConfigFunction($loadFunction, $saveFunction) { $this->columnConfigLoadFunction = $loadFunction; $this->columnConfigSaveFunction = $saveFunction; return $this; }
+
+
     // Create a script/html that should be output only once even if the instance is created multiple times
     private function onceOutput()
     {
@@ -1444,7 +1454,7 @@ class DataTables
             $html .= <<<EOD
 
                 <!-- DataTables Column Config Modal -->
-                <div class="modal fade" tabindex="-1" id="sfdt-modal-column-config">
+                <div class="modal fade" tabindex="-1" id="sfdt-modal-column-config" aria-labelledby="Column Config" aria-describedby="Column Config" aria-hidden="true" aria-modal="true">
                     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                         <div class="modal-content">
                             <div class="modal-body" id="sfdt-modal-column-config-body"></div>
@@ -1454,7 +1464,7 @@ class DataTables
                                     <button type="button" class="btn btn-sm btn-save" id="sfdt-btn-column-config-save"><i class="bi bi-floppy"></i></button>
                                 </div>
                                 <div>
-                                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">[:dt:Cancel:]</button>
+                                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal" aria-label="Close">[:dt:Cancel:]</button>
                                     <button type="button" class="btn btn-sm btn-primary" id="sfdt-btn-column-config-apply" disabled>[:dt:Apply:]</button>
                                 </div>
                             </div>
@@ -1604,11 +1614,20 @@ class DataTables
         $extraButtons = "";
 
         if ($this->options["colReorder"]) {
+            $serverSide = "false";
+            if ($this->columnConfigLoadFunction && $this->columnConfigSaveFunction) {
+                if (!is_callable([ $this, $this->columnConfigLoadFunction ]) || !is_callable([ $this, $this->columnConfigSaveFunction ])) L::system("[:dt:Column config load/save function is not callable.:]");
+                $serverSide = "true";
+            }
+
             $colReorder = <<<EOD
                     ,{
                                             text: '[:dt:Columns:]',
                                             className:'sfdt-btn-open-column-config',
-                                            attr: { 'data-table-id': '{$this->tableId}' }
+                                            attr: {
+                                                'data-table-id': '{$this->tableId}',
+                                                'data-server-side': '{$serverSide}',
+                                            }
                                         }
                     EOD;
         }
@@ -1863,6 +1882,8 @@ class DataTables
                 case "modify" : return $this->opModify();
                 case "submitForModify" : return $this->opSubmitForModify();
                 case "detailView" : return $this->opDetailView();
+                case "columnConfigSave" : return $this->opColumnConfigSave();
+                case "columnConfigLoad" : return $this->opColumnConfigLoad();
             }
         }
 
@@ -1947,7 +1968,7 @@ class DataTables
 
         // input mask initialization
         $drawCallbackInputMask = $drawCallbackInputMask | $codeCustomSearch["isEnableInputMask"]; //  | $modifyView["isEnableInputMask"]
-        if ($drawCallbackInputMask) $drawCallbackScript .= "$(\":input[data-inputmask]\").inputmask();";
+        if ($drawCallbackInputMask) $drawCallbackScript .= "\n        $(\":input[data-inputmask]\").inputmask();";
 
         $replaceFrom[] = "\"drawCallback\": \"drawCallback-function\"";
         $replaceTo[] = <<<EOD
@@ -2300,5 +2321,35 @@ class DataTables
     {
         $param = Param::getInstance();
         return $param->length;
+    }
+
+    private function opColumnConfigSave()
+    {
+        $param = Param::getInstance();
+        $param->checkKeyValue('data', Param::TYPE_STRING);
+
+        if (!$this->columnConfigSaveFunction || !is_callable([ $this, $this->columnConfigSaveFunction ])) L::system("[:dt:Column config load/save function is not callable.:]");
+        $result = call_user_func([ $this, $this->columnConfigSaveFunction ], $param->data);
+
+        $res = Response::getInstance();
+        $res->result = $result;
+        $template = Template::getInstance();
+        $template->setMode(Template::MODE_AJAX);
+        $template->displayResult();
+        exit;
+    }
+
+    private function opColumnConfigLoad()
+    {
+        if (!$this->columnConfigLoadFunction || !is_callable([ $this, $this->columnConfigLoadFunction ])) L::system("[:dt:Column config load/save function is not callable.:]");
+        $result = call_user_func([ $this, $this->columnConfigLoadFunction ]);
+        if (!$result || $result == "undefined") $result = "";
+
+        $res = Response::getInstance();
+        $res->result = $result;
+        $template = Template::getInstance();
+        $template->setMode(Template::MODE_AJAX);
+        $template->displayResult();
+        exit;
     }
 }
