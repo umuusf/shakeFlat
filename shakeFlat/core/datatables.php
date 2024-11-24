@@ -1305,7 +1305,8 @@ class DataTables
             "serverSide" => true,
         ];
 
-        $this->language = 'kr';
+        $translation = Translation::getInstance();
+        $this->language = $translation->getTranslationLang();
         $this->ajaxUrl = $_SERVER['REQUEST_URI'];
         $this->columns = [];
         $this->customSearch = [];
@@ -1353,7 +1354,6 @@ class DataTables
     public function lengthMenu($menu) { $this->options["lengthMenu"] = $menu; return $this; }
     public function disableStateSave() { $this->options["stateSave"] = false; return $this; }
     public function disableColReorder() { $this->options["colReorder"] = false; return $this; }
-    public function english() { $this->language = 'en'; return $this; }
     public function ajaxUrl($url) { $this->ajaxUrl = $url; return $this; }
     public function disableTooltip() { $this->disableTooltip = true; return $this; }
     public function orderBy($alias, $dir) { $this->defaultOrder[] = [ "alias" => $alias, "dir" => $dir ]; return $this; }
@@ -2029,19 +2029,19 @@ class DataTables
     }
 
     public function echoHtml() {
-        echo $this->translationOutput($this->html, $this->language);
+        echo $this->translationOutput($this->html);
     }
 
-    private function translationOutput($output, $lang)
+    private function translationOutput($output)
     {
         $translation = Translation::getInstance();
-        if ($lang) {
+        if ($this->language) {
             if (is_array($output)) {
-                $output = json_decode($translation->convert(json_encode($output, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE), $lang), true);
+                $output = json_decode($translation->convert(json_encode($output, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE), $this->language), true);
             } else {
-                $output = $translation->convert($output, $lang);
+                $output = $translation->convert($output, $this->language);
             }
-            $translation->updateCache($lang);
+            $translation->updateCache($this->language);
             return $output;
         }
         if (is_array($output)) {

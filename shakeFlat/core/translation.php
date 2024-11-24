@@ -12,13 +12,12 @@
 
 namespace shakeFlat;
 
-require_once "gpath.php";
-
 class Translation
 {
     private $cacheTable;
     private $needUpdate;
     private $allTable;
+    private $translationLang;
 
     public static function getInstance()
     {
@@ -33,12 +32,14 @@ class Translation
         $this->needUpdate = false;
         $this->cacheTable = [];
         $this->allTable = [];
+        $this->translationLang = null;
 
         $this->setFilePathTranslation(__DIR__ . "/system_translation.json");
-        $this->setFilePathTranslation(SHAKEFLAT_PATH . trim(SHAKEFLAT_ENV["path"]["translation_file"] ?? "sample/translation.json"));
+        if (isset(SHAKEFLAT_ENV["path"]["translation_file"])) $this->setFilePathTranslation(SHAKEFLAT_PATH . trim(SHAKEFLAT_ENV["path"]["translation_file"]));
+        if (isset(SHAKEFLAT_ENV["config"]["default_language"])) $this->setTranslationLang(SHAKEFLAT_ENV["config"]["default_language"]);
     }
 
-    public function setFilePathTranslation($filePath)
+    private function setFilePathTranslation($filePath)
     {
         try {
             $json = file_get_contents($filePath);
@@ -47,8 +48,21 @@ class Translation
                 if ($arr) $this->allTable = array_merge($this->allTable, $arr);
             }
         } catch (\Exception $e) {
-            //echo $e->getMessage();
+            L::system($e->getMessage());
         }
+    }
+
+    // If a tag for translation ([:...:]) is applied to the text written in the template, but translation is not desired, this function is called without parameters.
+    // If it is called without parameters (when it is called as null ), the passing method of the Translation class is called.
+    public function setTranslationLang($lang = null)
+    {
+        $this->translationLang = $lang;
+        return $this;
+    }
+
+    public function getTranslationLang()
+    {
+        return $this->translationLang;
     }
 
     public function convert($output, $lang)

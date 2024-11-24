@@ -38,7 +38,6 @@ class Template
     private $layoutFileForError;
     private $customTemplateFile;
     private $mode;
-    private $translationLang;
     private $redirectUrl;
     private $redirectMsg;
     private $charset;
@@ -61,20 +60,12 @@ class Template
         $this->layoutFile           = "layout.html";
         $this->layoutFileForError   = "layout.html";
         $this->mode                 = self::MODE_WEB;
-        $this->translationLang      = null;
         $this->redirectUrl          = null;
         $this->redirectMsg          = null;
         $this->charset              = "UTF-8";
         $this->aes256key            = SHAKEFLAT_ENV["aes256"]["key_with_client"] ?? "00000000000000000000000000000000";
         $this->aes256iv             = SHAKEFLAT_ENV["aes256"]["iv_with_client"] ?? "0000000000000000";
         $this->customTemplateFile   = "";
-    }
-
-    // called from App class
-    public function setPathTemplates($pathTemplates)
-    {
-        $this->gpath->TEMPLATES = rtrim($pathTemplates, " /") . "/";
-        return $this;
     }
 
     // Set the file to be used as layout. (default is layout.html)
@@ -123,23 +114,10 @@ class Template
         return ($this->mode === self::MODE_AJAX);
     }
 
-    // If a tag for translation ([:...:]) is applied to the text written in the template, but translation is not desired, this function is called without parameters.
-    // If it is called without parameters (when it is called as null ), the passing method of the Translation class is called.
-    public function setTranslationLang($lang = null)
-    {
-        $this->translationLang = $lang;
-        return $this;
-    }
-
     public function setAES256Key($key, $iv = null)
     {
         $this->aes256key = $key;
         if ($iv !== null) $this->aes256iv = $iv;
-    }
-
-    public function getTranslationLang()
-    {
-        return $this->translationLang;
     }
 
     public function displayResult()
@@ -368,13 +346,13 @@ class Template
     private function translationOutput($output)
     {
         $translation = Translation::getInstance();
-        if ($this->translationLang) {
+        if ($translation->getTranslationLang()) {
             if (is_array($output)) {
-                $output = json_decode($translation->convert(json_encode($output, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE), $this->translationLang), true);
+                $output = json_decode($translation->convert(json_encode($output, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE), $translation->getTranslationLang()), true);
             } else {
-                $output = $translation->convert($output, $this->translationLang);
+                $output = $translation->convert($output, $translation->getTranslationLang());
             }
-            $translation->updateCache($this->translationLang);
+            $translation->updateCache($translation->getTranslationLang());
             return $output;
         }
         if (is_array($output)) {

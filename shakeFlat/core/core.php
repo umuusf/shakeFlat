@@ -43,30 +43,6 @@ class App
         return $this;
     }
 
-    public function setPathModels($pathModels)
-    {
-        $this->gpath->MODELS = rtrim($pathModels, " /") . "/";
-        return $this;
-    }
-
-    public function setPathDatabases($pathDatabases)
-    {
-        $this->gpath->DATATABLES = rtrim($pathDatabases, " /") . "/";
-        return $this;
-    }
-
-    public function setPathModules($pathModules)
-    {
-        $this->gpath->MODULES = rtrim($pathModules . " /") . "/";
-        return $this;
-    }
-
-    public function setPathTemplates($pathTemplates)
-    {
-        $this->template->setPathTemplates($pathTemplates);
-        return $this;
-    }
-
     public function setLayoutFile($layoutFile)
     {
         $this->template->setLayoutFile($layoutFile);
@@ -107,19 +83,19 @@ class App
         L::defaultErrorMessage($msg);
     }
 
-    public function setFilePathTranslation($filePath)
-    {
-        $translation = Translation::getInstance();
-        $translation->setFilePathTranslation($filePath);
-        return $this;
-    }
-
     // Select the language to use when outputting results.
     // You need a translation file defined in translation session in config.ini.
     public function setTranslationLang($lang = null)
     {
-        $this->template->setTranslationLang($lang);
+        $translation = Translation::getInstance();
+        $translation->setTranslationLang($lang);
         return $this;
+    }
+
+    public function getTranslationLang()
+    {
+        $translation = Translation::getInstance();
+        return $translation->getTranslationLang();
     }
 
     public function setCharset($charset)

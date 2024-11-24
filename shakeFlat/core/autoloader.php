@@ -32,7 +32,6 @@ spl_autoload_register(function($class) {
         case "shakeFlat\Log" :
         case "shakeFlat\LogQuery" :
         case "shakeFlat\LogLevel" :     require_once SHAKEFLAT_PATH . "/core/log.php"; break;
-
         case "shakeFlat\Util" :         require_once SHAKEFLAT_PATH . "/core/util.php"; break;
 
         default :
@@ -43,6 +42,9 @@ spl_autoload_register(function($class) {
             } elseif (substr($class, 0, 20) == "shakeFlat\datatables") {
                 $dataTableName = substr($class, 21);
                 require_once $gpath->DATATABLES . "{$dataTableName}.php";
+            } elseif (substr($class, 0, 14) == "shakeFlat\libs") {
+                $dataTableName = substr($class, 15);
+                require_once $gpath->LIBS . "{$dataTableName}.php";
             }
     }
 });
