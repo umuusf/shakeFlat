@@ -331,11 +331,12 @@ body {
                 > .list-group-item-text { font-size:1.0rem; position:relative; top:-1px; margin-left:10px; }
             }
             > .list-group { margin-left:1.15rem; }
-            > [data-bs-toggle="collapse"]::after { float:right; padding-right:0px; padding-top:5px; font-family:"Bootstrap-icons"; }
+            > [data-bs-toggle="collapse"]::after { float:right; padding-right:0px; padding-top:0px; font-family:"Bootstrap-icons"; }
             > [data-bs-toggle="collapse"].hide::after { display:none; }
             > [data-bs-toggle="collapse"].list-group-item::after { content:"\F22D"; }
             > [data-bs-toggle="collapse"].list-group-item.open::after { content:"\F229"; }
             > .list-group-gap { height:0.5rem; }
+            .list-group-item-icon { width: 20px; text-align: center; }
         }
     }
     .shakeflat-sidebar-blind { opacity: 0.65; display:none; position:fixed; left:0; top:0; width:100%; height:100%; z-index:100; background-color:var(--sf-left-sidebar-blind-bg-color); }

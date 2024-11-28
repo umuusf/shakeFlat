@@ -35,8 +35,8 @@ class Translation
         $this->translationLang = null;
 
         $this->setFilePathTranslation(__DIR__ . "/system_translation.json");
-        if (isset(SHAKEFLAT_ENV["path"]["translation_file"])) $this->setFilePathTranslation(SHAKEFLAT_PATH . trim(SHAKEFLAT_ENV["path"]["translation_file"]));
-        if (isset(SHAKEFLAT_ENV["config"]["default_language"])) $this->setTranslationLang(SHAKEFLAT_ENV["config"]["default_language"]);
+        if (SHAKEFLAT_ENV["path"]["translation_file"] ?? false) $this->setFilePathTranslation(SHAKEFLAT_PATH . trim(SHAKEFLAT_ENV["path"]["translation_file"]));
+        if (SHAKEFLAT_ENV["config"]["default_language"] ?? false) $this->setTranslationLang(SHAKEFLAT_ENV["config"]["default_language"]);
     }
 
     private function setFilePathTranslation($filePath)

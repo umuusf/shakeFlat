@@ -220,14 +220,14 @@ if (array_key_exists("select", $sfThemeCookie ?? []) && ($sfThemeCookie["select"
                 ?>
 
                 <a class="list-group-item<?php echo $active; ?>" href="<?php echo $menu["link"]; ?>"<?php echo $dataToggle; ?>>
-                    <?php echo $menu["icon"] ?? ""; ?><span class="list-group-item-text"><?php echo $menu["title"] ?? ""; ?></span>
+                    <span class="list-group-item-icon"><?php echo $menu["icon"] ?? ""; ?></span><span class="list-group-item-text"><?php echo $menu["title"] ?? ""; ?></span>
                 </a>
                 <?php
                     } else {
                 ?>
 
                 <div class="list-group-item<?php echo $active; ?>"<?php echo $dataToggle; ?>>
-                    <?php echo $menu["icon"] ?? ""; ?><span class="list-group-item-text"><?php echo $menu["title"] ?? ""; ?></span>
+                    <span class="list-group-item-icon"><?php echo $menu["icon"] ?? ""; ?></span><span class="list-group-item-text"><?php echo $menu["title"] ?? ""; ?></span>
                 </div>
 
                 <?php

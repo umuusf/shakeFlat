@@ -174,9 +174,8 @@ class L
 
     private static function getTranslation($output)
     {
-        $template = Template::getInstance();
-        $lang = $template->getTranslationLang();
         $translation = Translation::getInstance();
+        $lang = $translation->getTranslationLang();
         if ($lang) {
             if (is_array($output)) {
                 $output = json_decode($translation->convert(json_encode($output, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE), $lang), true);
