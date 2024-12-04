@@ -143,6 +143,7 @@ body {
     .sfdt-floating {
         position: relative;
         margin-left: .5rem;
+        height: calc(3.5rem + calc(var(--bs-border-width)* 2));
         > div.sfdt-plaintext {
             padding: 1.625rem 0 .625rem .3rem;
             display: block;
@@ -152,10 +153,10 @@ body {
             line-height: 1.25;
         }
         > div.sfdt-label {
-            position: absolute;
+            position: relative;
             pointer-events: none;
-            top: .2rem;
-            left: .3rem;
+            margin-top: -3.2rem;
+            margin-left: 0.25rem;
             opacity:.65;
             font-size: 0.85rem;
         }

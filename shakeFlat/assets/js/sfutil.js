@@ -226,6 +226,7 @@ Number.prototype.numberFormatX = function() {
 //     let formattedDate = dateStr.formatDate("YYYY년 MM월 DD일 HH시 mm분 ss초");
 String.prototype.formatDateTime = function(toFormat) {
     let dateStr = this;
+    if (dateStr == null || dateStr == "" || dateStr == "0000-00-00 00:00:00") return "";
     let date = new Date(dateStr);
     let year = date.getFullYear();
     let month = date.getMonth() + 1;
