@@ -839,6 +839,7 @@ class DataTablesEditColumn
     private $controlStyle;
     private $enableInputMask;
     private $defaultValue;
+    private $comment;
 
     public function __construct($tableId, $editId, $alias)
     {
@@ -854,6 +855,7 @@ class DataTablesEditColumn
         $this->controlStyle = [];
         $this->enableInputMask = false;
         $this->options = [];
+        $this->comment = "";
     }
 
 
@@ -954,6 +956,13 @@ class DataTablesEditColumn
         return $this;
     }
 
+    public function comment($comment = null)
+    {
+        if ($comment === null) return $this->comment;
+        $this->comment = $comment;
+        return $this;
+    }
+
     public function html($tableColumns)
     {
         $class = implode(" ", $this->class);    if ($class) $class = " " . $class;
@@ -961,12 +970,23 @@ class DataTablesEditColumn
         $controlStyle = "";     if ($this->controlStyle) $controlStyle = " style=\"" . implode(" ", $this->controlStyle) . "\"";
         $required = "";         if ($this->required) $required = " required";
         $title = $this->title;  if (!$title) $title = $tableColumns[$this->alias]->title();
+
+        $commentHtml = "";
+        if ($this->comment) {
+            $commentHtml = <<<EOD
+
+                                        <small class="text-body-secondary ms-2">{$this->comment}</small>
+                EOD;
+        }
+
+        $html = "";
         switch($this->type) {
             case "hidden" :
-                return <<<EOD
+                $html = <<<EOD
 
                                     <input type="hidden" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}" value="{$this->defaultValue}"{$controlOption}>
                 EOD;
+                break;
             case "text" :
             case "number" :
             case "email" :
@@ -976,43 +996,49 @@ class DataTablesEditColumn
             case "month" :
             case "password" :
             case "tel" :
-                return <<<EOD
+                $html = <<<EOD
 
                                     <div class="col-auto">
                                         <div class="form-floating">
                                             <input type="{$this->type}" class="form-control{$class}" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}" placeholder="" value="{$this->defaultValue}"{$required}{$controlOption}{$controlStyle} autocomplete="off">
                                             <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}">{$title}</label>
                                         </div>
+                                        {$commentHtml}
                                     </div>
                     EOD;
+                break;
             case "textarea" :
-                return <<<EOD
+                $html = <<<EOD
 
                                     <div class="col-auto">
                                         <div class="form-floating">
                                             <textarea type="{$this->type}" class="form-control{$class}" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}" placeholder="" {$required}{$controlOption}{$controlStyle} autocomplete="off">{$this->defaultValue}</textarea>
                                             <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}">{$title}</label>
                                         </div>
+                                        {$commentHtml}
                                     </div>
                     EOD;
+                break;
             case "file" :
-                return <<<EOD
+                $html = <<<EOD
 
                                     <div class="col-auto">
                                         <div class="sfdt-floating-file{$required}">
                                             <input type="file" class="form-control{$class}" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}" placeholder="" value="{$this->defaultValue}"{$required}{$controlOption}{$controlStyle} autocomplete="off">
                                             <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}">{$title}</label>
                                         </div>
+                                        {$commentHtml}
                                     </div>
                     EOD;
+                break;
             case "checkbox" :
-                $html = "";
+                $htmlSub = "";
                 $idx = 1;
                 if (!$this->options) L::system("[:dtedit:DataTablesEditColumn {$this->editId} {$this->alias} checkbox options not defined.:]");
                 if (count($this->options) > 1) $name = "{$this->alias}[]"; else $name = "{$this->alias}";
                 foreach($this->options as $value => $text) {
                     if ($value === $this->defaultValue) $checked = " checked"; else $checked = "";
-                    $html .= <<<EOD
+                    $htmlSub .= <<<EOD
 
                                                 <div class="form-check form-check-inline">
                                                     <input class="form-check-input" type="checkbox" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-{$idx}" name="{$name}" value="{$value}"{$checked}{$controlOption}{$controlStyle}>
@@ -1021,22 +1047,24 @@ class DataTablesEditColumn
                         EOD;
                     $idx++;
                 }
-                return <<<EOD
+                $html = <<<EOD
 
                                     <div class="col-auto me-3">
                                         <div class="sfdt-floating-checkbox{$required}">
                                             <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-1">{$title}</label>
-                                            {$html}
+                                            {$htmlSub}
                                         </div>
+                                        {$commentHtml}
                                     </div>
                     EOD;
+                break;
             case "radio" :
-                $html = "";
+                $htmlSub = "";
                 $idx = 1;
                 if (!$this->options) L::system("[:dtedit:DataTablesEditColumn {$this->editId} {$this->alias} radio options not defined.:]");
                 foreach($this->options as $value => $text) {
                     if ($value === $this->defaultValue) $checked = " checked"; else $checked = "";
-                    $html .= <<<EOD
+                    $htmlSub .= <<<EOD
 
                                                 <div class="form-check form-check-inline">
                                                     <input class="form-check-input" type="radio" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-{$idx}" name="{$this->alias}" value="{$value}"{$required}{$checked}{$controlOption}{$controlStyle}>
@@ -1045,15 +1073,17 @@ class DataTablesEditColumn
                         EOD;
                     $idx ++;
                 }
-                return <<<EOD
+                $html = <<<EOD
 
                                     <div class="col-auto me-3">
                                         <div class="sfdt-floating-radio{$required}">
                                             <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-1">{$title}</label>
-                                            {$html}
+                                            {$htmlSub}
                                         </div>
+                                        {$commentHtml}
                                     </div>
                     EOD;
+                break;
             case "select" :
                 if (!$this->options) L::system("[:dtedit:DataTablesEditColumn {$this->editId} {$this->alias} select options not defined.:]");
                 $optionArr = [];
@@ -1063,7 +1093,7 @@ class DataTablesEditColumn
                     $optionArr[] = "<option value='{$value}'{$selected}>{$text}</option>";
                 }
                 $optionHtml = implode("\n                            ", $optionArr);
-                return <<<EOD
+                $html = <<<EOD
 
                                         <div class="col-auto">
                                             <div class="form-floating">
@@ -1072,9 +1102,13 @@ class DataTablesEditColumn
                                                 </select>
                                                 <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}">{$title}</label>
                                             </div>
+                                            {$commentHtml}
                                         </div>
                     EOD;
+                break;
         }
+
+        return $html;
     }
 }
 
