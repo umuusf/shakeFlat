@@ -3,6 +3,7 @@ namespace shakeFlat;
 use shakeFlat\L;
 use shakeFlat\Translation;
 use shakeFlat\Param;
+use shakeFlat\TransactionDBList;
 
 class DataTablesRenderButton
 {
@@ -2108,28 +2109,68 @@ class DataTables
 
     private function opDetailView()
     {
+        $dbList = array();
+        $tdbList = TransactionDBList::getInstance();
+        if ($tdbList->list()) {
+            foreach($tdbList->list() as $connectionName) {
+                $db = DB::getInstance($connectionName);
+                $db->beginTransaction();
+                $dbList[] = $db;
+            }
+        }
+
         list($btnId, $queryFunction, $params) = $this->opQueryParams();
         $res = Response::getInstance();
         $res->queryData = call_user_func_array([ $this, $queryFunction ], [ $params, $btnId ]);
         $template = Template::getInstance();
         $template->setMode(Template::MODE_AJAX);
         $template->displayResult();
+
+        $modtList = Modt::instanceList();
+        if ($modtList) foreach($modtList as $class => $pks) foreach($pks as $pk => $modt) $modt->update();
+        if ($dbList) foreach($dbList as $db) $db->commit();
+
         exit;
     }
 
     private function opModify()
     {
+        $dbList = array();
+        $tdbList = TransactionDBList::getInstance();
+        if ($tdbList->list()) {
+            foreach($tdbList->list() as $connectionName) {
+                $db = DB::getInstance($connectionName);
+                $db->beginTransaction();
+                $dbList[] = $db;
+            }
+        }
+
         list($btnId, $queryFunction, $params) = $this->opQueryParams();
         $res = Response::getInstance();
         $res->queryData = call_user_func_array([ $this, $queryFunction ], [ $params, $btnId ]);
         $template = Template::getInstance();
         $template->setMode(Template::MODE_AJAX);
         $template->displayResult();
+
+        $modtList = Modt::instanceList();
+        if ($modtList) foreach($modtList as $class => $pks) foreach($pks as $pk => $modt) $modt->update();
+        if ($dbList) foreach($dbList as $db) $db->commit();
+
         exit;
     }
 
     private function opSubmitForModify()
     {
+        $dbList = array();
+        $tdbList = TransactionDBList::getInstance();
+        if ($tdbList->list()) {
+            foreach($tdbList->list() as $connectionName) {
+                $db = DB::getInstance($connectionName);
+                $db->beginTransaction();
+                $dbList[] = $db;
+            }
+        }
+
         $param = Param::getInstance();
         $param->checkKeyValue('sfdtBtnId', Param::TYPE_STRING);
 
@@ -2144,6 +2185,11 @@ class DataTables
         $template = Template::getInstance();
         $template->setMode(Template::MODE_AJAX);
         $template->displayResult();
+
+        $modtList = Modt::instanceList();
+        if ($modtList) foreach($modtList as $class => $pks) foreach($pks as $pk => $modt) $modt->update();
+        if ($dbList) foreach($dbList as $db) $db->commit();
+
         exit;
     }
 
@@ -2151,6 +2197,16 @@ class DataTables
     // Receives an ajax call from the submit action of the add record form and returns a response to it.
     private function opSubmitForAddRecord()
     {
+        $dbList = array();
+        $tdbList = TransactionDBList::getInstance();
+        if ($tdbList->list()) {
+            foreach($tdbList->list() as $connectionName) {
+                $db = DB::getInstance($connectionName);
+                $db->beginTransaction();
+                $dbList[] = $db;
+            }
+        }
+
         $param = Param::getInstance();
         $btnId = $param->sfdtBtnId;
         if (!isset($this->extraButtons[$btnId])) L::system("[:dtaddrecord:Extra button {$btnId} not found.:]");
@@ -2163,6 +2219,11 @@ class DataTables
         $template = Template::getInstance();
         $template->setMode(Template::MODE_AJAX);
         $template->displayResult();
+
+        $modtList = Modt::instanceList();
+        if ($modtList) foreach($modtList as $class => $pks) foreach($pks as $pk => $modt) $modt->update();
+        if ($dbList) foreach($dbList as $db) $db->commit();
+
         exit;
     }
 
@@ -2325,6 +2386,16 @@ class DataTables
 
     private function opColumnConfigSave()
     {
+        $dbList = array();
+        $tdbList = TransactionDBList::getInstance();
+        if ($tdbList->list()) {
+            foreach($tdbList->list() as $connectionName) {
+                $db = DB::getInstance($connectionName);
+                $db->beginTransaction();
+                $dbList[] = $db;
+            }
+        }
+
         $param = Param::getInstance();
         $param->checkKeyValue('data', Param::TYPE_STRING);
 
@@ -2336,11 +2407,26 @@ class DataTables
         $template = Template::getInstance();
         $template->setMode(Template::MODE_AJAX);
         $template->displayResult();
+
+        $modtList = Modt::instanceList();
+        if ($modtList) foreach($modtList as $class => $pks) foreach($pks as $pk => $modt) $modt->update();
+        if ($dbList) foreach($dbList as $db) $db->commit();
+
         exit;
     }
 
     private function opColumnConfigLoad()
     {
+        $dbList = array();
+        $tdbList = TransactionDBList::getInstance();
+        if ($tdbList->list()) {
+            foreach($tdbList->list() as $connectionName) {
+                $db = DB::getInstance($connectionName);
+                $db->beginTransaction();
+                $dbList[] = $db;
+            }
+        }
+
         if (!$this->columnConfigLoadFunction || !is_callable([ $this, $this->columnConfigLoadFunction ])) L::system("[:dt:Column config load/save function is not callable.:]");
         $result = call_user_func([ $this, $this->columnConfigLoadFunction ]);
         if (!$result || $result == "undefined") $result = "";
@@ -2350,6 +2436,11 @@ class DataTables
         $template = Template::getInstance();
         $template->setMode(Template::MODE_AJAX);
         $template->displayResult();
+
+        $modtList = Modt::instanceList();
+        if ($modtList) foreach($modtList as $class => $pks) foreach($pks as $pk => $modt) $modt->update();
+        if ($dbList) foreach($dbList as $db) $db->commit();
+
         exit;
     }
 }

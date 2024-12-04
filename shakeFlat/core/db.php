@@ -10,6 +10,33 @@ use shakeFlat\L;
 use \PDO;
 use \Exception;
 
+class TransactionDBList
+{
+    private $transactionDBList = array();
+
+    public static function getInstance()
+    {
+        static $oInstance = null;
+        if ($oInstance === null) $oInstance = new TransactionDBList();
+        return $oInstance;
+    }
+
+    private function __construct()
+    {
+        $this->transactionDBList = array();
+    }
+
+    public function add($connectionName)
+    {
+        $this->transactionDBList[] = $connectionName;
+    }
+
+    public function list()
+    {
+        return $this->transactionDBList;
+    }
+}
+
 class DB
 {
     private $dbh = null;
@@ -178,6 +205,7 @@ class DB
 
     public function beginTransaction()
     {
+        if ($this->dbh->inTransaction()) return true;
         return $this->dbh->beginTransaction();
     }
 

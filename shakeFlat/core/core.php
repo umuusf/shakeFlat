@@ -10,6 +10,7 @@ namespace shakeFlat;
 use shakeFlat\Template;
 use shakeFlat\Router;
 use shakeFlat\L;
+use shakeFlat\TransactionDBList;
 use shakeFlat\DB;
 use shakeFlat\Modt;
 use shakeFlat\Util;
@@ -17,13 +18,11 @@ use shakeFlat\Translation;
 
 class App
 {
-    private $transactionDB  = array();
     private $template       = null;
     private $gpath          = null;
 
     public function __construct()
     {
-        $this->transactionDB = array();
         $this->gpath = GPath::getInstance();
         $this->template = Template::getInstance();
         $this->template->setMode(Template::MODE_WEB);
@@ -39,7 +38,8 @@ class App
     public function setTransaction($connectionName = "default")
     {
         if (!isset(SHAKEFLAT_ENV["database"]["connection"][$connectionName])) L::system("[:DB connection information is not defined in config.ini.:]", array( "connection" => $connectionName ));
-        $this->transactionDB[] = $connectionName;
+        $tdbList = TransactionDBList::getInstance();
+        $tdbList->add($connectionName);
         return $this;
     }
 
@@ -109,8 +109,9 @@ class App
     public function execModule()
     {
         $dbList = array();
-        if ($this->transactionDB) {
-            foreach($this->transactionDB as $connectionName) {
+        $tdbList = TransactionDBList::getInstance();
+        if ($tdbList->list()) {
+            foreach($tdbList->list() as $connectionName) {
                 $db = DB::getInstance($connectionName);
                 $db->beginTransaction();
                 $dbList[] = $db;
