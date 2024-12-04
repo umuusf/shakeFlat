@@ -44,6 +44,7 @@ function __sfConfig__init()
     $gpath->MODELS           = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["models"]       ?? "sample/models", " /") . "/";
     $gpath->DATATABLES       = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["datatables"]   ?? "sample/datatables", " /") . "/";
     $gpath->STORAGE          = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["storage"]      ?? "sample/storage", " /") . "/";
+    $gpath->LIBS             = SHAKEFLAT_PATH . rtrim(SHAKEFLAT_ENV["path"]["libs"]         ?? "sample/libs", " /") . "/";
 
     __sfConfig__checkStorage();
 }

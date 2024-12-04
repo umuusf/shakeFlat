@@ -134,6 +134,12 @@ body {
     .form-floating textarea:required:focus + label::after,
     .form-floating textarea:required:not(:placeholder-shown) + label::after,
     .form-floating select:required:not(:placeholder-shown) + label::after,
+    .sfdt-floating-checkbox.required > label::after,
+    .sfdt-floating-radio.required > label::after,
+    .sfdt-floating-file.required > label::after {
+        content: " *"; color: red; font-weight: bold; position: relative; top: -0.5rem; left: -0.1rem; font-size: 0.8rem; opacity: 1!important; transform: scale(1)!important;
+    }
+
     .sfdt-floating {
         position: relative;
         margin-left: .5rem;
@@ -153,11 +159,6 @@ body {
             opacity:.65;
             font-size: 0.85rem;
         }
-    }
-    .sfdt-floating-checkbox.required > label::after,
-    .sfdt-floating-radio.required > label::after,
-    .sfdt-floating-file.required > label::after {
-        content: " *"; color: red; font-weight: bold; position: relative; top: -0.5rem; left: -0.1rem; font-size: 0.8rem; opacity: 1!important; transform: scale(1)!important;
     }
 
     #sfdt-modal-column-config {

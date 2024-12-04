@@ -1810,7 +1810,7 @@ class DataTables
 
     private function makeCodeCustomSearch()
     {
-        if (!$this->customSearch) return "";
+        if (!$this->customSearch) return [ "html" => "", "isEnableInputMask" => false ];
 
         if (!$this->layoutCustomSearch) $this->layoutCustomSearch = array_keys($this->customSearch);
 

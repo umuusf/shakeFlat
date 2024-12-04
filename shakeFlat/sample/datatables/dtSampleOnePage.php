@@ -104,7 +104,7 @@ class dtSampleOnePage extends DataTables
         $addRecord->column("phone")     ->title("전화번호")->tel()->required();//->mask("999-999[9]-9999");
         $addRecord->column("address")   ->title("주소")->text()->widthRem(25);
         $addRecord->column("hobby")     ->title("취미")->checkbox()->options([ "a"=>"독서", "b"=>"영화감상", "c"=>"등산" ])->defaultValue("a");
-        $addRecord->column("status")    ->title("상태")->radio()->options([ "active"=>"Active", "banned"=>"Banned", "inactive"=>"Inactive" ])->defaultValue("Active");
+        $addRecord->column("status")    ->title("상태")->required()->radio()->options([ "active"=>"Active", "banned"=>"Banned", "inactive"=>"Inactive" ])->defaultValue("Active");
         $addRecord->column("city")      ->title("도시")->select()->options([ "a"=>"서울특별시", "b"=>"부산직할시", "c"=>"용인특례시" ])->widthRem(20);
         $addRecord->column("attach")    ->title("첨부파일")->file();
         $addRecord->column("jumin")     ->title("주민등록번호")->text()->mask("999999-9999999");

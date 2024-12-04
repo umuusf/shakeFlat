@@ -245,7 +245,7 @@ if (array_key_exists("select", $sfThemeCookie ?? []) && ($sfThemeCookie["select"
                     ?>
 
                     <a class="list-group-item<?php echo $submenu["active"]; ?>" href="<?php echo $submenu["link"]; ?>">
-                        <span class="list-group-item-text"><?php echo $submenu["title"]; ?></span>
+                        <span class="list-group-item-icon-sub"><i class="fa-solid fa-angle-right"></i></span><span class="list-group-item-text sub"><?php echo $submenu["title"]; ?></span>
                     </a>
                     <?php
                         } else {
