@@ -314,7 +314,7 @@ class DataTablesRenderButton
                                         sfdtSetDefaultValue($("#sfdt-edit-{$this->tableId}-{$this->btnId}-"+alias+"-1[name='"+alias+"']"), txt);
                                     } else if (types[alias] == 'checkbox') {
                                         sfdtSetDefaultValue($("#sfdt-edit-{$this->tableId}-{$this->btnId}-"+alias+"-1[name='"+alias+"[]']"), txt);
-                                    } else {
+                                    } else if (types[alias] != 'password') {
                                         sfdtSetDefaultValue($("#sfdt-edit-{$this->tableId}-{$this->btnId}-"+alias), txt);
                                     }
                                 }
