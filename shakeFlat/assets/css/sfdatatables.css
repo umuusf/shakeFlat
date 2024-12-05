@@ -141,24 +141,18 @@ body {
     }
 
     .sfdt-floating {
-        position: relative;
         margin-left: .5rem;
-        height: calc(3.5rem + calc(var(--bs-border-width)* 2));
-        > div.sfdt-plaintext {
-            padding: 1.625rem 0 .625rem .3rem;
-            display: block;
-            width: 100%;
-            margin-bottom: 0;
-            height: calc(3.5rem + calc(var(--bs-border-width)* 2));
-            line-height: 1.25;
-        }
+        width: calc(100% + 1rem);
         > div.sfdt-label {
-            position: relative;
             pointer-events: none;
-            margin-top: -3.2rem;
-            margin-left: 0.25rem;
-            opacity:.65;
+            margin-left: 0rem;
+            opacity: .65;
             font-size: 0.85rem;
+        }
+        > div.sfdt-plaintext {
+            display: block;
+            line-height: 1.25;
+            min-height: 1.25rem;
         }
     }
 
