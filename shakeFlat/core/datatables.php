@@ -22,6 +22,7 @@ class DataTablesRenderButton
     private $style;
     private $editColumn;
     private $layout;
+    private $confirmMsg;        // for delete
 
     public function __construct($tableId, $columnAlias, $btnId)
     {
@@ -40,12 +41,14 @@ class DataTablesRenderButton
         $this->style = [];
         $this->editColumn = [];
         $this->layout = [];
+        $this->confirmMsg = "";
 
         $this->dataset("button-id", $btnId);
     }
 
     public function typeDetailVlew() { $this->type = "detailView"; return $this; }
     public function typeModify() { $this->type = "modify"; return $this; }
+    public function typeDelete() { $this->type = "delete"; return $this; }
 
     public function keyParams($keyParams = null)
     {
@@ -114,6 +117,13 @@ class DataTablesRenderButton
         return $this->editColumn[$alias];
     }
 
+    public function confirmMsg($msg = null)
+    {
+        if ($msg === null) return $this->confirmMsg;
+        $this->confirmMsg = $msg;
+        return $this;
+    }
+
     public function layout($layout) { $this->layout = $layout; return $this; }
 
 
@@ -136,6 +146,7 @@ class DataTablesRenderButton
     {
         if ($this->type === "detailView") return $this->_codeDetailView($tableColumns, $ajaxUrl, $deliverParameters);
         else if ($this->type === "modify") return $this->_codeModify($tableColumns, $ajaxUrl, $deliverParameters);
+        else if ($this->type === "delete") return $this->_codeDelete($ajaxUrl, $deliverParameters);
 
         return [ "html" => "", "drawCallbackScript" => "", "script" => "" ];
     }
@@ -162,41 +173,41 @@ class DataTablesRenderButton
         if (!$this->keyParams) L::system("[:dt:Parameter for detail view({$this->btnId}) is not defined.:]");
         $paramScript = "";
         foreach($this->keyParams as $alias) {
-            $paramScript .= "param['{$alias}'] = $(this).data('{$alias}');\n            ";
+            $paramScript .= "param['{$alias}'] = $(this).data('{$alias}');\n        ";
         }
         $queryUrl = $this->queryUrl | $ajaxUrl;
         if ($queryUrl === $ajaxUrl) {
-            $paramScript .= "param['sfdtPageMode'] = 'detailView';\n            ";
+            $paramScript .= "param['sfdtPageMode'] = 'detailView';\n        ";
         }
-        $paramScript .= "param['sfdtBtnId'] = '{$this->btnId}';\n            ";
+        $paramScript .= "param['sfdtBtnId'] = '{$this->btnId}';\n        ";
 
         if ($deliverParameters) {
             foreach($deliverParameters as $k => $v) {
-                $paramScript .= "param['{$k}'] = '{$v}';\n            ";
+                $paramScript .= "param['{$k}'] = '{$v}';\n        ";
             }
         }
         $detailScript .= <<<EOD
 
-                    $(document).on("click", "button[data-button-id='{$this->btnId}']", function() {
-                        let param = {};
-                        {$paramScript}
-                        callAjax(
-                            '{$queryUrl}',
-                            param,
-                            function(result) {
-                                if (!result.data.queryData || typeof result.data.queryData !== 'object') {
-                                    alert("[:dt:queryData does not exist in the result from {$queryUrl}:]");
-                                    return;
-                                }
-                                for(let alias in result.data.queryData) {
-                                    let txt = result.data.queryData[alias];
-                                    {$formatScript}
-                                    $("#sfdt-modal-{$this->tableId}-{$this->btnId}-column-" + alias).html(txt);
-                                }
-                                $("#sfdt-modal-{$this->tableId}-{$this->btnId}").modal("show");
+                $(document).on("click", "button[data-button-id='{$this->btnId}']", function() {
+                    let param = {};
+                    {$paramScript}
+                    callAjax(
+                        '{$queryUrl}',
+                        param,
+                        function(result) {
+                            if (!result.data.queryData || typeof result.data.queryData !== 'object') {
+                                alert("[:dt:queryData does not exist in the result from {$queryUrl}:]");
+                                return;
                             }
-                        );
-                    });
+                            for(let alias in result.data.queryData) {
+                                let txt = result.data.queryData[alias];
+                                {$formatScript}
+                                $("#sfdt-modal-{$this->tableId}-{$this->btnId}-column-" + alias).html(txt);
+                            }
+                            $("#sfdt-modal-{$this->tableId}-{$this->btnId}").modal("show");
+                        }
+                    );
+                });
             EOD;
 
         $layoutHtml = "";
@@ -205,8 +216,8 @@ class DataTablesRenderButton
             return <<<EOD
                                     <div class="col-auto">
                                         <div class="sfdt-floating">
-                                            <div class="sfdt-plaintext text-nowrap" id="sfdt-modal-{$this->tableId}-{$this->btnId}-column-{$alias}"></div>
                                             <div class="sfdt-label text-nowrap">{$tableColumns[$alias]->title()}</div>
+                                            <div class="sfdt-plaintext text-nowrap" id="sfdt-modal-{$this->tableId}-{$this->btnId}-column-{$alias}"></div>
                                         </div>
                                     </div>
 
@@ -222,9 +233,11 @@ class DataTablesRenderButton
                 EOD;
                 continue;
             }
+            $mb4 = "";
+            if (is_array($this->layout) && $item !== end($this->layout)) $mb4 = " mb-4";
             $layoutHtml .= <<<EOD
 
-                                <div class="row">
+                                <div class="row{$mb4}">
 
                 EOD;
             if (is_array($item)) foreach($item as $alias) $layoutHtml .= $htmlItem($alias);
@@ -256,31 +269,30 @@ class DataTablesRenderButton
             </div>
             EOD;
 
-        return [ "html" => $detailHtml, "drawCallbackScript" => $detailScript, "script" => "" ];
+        return [ "html" => $detailHtml, "drawCallbackScript" => "", "script" => $detailScript ];
     }
 
     private function _codeModify($tableColumns, $ajaxUrl, $deliverParameters)
     {
         // modify button
-        $modifyCallbackScript = "";
         $modifyScript = "";
         $modifyHtml = "";
         if (!$this->keyParams) L::system("[:dt:Parameter for modify({$this->btnId}) is not defined.:]");
         $paramScript = "";
         $submitScript = "";
         foreach($this->keyParams as $alias) {
-            $paramScript .= "param['{$alias}'] = $(this).data('{$alias}');\n            ";
+            $paramScript .= "param['{$alias}'] = $(this).data('{$alias}');\n        ";
         }
         $queryUrl = $this->queryUrl | $ajaxUrl;
         $submitUrl = $this->submitUrl | $ajaxUrl;
-        if ($queryUrl === $ajaxUrl) $paramScript .= "param['sfdtPageMode'] = 'modify';\n            ";
+        if ($queryUrl === $ajaxUrl) $paramScript .= "param['sfdtPageMode'] = 'modify';\n        ";
         if ($submitUrl === $ajaxUrl) $submitScript .= "formData.append('sfdtPageMode', 'submitForModify');\n    ";
-        $paramScript .= "param['sfdtBtnId'] = '{$this->btnId}';\n            ";
+        $paramScript .= "param['sfdtBtnId'] = '{$this->btnId}';\n        ";
         $submitScript .= "formData.append('sfdtBtnId', '{$this->btnId}');\n    ";
 
         if ($deliverParameters) {
             foreach($deliverParameters as $k => $v) {
-                $paramScript .= "param['{$k}'] = '{$v}';\n            ";
+                $paramScript .= "param['{$k}'] = '{$v}';\n        ";
                 $submitScript .= "formData.append('{$k}', '{$v}');\n    ";
             }
         }
@@ -290,41 +302,37 @@ class DataTablesRenderButton
             $setTypesScript .= "types['{$alias}'] = '{$editColumn->type()}';\n                    ";
         }
 
-
-        $modifyCallbackScript .= <<<EOD
-
-                    $(document).on("click", "button[data-button-id='{$this->btnId}']", function() {
-                        let param = {};
-                        {$paramScript}
-                        callAjax(
-                            '{$queryUrl}',
-                            param,
-                            function(result) {
-                                if (!result.data.queryData || typeof result.data.queryData !== 'object') {
-                                    alert("[:dt:queryData does not exist in the result from {$queryUrl}:]");
-                                    return;
-                                }
-                                //console.log(result.data.queryData);
-                                $("#sfdt-form-{$this->tableId}-{$this->btnId}")[0].reset();
-                                let types = {};
-                                {$setTypesScript}
-                                for(let alias in result.data.queryData) {
-                                    let txt = result.data.queryData[alias];
-                                    if (types[alias] == 'radio') {
-                                        sfdtSetDefaultValue($("#sfdt-edit-{$this->tableId}-{$this->btnId}-"+alias+"-1[name='"+alias+"']"), txt);
-                                    } else if (types[alias] == 'checkbox') {
-                                        sfdtSetDefaultValue($("#sfdt-edit-{$this->tableId}-{$this->btnId}-"+alias+"-1[name='"+alias+"[]']"), txt);
-                                    } else if (types[alias] != 'password') {
-                                        sfdtSetDefaultValue($("#sfdt-edit-{$this->tableId}-{$this->btnId}-"+alias), txt);
-                                    }
-                                }
-                                $("#sfdt-modal-{$this->tableId}-{$this->btnId}").modal("show");
-                            }
-                        );
-                    });
-            EOD;
-
         $modifyScript .= <<<EOD
+
+                $(document).on("click", "button[data-button-id='{$this->btnId}']", function() {
+                    let param = {};
+                    {$paramScript}
+                    callAjax(
+                        '{$queryUrl}',
+                        param,
+                        function(result) {
+                            if (!result.data.queryData || typeof result.data.queryData !== 'object') {
+                                alert("[:dt:queryData does not exist in the result from {$queryUrl}:]");
+                                return;
+                            }
+                            //console.log(result.data.queryData);
+                            $("#sfdt-form-{$this->tableId}-{$this->btnId}")[0].reset();
+                            let types = {};
+                            {$setTypesScript}
+                            for(let alias in result.data.queryData) {
+                                let txt = result.data.queryData[alias];
+                                if (types[alias] == 'radio') {
+                                    sfdtSetDefaultValue($("#sfdt-edit-{$this->tableId}-{$this->btnId}-"+alias+"-1[name='"+alias+"']"), txt);
+                                } else if (types[alias] == 'checkbox') {
+                                    sfdtSetDefaultValue($("#sfdt-edit-{$this->tableId}-{$this->btnId}-"+alias+"-1[name='"+alias+"[]']"), txt);
+                                } else if (types[alias] != 'password') {
+                                    sfdtSetDefaultValue($("#sfdt-edit-{$this->tableId}-{$this->btnId}-"+alias), txt);
+                                }
+                            }
+                            $("#sfdt-modal-{$this->tableId}-{$this->btnId}").modal("show");
+                        }
+                    );
+                });
 
                 // modify submit
                 $("#sfdt-btn-{$this->tableId}-{$this->btnId}-modify-submit").click(function() {
@@ -360,6 +368,11 @@ class DataTablesRenderButton
                     }
                 });
             EOD;
+
+        $hiddenHtml = "";
+        foreach($this->editColumn as $alias => $editColumn) {
+            if ($editColumn->type() == "hidden") $hiddenHtml .= "<input type=\"hidden\" name=\"{$alias}\" id=\"sfdt-edit-{$this->tableId}-{$this->btnId}-{$alias}\" value=\"\">";
+        }
 
         $layoutHtml = "";
         if (!$this->layout) L::system("[:dt:Layout for modify({$this->btnId}) is not defined.:]");
@@ -397,6 +410,7 @@ class DataTablesRenderButton
                         </div>
                         <div class="modal-body">
                             <form id="sfdt-form-{$this->tableId}-{$this->btnId}">
+                            {$hiddenHtml}
                             {$layoutHtml}
                             </form>
                         </div>
@@ -409,7 +423,53 @@ class DataTablesRenderButton
             </div>
             EOD;
 
-        return [ "html" => $modifyHtml, "drawCallbackScript" => $modifyCallbackScript, "script" => $modifyScript ];
+        return [ "html" => $modifyHtml, "drawCallbackScript" => "", "script" => $modifyScript ];
+    }
+
+    private function _codeDelete($ajaxUrl, $deliverParameters)
+    {
+        if (!$this->keyParams) L::system("[:dt:Parameter for delete({$this->btnId}) is not defined.:]");
+        $paramScript = "";
+        foreach($this->keyParams as $alias) {
+            $paramScript .= "param['{$alias}'] = $(this).data('{$alias}');\n        ";
+        }
+        $submitUrl = $this->submitUrl | $ajaxUrl;
+        if ($submitUrl === $ajaxUrl) $paramScript .= "param['sfdtPageMode'] = 'submitForDelete';\n        ";
+        $paramScript .= "param['sfdtBtnId'] = '{$this->btnId}';\n        ";
+
+        if ($deliverParameters) {
+            foreach($deliverParameters as $k => $v) {
+                $paramScript .= "param['{$k}'] = '{$v}';\n        ";
+            }
+        }
+
+        $confirmMsg = "[:dtdelete:Are you sure you want to delete? Deleted data cannot be recovered.:]";
+        if ($this->confirmMsg) $confirmMsg = $this->confirmMsg;
+
+        $script = <<<EOD
+
+                $(document).on("click", "button[data-button-id='{$this->btnId}']", function() {
+                    let param = {};
+                    {$paramScript}
+                    console.log(param);
+                    confirm("{$confirmMsg}", function() {
+                        callAjax(
+                            '{$submitUrl}',
+                            param,
+                            function(result) {
+                                if (result.data.result != true) {
+                                    alert("[:dtdelete:Failed to delete. Please try again.:]");
+                                    return;
+                                }
+                                noti("[:dtdelete:Successfully deleted.:]", "success");
+                                sfdt['{$this->tableId}'].ajax.reload(null, false);
+                            }
+                        )
+                    });
+                });
+            EOD;
+
+        return [ "html" => "", "drawCallbackScript" => "", "script" => $script ];
     }
 }
 
@@ -589,6 +649,12 @@ class DataTablesColumn
     public function buttonModify($btnId)
     {
         $this->button($btnId)->typeModify()->title("[:dtmodify:Modify:]")->class("btn-modify");
+        return $this->button($btnId);
+    }
+
+    public function buttonDelete($btnId)
+    {
+        $this->button($btnId)->typeDelete()->title("[:dtdelete:Delete:]")->class("btn-delete");
         return $this->button($btnId);
     }
 }
@@ -1916,6 +1982,7 @@ class DataTables
                 case "submitForAddRecord" : return $this->opSubmitForAddRecord();
                 case "modify" : return $this->opModify();
                 case "submitForModify" : return $this->opSubmitForModify();
+                case "submitForDelete" : return $this->opSubmitForDelete();
                 case "detailView" : return $this->opDetailView();
                 case "columnConfigSave" : return $this->opColumnConfigSave();
                 case "columnConfigLoad" : return $this->opColumnConfigLoad();
@@ -2194,6 +2261,40 @@ class DataTables
     }
 
     private function opSubmitForModify()
+    {
+        $dbList = array();
+        $tdbList = TransactionDBList::getInstance();
+        if ($tdbList->list()) {
+            foreach($tdbList->list() as $connectionName) {
+                $db = DB::getInstance($connectionName);
+                $db->beginTransaction();
+                $dbList[] = $db;
+            }
+        }
+
+        $param = Param::getInstance();
+        $param->checkKeyValue('sfdtBtnId', Param::TYPE_STRING);
+
+        $crb = $this->opRenderButton($param->sfdtBtnId);
+        if (!$crb->submitFunction()) L::system("[:dt:Submit function(submitFunction) for button {$param->sfdtBtnId} is not defined.:]");
+        if (!is_callable([ $this, $crb->submitFunction() ])) L::system("[:dt:Submit function {$crb->submitFunction()} for button {$param->sfdtBtnId} is not callable.:]");
+
+        $result = call_user_func([ $this, $crb->submitFunction() ]);
+
+        $res = Response::getInstance();
+        $res->result = $result;
+        $template = Template::getInstance();
+        $template->setMode(Template::MODE_AJAX);
+        $template->displayResult();
+
+        $modtList = Modt::instanceList();
+        if ($modtList) foreach($modtList as $class => $pks) foreach($pks as $pk => $modt) $modt->update();
+        if ($dbList) foreach($dbList as $db) $db->commit();
+
+        exit;
+    }
+
+    private function opSubmitForDelete()
     {
         $dbList = array();
         $tdbList = TransactionDBList::getInstance();
