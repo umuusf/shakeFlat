@@ -34,6 +34,8 @@
     --sf-footer-border-color: #d0d0d0;
     --sf-custom-search-bg-color: #eeeef3;
     --sf-custom-search-text-color: #000000;
+    --sf-plain-bg-color: #eeeef3;
+    --sf-plain-text-color: #000000;
 
     --bs-border-color: #aaa;
 
@@ -52,6 +54,10 @@
         appearance: none;
         -webkit-appearance: none;
         -moz-appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23000000' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.8rem center;
+        background-size: 10%;
         background-color: var(--bs-body-bg);
         border: 1px solid var(--bs-border-color);
         color: #000;
@@ -106,6 +112,8 @@
     --sf-footer-border-color: #121212;
     --sf-custom-search-bg-color: #343741;
     --sf-custom-search-text-color: #fefefe;
+    --sf-plain-bg-color: #343741;
+    --sf-plain-text-color: #fefefe;
 
     .list-group {
         --bs-list-group-bg: #101010;
