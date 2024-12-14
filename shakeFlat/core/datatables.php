@@ -669,6 +669,9 @@ class DataTablesColumn
     public function noData() { $this->searchable = false; $this->orderable = false; return $this; }
     public function noKeyCursor() { return $this->class("sfdt-no-keys-cursor"); }
 
+    public function noSearchable() { $this->searchable = false; return $this; }
+    public function noOrderable() { $this->orderable = false; return $this; }
+
     public function renderButtons() { return $this->renderButtons; }
 
     public function button($btnId) {
