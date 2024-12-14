@@ -65,18 +65,18 @@ $(document).ready(function() {
         $(this).parents('div').prev('input').val(page);
     });
 
-    $(".sfdt-custom-search-item>select[data-sfdt-custom-search-ex!='true']").on("change", function() {
+    $(".sfdt-custom-search-item.sfdt-custom-search-auto-submit>select[data-sfdt-custom-search-ex!='true']").on("change", function() {
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
         let oriIdx = sfdtFindIndexForAlias(tableId, $(this).data("sfdt-alias"));
         sfdt[tableId].columns(sfdt[tableId].colReorder.transpose(oriIdx)).search($(this).val(), true, false).draw();
     });
 
-    $(".sfdt-custom-search-item>select[data-sfdt-custom-search-ex='true']").on("change", function() {
+    $(".sfdt-custom-search-item.sfdt-custom-search-auto-submit>select[data-sfdt-custom-search-ex='true']").on("change", function() {
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
         sfdt[tableId].ajax.reload();
     });
 
-    $(".sfdt-custom-search-item>input[data-sfdt-custom-search-type='string'][data-sfdt-custom-search-ex!='true']").on("keyup", function() {
+    $(".sfdt-custom-search-item.sfdt-custom-search-auto-submit>input[data-sfdt-custom-search-type='string'][data-sfdt-custom-search-ex!='true']").on("keyup", function() {
         clearTimeout(sfdtKeypressDelayTimer[$(this).attr("id")]);
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
         let alias = $(this).data("sfdt-alias");
@@ -87,7 +87,7 @@ $(document).ready(function() {
         }, 800);
     });
 
-    $(".sfdt-custom-search-item>input[data-sfdt-custom-search-type='string'][data-sfdt-custom-search-ex='true']").on("keyup", function() {
+    $(".sfdt-custom-search-item.sfdt-custom-search-auto-submit>input[data-sfdt-custom-search-type='string'][data-sfdt-custom-search-ex='true']").on("keyup", function() {
         clearTimeout(sfdtKeypressDelayTimer[$(this).attr("id")]);
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
         sfdtKeypressDelayTimer[$(this).attr("id")] = setTimeout(function() {
@@ -106,13 +106,13 @@ $(document).ready(function() {
         max: $(".sfdt-custom-search-item input[data-sfdt-custom-search-type='numberrange']").data("sfdt-numberrange-max")
     });
 
-    $(".sfdt-custom-search-item input[data-sfdt-custom-search-type='numberrange'][data-sfdt-custom-search-ex!='true']").on("apply.sfRangeSlide", function(event) {
+    $(".sfdt-custom-search-item.sfdt-custom-search-auto-submit input[data-sfdt-custom-search-type='numberrange'][data-sfdt-custom-search-ex!='true']").on("apply.sfRangeSlide", function(event) {
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
         let oriIdx = sfdtFindIndexForAlias(tableId, $(this).data("sfdt-alias"));
         sfdt[tableId].columns(sfdt[tableId].colReorder.transpose(oriIdx)).search($(this).val()).draw();
     });
 
-    $(".sfdt-custom-search-item input[data-sfdt-custom-search-type='numberrange'][data-sfdt-custom-search-ex='true']").on("apply.sfRangeSlide", function(event) {
+    $(".sfdt-custom-search-item.sfdt-custom-search-auto-submit input[data-sfdt-custom-search-type='numberrange'][data-sfdt-custom-search-ex='true']").on("apply.sfRangeSlide", function(event) {
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
         sfdt[tableId].ajax.reload();
     });
@@ -131,39 +131,57 @@ $(document).ready(function() {
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
         $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
         let oriIdx = sfdtFindIndexForAlias(tableId, $(this).data("sfdt-alias"));
-        if (oriIdx > -1) sfdt[tableId].columns(sfdt[tableId].colReorder.transpose(oriIdx)).search($(this).val()).draw();
+        if (oriIdx > -1) {
+            if ($(this).closest(".sfdt-custom-search-item").hasClass("sfdt-custom-search-auto-submit")) {
+                sfdt[tableId].columns(sfdt[tableId].colReorder.transpose(oriIdx)).search($(this).val()).draw();
+            }
+        }
     });
 
     $(".sfdt-custom-search-item>input[data-sfdt-custom-search-type='daterange'][data-sfdt-custom-search-ex='true']").on("apply.daterangepicker", function(ev, picker) {
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
         $(this).val(picker.startDate.format('YYYY-MM-DD') + ' - ' + picker.endDate.format('YYYY-MM-DD'));
-        sfdt[tableId].ajax.reload();
+        if ($(this).closest(".sfdt-custom-search-item").hasClass("sfdt-custom-search-auto-submit")) {
+            sfdt[tableId].ajax.reload();
+        }
     });
 
     $(".sfdt-custom-search-item>input[data-sfdt-custom-search-type='datetimerange'][data-sfdt-custom-search-ex!='true']").on("apply.daterangepicker", function(ev, picker) {
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
         $(this).val(picker.startDate.format('YYYY-MM-DD HH:mm') + ' - ' + picker.endDate.format('YYYY-MM-DD HH:mm'));
         let oriIdx = sfdtFindIndexForAlias(tableId, $(this).data("sfdt-alias"));
-        if (oriIdx > -1) sfdt[tableId].columns(sfdt[tableId].colReorder.transpose(oriIdx)).search($(this).val()).draw();
+        if (oriIdx > -1) {
+            if ($(this).closest(".sfdt-custom-search-item").hasClass("sfdt-custom-search-auto-submit")) {
+                sfdt[tableId].columns(sfdt[tableId].colReorder.transpose(oriIdx)).search($(this).val()).draw();
+            }
+        }
     });
 
     $(".sfdt-custom-search-item>input[data-sfdt-custom-search-type='datetimerange'][data-sfdt-custom-search-ex='true']").on("apply.daterangepicker", function(ev, picker) {
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
         $(this).val(picker.startDate.format('YYYY-MM-DD HH:mm') + ' - ' + picker.endDate.format('YYYY-MM-DD HH:mm'));
-        sfdt[tableId].ajax.reload();
+        if ($(this).closest(".sfdt-custom-search-item").hasClass("sfdt-custom-search-auto-submit")) {
+            sfdt[tableId].ajax.reload();
+        }
     });
 
     $(".sfdt-custom-search-item>input[data-sfdt-custom-search-type='daterange'][data-sfdt-custom-search-ex!='true'], .sfdt-custom-search-item>input[data-sfdt-custom-search-type='datetimerange'][data-sfdt-custom-search-ex!='true']").on("cancel.daterangepicker", function(ev, picker) {
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
         $(this).val("");
         let oriIdx = sfdtFindIndexForAlias(tableId, $(this).data("sfdt-alias"));
-        if (oriIdx) sfdt[tableId].columns(sfdt[tableId].colReorder.transpose(oriIdx)).search($(this).val()).draw();
+        if (oriIdx) {
+            if ($(this).closest(".sfdt-custom-search-item").hasClass("sfdt-custom-search-auto-submit")) {
+                sfdt[tableId].columns(sfdt[tableId].colReorder.transpose(oriIdx)).search($(this).val()).draw();
+            }
+        }
     });
 
     $(".sfdt-custom-search-item>input[data-sfdt-custom-search-type='daterange'][data-sfdt-custom-search-ex='true'], .sfdt-custom-search-item>input[data-sfdt-custom-search-type='datetimerange'][data-sfdt-custom-search-ex='true']").on("cancel.daterangepicker", function(ev, picker) {
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
         $(this).val("");
-        sfdt[tableId].ajax.reload();
+        if ($(this).closest(".sfdt-custom-search-item").hasClass("sfdt-custom-search-auto-submit")) {
+            sfdt[tableId].ajax.reload();
+        }
     });
 
     $(".sfdt-custom-search-item>input[data-sfdt-custom-search-type='daterange'][data-sfdt-custom-search-ex!='true'], .sfdt-custom-search-item>input[data-sfdt-custom-search-type='datetimerange'][data-sfdt-custom-search-ex!='true']").on("keypress", function(event) {
@@ -171,7 +189,11 @@ $(document).ready(function() {
         if ($(this).val() === '') $(this).trigger('cancel.daterangepicker');
         else if ($(this).val().length === 23) {
             let oriIdx = sfdtFindIndexForAlias(tableId, $(this).data("sfdt-alias"));
-            if (oriIdx) sfdt[tableId].columns(sfdt[tableId].colReorder.transpose(oriIdx)).search($(this).val()).draw();
+            if (oriIdx) {
+                if ($(this).closest(".sfdt-custom-search-item").hasClass("sfdt-custom-search-auto-submit")) {
+                    sfdt[tableId].columns(sfdt[tableId].colReorder.transpose(oriIdx)).search($(this).val()).draw();
+                }
+            }
         }
     });
 
@@ -179,7 +201,9 @@ $(document).ready(function() {
         let tableId = $(this).closest(".sfdt-custom-search").data("table-id");
         if ($(this).val() === '') $(this).trigger('cancel.daterangepicker');
         else if ($(this).val().length === 23) {
-            sfdt[tableId].ajax.reload();
+            if ($(this).closest(".sfdt-custom-search-item").hasClass("sfdt-custom-search-auto-submit")) {
+                sfdt[tableId].ajax.reload();
+            }
         }
     });
 
