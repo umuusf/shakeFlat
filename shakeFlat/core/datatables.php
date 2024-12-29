@@ -1516,8 +1516,8 @@ class DataTables
         $this->querySearchSQL = "";
         $this->querySearchBind = null;
 
-        $this->jsScript = "";
-        $this->jsScriptOnReady = "";
+        $this->jsScript = [];
+        $this->jsScriptOnReady = [];
     }
 
     public function containerOption($option) { $this->containerOption = $option; return $this; }
@@ -1613,8 +1613,8 @@ class DataTables
     public function columnConfigFunction($loadFunction, $saveFunction) { $this->columnConfigLoadFunction = $loadFunction; $this->columnConfigSaveFunction = $saveFunction; return $this; }
 
     // Additional JavaScript code to be executed after DataTables initialization
-    public function jsScript($script) { $this->jsScript = $script; return $this; }
-    public function jsScriptOnReady($script) { $this->jsScriptOnReady = $script; return $this; }
+    public function jsScript($script) { $this->jsScript[] = $script; return $this; }
+    public function jsScriptOnReady($script) { $this->jsScriptOnReady[] = $script; return $this; }
 
     // Create a script/html that should be output only once even if the instance is created multiple times
     private function onceOutput()
@@ -2207,6 +2207,9 @@ class DataTables
         // A script that should be output only once on the current web page.
         $once = $this->onceOutput();
 
+        // addtional js code
+        if ($this->jsScript) $jsScript = implode("\n", $this->jsScript);
+        if ($this->jsScriptOnReady) $jsScriptOnReady = implode("\n", $this->jsScriptOnReady);
 
         // Finallay, create the HTML to be output.
         $this->html = <<<EOD
@@ -2226,9 +2229,9 @@ class DataTables
                 {$scriptCsStorage}
                 {$addRecordScript}
                 {$codeColumns["script"]}
-                {$this->jsScriptOnReady}
+                {$jsScriptOnReady}
             });
-            {$this->jsScript}
+            {$jsScript}
             </script>
 
             EOD;
