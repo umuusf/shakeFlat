@@ -1453,6 +1453,9 @@ class DataTables
     private $querySearchSQL;
     private $querySearchBind;
 
+    private $jsScript;
+    private $jsScriptOnReady;
+
     // output for template
     private $html;
 
@@ -1512,6 +1515,9 @@ class DataTables
         $this->onePage = false;
         $this->querySearchSQL = "";
         $this->querySearchBind = null;
+
+        $this->jsScript = "";
+        $this->jsScriptOnReady = "";
     }
 
     public function containerOption($option) { $this->containerOption = $option; return $this; }
@@ -1606,6 +1612,9 @@ class DataTables
     // column config load/save function
     public function columnConfigFunction($loadFunction, $saveFunction) { $this->columnConfigLoadFunction = $loadFunction; $this->columnConfigSaveFunction = $saveFunction; return $this; }
 
+    // Additional JavaScript code to be executed after DataTables initialization
+    public function jsScript($script) { $this->jsScript = $script; return $this; }
+    public function jsScriptOnReady($script) { $this->jsScriptOnReady = $script; return $this; }
 
     // Create a script/html that should be output only once even if the instance is created multiple times
     private function onceOutput()
@@ -2055,14 +2064,14 @@ class DataTables
         if ($this->onePage) {
             $param = Param::getInstance();
             switch($param->sfdtPageMode) {
-                case "data" : return $this->opAjax();
-                case "submitForAddRecord" : return $this->opSubmitForAddRecord();
-                case "modify" : return $this->opModify();
-                case "submitForModify" : return $this->opSubmitForModify();
-                case "submitForDelete" : return $this->opSubmitForDelete();
-                case "detailView" : return $this->opDetailView();
-                case "columnConfigSave" : return $this->opColumnConfigSave();
-                case "columnConfigLoad" : return $this->opColumnConfigLoad();
+                case "data"                 : return $this->opAjax();
+                case "submitForAddRecord"   : return $this->opSubmitForAddRecord();
+                case "modify"               : return $this->opModify();
+                case "submitForModify"      : return $this->opSubmitForModify();
+                case "submitForDelete"      : return $this->opSubmitForDelete();
+                case "detailView"           : return $this->opDetailView();
+                case "columnConfigSave"     : return $this->opColumnConfigSave();
+                case "columnConfigLoad"     : return $this->opColumnConfigLoad();
             }
         }
 
@@ -2217,7 +2226,9 @@ class DataTables
                 {$scriptCsStorage}
                 {$addRecordScript}
                 {$codeColumns["script"]}
+                {$this->jsScriptOnReady}
             });
+            {$this->jsScript}
             </script>
 
             EOD;
