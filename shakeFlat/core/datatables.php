@@ -2208,6 +2208,8 @@ class DataTables
         $once = $this->onceOutput();
 
         // addtional js code
+        $jsScript = "";
+        $jsScriptOnReady = "";
         if ($this->jsScript) $jsScript = implode("\n", $this->jsScript);
         if ($this->jsScriptOnReady) $jsScriptOnReady = implode("\n", $this->jsScriptOnReady);
 
