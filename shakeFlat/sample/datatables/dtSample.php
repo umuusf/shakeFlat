@@ -46,8 +46,8 @@ class dtSample extends DataTables
         parent::customSearch("join_date")   ->widthRem(13)  ->dateRange();
         parent::customSearch("salary")      ->widthRem(15)  ->numberRange(0, 999999999);
 
-        parent::customSearch("join_date2")  ->widthRem(19)  ->ex()  ->datetimeRange()->title("입사일ex");
-        parent::customSearch("salary2")     ->widthRem(15)  ->ex()  ->numberRange(0, 999999999)->title("연봉ex");
+        parent::customSearch("join_date2")  ->widthRem(19)  ->query()  ->datetimeRange()->title("입사일ex");
+        parent::customSearch("salary2")     ->widthRem(15)  ->query()  ->numberRange(0, 999999999)->title("연봉ex");
 
         parent::layoutCustomSearch([
             [ "name", "phone", "status" ],

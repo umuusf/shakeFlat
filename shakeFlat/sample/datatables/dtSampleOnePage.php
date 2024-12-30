@@ -45,8 +45,8 @@ class dtSampleOnePage extends DataTables
         parent::customSearch("join_date")   ->widthRem(13)  ->dateRange();
         parent::customSearch("salary")      ->widthRem(15)  ->numberRange(0, 999999999);
 
-        parent::customSearch("join_date2")  ->widthRem(19)  ->ex("join_date")   ->datetimeRange()->title("입사일ex");
-        parent::customSearch("salary2")     ->widthRem(15)  ->ex("salary")      ->numberRange(0, 999999999)->title("연봉ex");
+        parent::customSearch("join_date2")  ->widthRem(19)  ->query("join_date")   ->datetimeRange()->title("입사일ex");
+        parent::customSearch("salary2")     ->widthRem(15)  ->query("salary")      ->numberRange(0, 999999999)->title("연봉ex");
 
         parent::layoutCustomSearch([
             [ "name", "phone", "status" ],

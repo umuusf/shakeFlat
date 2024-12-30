@@ -737,7 +737,7 @@ class DataTablesCustomSearch
     }
 
     public function alias() { return $this->alias; }
-    public function ex($exColumnQuery = null)
+    public function query($exColumnQuery = null)
     {
         if ($exColumnQuery === null) $this->exColumnQuery = $this->alias;
         else $this->exColumnQuery = $exColumnQuery;
