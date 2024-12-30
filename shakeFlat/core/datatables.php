@@ -799,7 +799,7 @@ class DataTablesCustomSearch
         if ($key === null && $value === null) return $this->options;
 
         if (is_array($key) && $value === null) {
-            $this->options = array_merge($this->options, $key);
+            $this->options = $this->options + $key;
         } else {
             $this->options[$key] = $value;
         }
