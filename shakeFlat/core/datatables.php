@@ -1769,7 +1769,7 @@ class DataTables
 
             $sumClass = [];
             if ($this->columnDefaultClass) $sumClass = $this->columnDefaultClass;
-            if ($column->class()) $sumClass += $column->class();
+            if ($column->class()) $sumClass = array_merge($sumClass, $column->class());
 
             if ($sumClass) {
                 $class = [];
