@@ -1456,6 +1456,8 @@ class DataTables
     private $jsScript;
     private $jsScriptOnReady;
 
+    private $onLoadInitSearch;
+
     // output for template
     private $html;
 
@@ -1519,6 +1521,8 @@ class DataTables
 
         $this->jsScript = [];
         $this->jsScriptOnReady = [];
+
+        $this->onLoadInitSearch = true;
     }
 
     public function containerOption($option) { $this->containerOption = $option; return $this; }
@@ -1563,6 +1567,8 @@ class DataTables
     public function exportExcelAction($action) { $this->exportActionExcel = $action; return $this; }
     public function exportExcelTitle($title) { $this->exportTitleExcel = $title; return $this; }
     public function exportExcelFilename($filename) { $this->exportFilenameExcel = $filename; return $this; }
+
+    public function searchKeep() { $this->onLoadInitSearch = false; return $this; }
 
     /*
      * extra buttons
@@ -2107,8 +2113,22 @@ class DataTables
         // Organize options
         $options = $this->options;
 
+        // Replace the parts of PHP's array that cannot be converted directly to JSON.
+        $replaceFrom = $replaceTo = [];
+
+        if ($this->onLoadInitSearch) {
+            $options["stateSaveParams"] = "stateSaveParams-function";
+            $replaceFrom[] = "\"stateSaveParams\": \"stateSaveParams-function\"";
+            $replaceTo[] = "\"stateSaveParams\": function(settings, data) { data.search.search = ''; }";
+        }
+
         $options["ajax"] = "ajax-function";
+        $replaceFrom[] = "\"ajax\": \"ajax-function\"";
+        $replaceTo[] = "\"ajax\": {$this->makeCodeAjax()}";
+
         $options["layout"] = "layout-code";
+        $replaceFrom[] = "\"layout\": \"layout-code\"";
+        $replaceTo[] = "\"layout\": {$this->makeCodeLayout()}";
 
         $codeColumns = $this->makeCodeColumns();
         $options["columns"] = $codeColumns["list"];
@@ -2125,12 +2145,6 @@ class DataTables
         // Convert the options to a JSON string.
         $optionsStr = json_encode($options, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT);
 
-
-        // Replace the parts of PHP's array that cannot be converted directly to JSON.
-        $replaceFrom = $replaceTo = [];
-
-        $replaceFrom[] = "\"ajax\": \"ajax-function\"";     $replaceTo[] = "\"ajax\": {$this->makeCodeAjax()}";
-        $replaceFrom[] = "\"layout\": \"layout-code\"";     $replaceTo[] = "\"layout\": {$this->makeCodeLayout()}";
         if ($codeColumns["render"]) {
             foreach($codeColumns["render"] as $alias => $to) {
                 $replaceFrom[] = "\"rendering-{$alias}\"";
@@ -2159,7 +2173,7 @@ class DataTables
             }
         }
 
-        if ($this->options["stateSave"]) {
+        if (!$this->onLoadInitSearch) {
             $drawCallbackScript .= <<<EOD
 
                         let state = sfdt['{$this->tableId}'].state();
@@ -2210,7 +2224,7 @@ class DataTables
         $containerOption = $this->containerOption;
         if ($containerOption) $containerOption = " {$containerOption}";
         $scriptCsStorage = "";
-        if ($this->options["stateSave"] && $this->customSearch) {
+        if (!$this->onLoadInitSearch)
             $scriptCsStorage = <<<EOD
 
                     let storage = localStorage.getItem('sfdt-{$this->tableId}-custom-search-ex');
@@ -2220,6 +2234,10 @@ class DataTables
                             sfdtSetDefaultValue($("#sfdt-{$this->tableId}-custom-search-" + key), csEx[key]);
                         }
                     }
+                EOD;
+
+        if ($this->customSearch)
+            $scriptCsStorage = <<<EOD
 
                     $(document).on("hide.bs.collapse", "div.sfdt-custom-search.collapse", function () {
                         localStorage.setItem('sfdt-{$this->tableId}-custom-search-onoff', 0);
@@ -2231,7 +2249,6 @@ class DataTables
                         $("#btn-sfdt-custom-search-detail-collaps").html("[:dt:Detail Search:] <i class='fa-regular fa-square-caret-up'></i></i>");
                     });
                 EOD;
-        }
 
         // A script that should be output only once on the current web page.
         $once = $this->onceOutput();

@@ -36,24 +36,7 @@ $(document).ready(function() {
     }
 
     $(document).on("click", ".btn-sfdt-search-reset", function() {
-        let tableId = $(this).data("table-id");
-        $(".sfdt-"+tableId+"-custom-search").each(function() {
-            if ($(this).data("sfdt-custom-search-ex") != true) {
-                let alias = $(this).data("sfdt-alias");
-                let oriIdx = sfdtFindIndexForAlias(tableId, alias);
-                sfdt[tableId].columns(sfdt[tableId].colReorder.transpose(oriIdx)).search("");
-            }
-            switch($(this).prop("tagName")) {
-                case "INPUT" :
-                    if ($(this).attr("type") === 'text' || $(this).attr("type") === 'search') $(this).val("");
-                    break;
-                case "SELECT" :
-                    if ($(this).data("sfselect2") == true) $(this).val($(this).find("option:first").val()).trigger("change.select2");
-                    else $(this).find("option:first").prop("selected", true);
-                    break;
-            }
-        });
-        sfdt[tableId].search("").draw();
+        sfdtSearchReset($(this).data("table-id"));
     });
 
     $(document).on("click", "button.sfdt-btn-pagejump", function() {
@@ -595,4 +578,46 @@ async function sfdtColumnConfigSave(tableId, data)
         );
         return res;
     }
+}
+
+function sfdtSearchReset(tableId)
+{
+    $(".sfdt-"+tableId+"-custom-search").each(function() {
+        if ($(this).data("sfdt-custom-search-ex") != true) {
+            let alias = $(this).data("sfdt-alias");
+            let oriIdx = sfdtFindIndexForAlias(tableId, alias);
+            sfdt[tableId].columns(sfdt[tableId].colReorder.transpose(oriIdx)).search("");
+        }
+        switch($(this).prop("tagName")) {
+            case "INPUT" :
+                if ($(this).attr("type") === 'text' || $(this).attr("type") === 'search') $(this).val("");
+                break;
+            case "SELECT" :
+                if ($(this).data("sfselect2") == true) $(this).val($(this).find("option:first").val()).trigger("change.select2");
+                else $(this).find("option:first").prop("selected", true);
+                break;
+        }
+    });
+    sfdt[tableId].search("").draw();
+}
+
+function sfdtSearchConditionAll(tableId)
+{
+    let customSearch = {};
+    $(".sfdt-"+tableId+"-custom-search").each(function() {
+        if ($(this).data("sfdt-custom-search-ex") != true) {
+            customSearch[$(this).data("sfdt-alias")] = $(this).val();
+        }
+    });
+    let csExStr = localStorage.getItem('sfdt-'+tableId+'-custom-search-ex');
+    if (csExStr) {
+        csEx = JSON.parse(csExStr);
+        for (let key in csEx) {
+            customSearch[key] = csEx[key];
+        }
+    }
+    return {
+        search : sfdt[tableId].search(),
+        customSearch : customSearch
+    };
 }
