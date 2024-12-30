@@ -1438,6 +1438,7 @@ class DataTables
     private $columns;
     private $customSearch;
     private $defaultOrder;
+    private $columnDefaultClass;
 
     private $layoutCustomSearch;
     private $layoutList;
@@ -1487,6 +1488,7 @@ class DataTables
         $this->columns = [];
         $this->customSearch = [];
         $this->defaultOrder = [];
+        $this->columnDefaultClass = [];
         $this->drawCallbackScript = [];
 
         $this->layoutCustomSearch = [];
@@ -1583,6 +1585,13 @@ class DataTables
     {
         if (!isset($this->columns[$alias])) $this->columns[$alias] = new DataTablesColumn($this->tableId, $alias);
         return $this->columns[$alias];
+    }
+
+    public function columnDefaultClass($class, ...$classes)
+    {
+        $this->columnDefaultClass[] = $class;
+        if ($classes) $this->columnDefaultClass = array_merge($this->columnDefaultClass, $classes);
+        return $this;
     }
 
     // custom search, $aliases : array of column alias
@@ -1757,7 +1766,28 @@ class DataTables
             $c = [ "name" => $alias ];
             if ($column->query())   $c["data"] = $column->data();
             if ($column->title())   $c["title"] = $column->title();
-            if ($column->class())   $c["className"] = implode(" ", $column->class());
+
+            $sumClass = [];
+            if ($this->columnDefaultClass) $sumClass = $this->columnDefaultClass;
+            if ($column->class()) $sumClass += $column->class();
+
+            if ($sumClass) {
+                $class = [];
+                $onlyClass = [ "align" => "", "wrap" => "", "case" => "", "fs" => "", "fw" => "", "fst" => "", "deco" => "" ];
+                foreach($sumClass as $cls) {
+                    if (in_array($cls, [ "text-start", "text-end", "text-center" ])) $onlyClass["align"] = $cls;
+                    else if (in_array($cls, [ "text-wrap", "text-nowrap" ])) $onlyClass["wrap"] = $cls;
+                    else if (in_array($cls, [ "text-lowercase", "text-uppercase", "text-capitalize" ])) $onlyClass["case"] = $cls;
+                    else if (in_array($cls, [ "fs-1", "fs-2", "fs-3", "fs-4", "fs-5", "fs-6" ])) $onlyClass["fs"] = $cls;
+                    else if (in_array($cls, [ "fw-bold", "fw-bolder", "fw-semibold", "fw-medium", "fw-normal", "fw-light", "fw-lighter" ])) $onlyClass["fw"] = $cls;
+                    else if (in_array($cls, [ "fst-italic", "fst-normal" ])) $onlyClass["fst"] = $cls;
+                    else if (in_array($cls, [ "text-decoration-underline", "text-decoration-line-through", "text-decoration-none" ])) $onlyClass["deco"] = $cls;
+                    else $class[] = $cls;
+                }
+                foreach($onlyClass as $k => $v) if ($v) $class[] = $v;
+                if ($class) $c["className"] = implode(" ", $class);
+            }
+
             if ($column->type())    $c["type"] = $column->type();
             $c["searchable"] = $column->searchable();
             $c["orderable"] = $column->orderable();
