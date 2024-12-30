@@ -475,7 +475,6 @@ class DataTablesRenderButton
                 $(document).on("click", "button[data-button-id='{$this->btnId}']", function() {
                     let param = {};
                     {$paramScript}
-                    console.log(param);
                     confirm("{$confirmMsg}", function() {
                         callAjax(
                             '{$submitUrl}',
@@ -827,8 +826,8 @@ class DataTablesCustomSearch
     }
 
     public function string() { return $this->type(self::TYPE_STRING); }
-    public function select() { return $this->type(self::TYPE_SELECT); }
-    public function select2() { $this->select2 = true; return $this->type(self::TYPE_SELECT); }
+    public function select() { $this->equalSearch(); return $this->type(self::TYPE_SELECT); }
+    public function select2() { $this->equalSearch(); $this->select2 = true; return $this->type(self::TYPE_SELECT); }
     public function dateRange() { return $this->type(self::TYPE_DATERANGE); }
     public function datetimeRange() { return $this->type(self::TYPE_DATETIMERANGE); }
 

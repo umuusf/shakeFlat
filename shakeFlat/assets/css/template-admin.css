@@ -427,6 +427,7 @@ body {
     .shakeflat-board {
         border-radius: 0.25rem; padding: 0.5rem; display: flex;
         > div { display: flex; align-items: center; }
+        > .shakeflat-board-badge { white-space: nowrap; border-radius: 0.25rem; font-size: 0.9em; padding: 0.2em 0.45em 0.2em 0.45em; margin-right: 0.8em; }
     }
 
     .shakeflat-board-plain {
@@ -440,15 +441,5 @@ body {
     .shakeflat-board-hint {
         background-color: var(--sf-hint-bg-color); color: var(--sf-hint-text-color);
         > .shakeflat-board-badge-hint { background-color: var(--sf-hint-badge-bg-color); color: var(--sf-hint-badge-text-color); }
-    }
-
-    .shakeflat-board-badge {
-        white-space: nowrap;
-        border-radius: 0.25rem;
-        font-size: 0.9em;
-        padding: 0.2em 0.45em 0.2em 0.45em;
-        margin-right: 0.8em;
-        display: flex;
-        align-items: center;
     }
 }
