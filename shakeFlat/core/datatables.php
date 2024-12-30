@@ -2119,7 +2119,7 @@ class DataTables
         if ($this->onLoadInitSearch) {
             $options["stateSaveParams"] = "stateSaveParams-function";
             $replaceFrom[] = "\"stateSaveParams\": \"stateSaveParams-function\"";
-            $replaceTo[] = "\"stateSaveParams\": function(settings, data) { data.search.search = ''; }";
+            $replaceTo[] = "\"stateSaveParams\": function(settings, data) { data.search.search = ''; for(i=0;i<data.columns.length;i++) { data.columns[i].search.search = ''; } }";
         }
 
         $options["ajax"] = "ajax-function";
@@ -2225,7 +2225,7 @@ class DataTables
         if ($containerOption) $containerOption = " {$containerOption}";
         $scriptCsStorage = "";
         if (!$this->onLoadInitSearch)
-            $scriptCsStorage = <<<EOD
+            $scriptCsStorage .= <<<EOD
 
                     let storage = localStorage.getItem('sfdt-{$this->tableId}-custom-search-ex');
                     if (storage) {
@@ -2237,7 +2237,7 @@ class DataTables
                 EOD;
 
         if ($this->customSearch)
-            $scriptCsStorage = <<<EOD
+            $scriptCsStorage .= <<<EOD
 
                     $(document).on("hide.bs.collapse", "div.sfdt-custom-search.collapse", function () {
                         localStorage.setItem('sfdt-{$this->tableId}-custom-search-onoff', 0);

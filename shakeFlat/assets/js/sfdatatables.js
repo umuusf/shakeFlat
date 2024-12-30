@@ -37,6 +37,7 @@ $(document).ready(function() {
 
     $(document).on("click", ".btn-sfdt-search-reset", function() {
         sfdtSearchReset($(this).data("table-id"));
+        sfdt[$(this).data("table-id")].search("").draw();
     });
 
     $(document).on("click", "button.sfdt-btn-pagejump", function() {
@@ -598,7 +599,6 @@ function sfdtSearchReset(tableId)
                 break;
         }
     });
-    sfdt[tableId].search("").draw();
 }
 
 function sfdtSearchConditionAll(tableId)
