@@ -13,6 +13,16 @@
     }
 
     #sfdt-modal-column-config { table thead tr th { background-color: #e1e1e1; } }
+
+    .form-floating.readonly,
+    .sfdt-floating-file.readonly,
+    .sfdt-floating-checkbox.readonly,
+    .sfdt-floating-radio.readonly {
+        > .form-control { background-color: #e0e0e0; }
+        > .form-select { background-color: #e0e0e0; }
+        > label::after { background-color: #e0e0e0; }
+    }
+
 }
 
 [data-sf-theme=dark] {
@@ -48,6 +58,15 @@
         .dt-search { input { border-color: #a0a0a0; } }
     }
     #sfdt-modal-column-config { table thead tr th { background-color: #444444; } }
+
+    .form-floating.readonly,
+    .sfdt-floating-file.readonly,
+    .sfdt-floating-checkbox.readonly,
+    .sfdt-floating-radio.readonly {
+        > .form-control { background-color: #232323; }
+        > .form-select { background-color: #232323; }
+        > label::after { background-color: #232323; }
+    }
 }
 
 body {
@@ -156,6 +175,14 @@ body {
             line-height: 1.25;
             min-height: 1.25rem;
         }
+    }
+
+    /* .form-floating 과 .readonly 가 함께 사용될 때 */
+    .form-floating.readonly,
+    .sfdt-floating-file.readonly,
+    .sfdt-floating-checkbox.readonly,
+    .sfdt-floating-radio.readonly {
+        pointer-events: none;
     }
 
     #sfdt-modal-column-config {

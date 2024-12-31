@@ -470,6 +470,12 @@ function sfdtSetDefaultValue(input, value)
                 radioGroup.each(function() {
                     if ($(this).val() == value) $(this).prop("checked", true);
                 });
+            } else if (input.attr("type") === "hidden") {
+                input.val(value);
+                if (input.data("readonly") && $("#" + input.attr("id") + "-readonly-text")) {
+                    let text = $("#" + input.attr("id") + "-readonly-select option[value='"+value+"']").text();
+                    $("#" + input.attr("id") + "-readonly-text").val(text);
+                }
             } else {
                 input.val(value);
             }

@@ -392,5 +392,10 @@
         "dtcustomsearch": {
             "kr": "전체"
         }
+    },
+    "Read only." : {
+        "dtedit": {
+            "kr": "수정 할 수 없습니다."
+        }
     }
 }

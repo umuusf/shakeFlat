@@ -363,6 +363,15 @@ class DataTablesRenderButton
                         return false;
                     }
                     let formData = new FormData($("#sfdt-form-{$this->tableId}-{$this->btnId}")[0]);
+
+                    // If there are any disabled radio buttons that are checked, pass their values.
+                    $("#sfdt-form-{$this->tableId}-{$this->btnId} input[type='radio']:disabled").each(function() {
+                        if ($(this).prop("checked")) formData.append($(this).attr("name"), $(this).val());
+                    });
+                    $("#sfdt-form-{$this->tableId}-{$this->btnId} input[type='checkbox']:disabled").each(function() {
+                        if ($(this).prop("checked")) formData.append($(this).attr("name"), $(this).val());
+                    });
+
                     {$submitScript}
                     callAjax(
                         '{$submitUrl}',
@@ -962,6 +971,7 @@ class DataTablesEditColumn
     private $enableInputMask;
     private $defaultValue;
     private $comment;
+    private $readonly;
 
     public function __construct($tableId, $editId, $alias)
     {
@@ -978,6 +988,7 @@ class DataTablesEditColumn
         $this->enableInputMask = false;
         $this->options = [];
         $this->comment = "";
+        $this->readonly = false;
     }
 
 
@@ -1025,6 +1036,8 @@ class DataTablesEditColumn
         $this->controlStyle[] = $style;
         return $this;
     }
+
+    public function readonly() { $this->readonly = true; return $this; }
 
     public function widthPx($px) { $this->controlStyle[] = "width:{$px}px;"; return $this; }
     public function widthRem($rem) { $this->controlStyle[] = "width:{$rem}rem;"; return $this; }
@@ -1092,13 +1105,19 @@ class DataTablesEditColumn
         $controlStyle = "";     if ($this->controlStyle) $controlStyle = " style=\"" . implode(" ", $this->controlStyle) . "\"";
         $required = "";         if ($this->required) $required = " required";
         $title = $this->title;  if (!$title) $title = $tableColumns[$this->alias]->title();
+        $readonly = "";         if ($this->readonly) { $readonly = " readonly"; }
 
         $commentHtml = "";
-        if ($this->comment) {
+        if ($this->readonly) {
             $commentHtml = <<<EOD
 
-                                        <small class="text-body-secondary ms-2">{$this->comment}</small>
+                                    <small class="text-body-secondary ms-2">[:dtedit:Read only.:]</small>
                 EOD;
+        } elseif ($this->comment) {
+                $commentHtml = <<<EOD
+
+                                        <small class="text-body-secondary ms-2">{$this->comment}</small>
+                    EOD;
         }
 
         $html = "";
@@ -1121,8 +1140,8 @@ class DataTablesEditColumn
                 $html = <<<EOD
 
                                     <div class="col-auto">
-                                        <div class="form-floating">
-                                            <input type="{$this->type}" class="form-control{$class}" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}" placeholder="" value="{$this->defaultValue}"{$required}{$controlOption}{$controlStyle} autocomplete="off">
+                                        <div class="form-floating{$readonly}">
+                                            <input type="{$this->type}" class="form-control{$class}" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}" placeholder="" value="{$this->defaultValue}"{$required}{$readonly}{$controlOption}{$controlStyle} autocomplete="off">
                                             <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}">{$title}</label>
                                         </div>
                                         {$commentHtml}
@@ -1133,8 +1152,8 @@ class DataTablesEditColumn
                 $html = <<<EOD
 
                                     <div class="col-auto">
-                                        <div class="form-floating">
-                                            <textarea type="{$this->type}" class="form-control{$class}" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}" placeholder="" {$required}{$controlOption}{$controlStyle} autocomplete="off">{$this->defaultValue}</textarea>
+                                        <div class="form-floating{$readonly}">
+                                            <textarea type="{$this->type}" class="form-control{$class}" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}" placeholder="" {$required}{$readonly}{$controlOption}{$controlStyle} autocomplete="off">{$this->defaultValue}</textarea>
                                             <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}">{$title}</label>
                                         </div>
                                         {$commentHtml}
@@ -1145,8 +1164,8 @@ class DataTablesEditColumn
                 $html = <<<EOD
 
                                     <div class="col-auto">
-                                        <div class="sfdt-floating-file{$required}">
-                                            <input type="file" class="form-control{$class}" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}" placeholder="" value="{$this->defaultValue}"{$required}{$controlOption}{$controlStyle} autocomplete="off">
+                                        <div class="sfdt-floating-file{$required}{$readonly}">
+                                            <input type="file" class="form-control{$class}" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}" placeholder="" value="{$this->defaultValue}"{$required}{$readonly}{$controlOption}{$controlStyle} autocomplete="off">
                                             <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}">{$title}</label>
                                         </div>
                                         {$commentHtml}
@@ -1155,6 +1174,7 @@ class DataTablesEditColumn
                 break;
             case "checkbox" :
                 $htmlSub = "";
+                $disabled = ""; if ($this->readonly) $disabled = " disabled";
                 $idx = 1;
                 if (!is_array($this->options)) L::system("[:dtedit:DataTablesEditColumn {$this->editId} {$this->alias} checkbox options not defined.:]");
                 if (count($this->options) > 1) $name = "{$this->alias}[]"; else $name = "{$this->alias}";
@@ -1163,7 +1183,7 @@ class DataTablesEditColumn
                     $htmlSub .= <<<EOD
 
                                                 <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="checkbox" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-{$idx}" name="{$name}" value="{$value}"{$checked}{$controlOption}{$controlStyle}>
+                                                    <input class="form-check-input" type="checkbox" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-{$idx}" name="{$name}" value="{$value}"{$checked}{$disabled}{$controlOption}{$controlStyle}>
                                                     <label class="form-check-label" for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-{$idx}">{$text}</label>
                                                 </div>
                         EOD;
@@ -1172,7 +1192,7 @@ class DataTablesEditColumn
                 $html = <<<EOD
 
                                     <div class="col-auto me-3">
-                                        <div class="sfdt-floating-checkbox{$required}">
+                                        <div class="sfdt-floating-checkbox{$required}{$readonly}">
                                             <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-1">{$title}</label>
                                             {$htmlSub}
                                         </div>
@@ -1182,6 +1202,7 @@ class DataTablesEditColumn
                 break;
             case "radio" :
                 $htmlSub = "";
+                $disabled = ""; if ($this->readonly) $disabled = " disabled";
                 $idx = 1;
                 if (!is_array($this->options)) L::system("[:dtedit:DataTablesEditColumn {$this->editId} {$this->alias} radio options not defined.:]");
                 foreach($this->options as $value => $text) {
@@ -1189,7 +1210,7 @@ class DataTablesEditColumn
                     $htmlSub .= <<<EOD
 
                                                 <div class="form-check form-check-inline">
-                                                    <input class="form-check-input" type="radio" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-{$idx}" name="{$this->alias}" value="{$value}"{$required}{$checked}{$controlOption}{$controlStyle}>
+                                                    <input class="form-check-input" type="radio" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-{$idx}" name="{$this->alias}" value="{$value}"{$required}{$disabled}{$checked}{$controlOption}{$controlStyle}>
                                                     <label class="form-check-label" for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-{$idx}">{$text}</label>
                                                 </div>
                         EOD;
@@ -1198,7 +1219,7 @@ class DataTablesEditColumn
                 $html = <<<EOD
 
                                     <div class="col-auto me-3">
-                                        <div class="sfdt-floating-radio{$required}">
+                                        <div class="sfdt-floating-radio{$required}{$readonly}">
                                             <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-1">{$title}</label>
                                             {$htmlSub}
                                         </div>
@@ -1219,18 +1240,38 @@ class DataTablesEditColumn
                     $optionArr[] = "<option value='{$value}'{$selected}>{$text}</option>";
                 }
                 $optionHtml = implode("\n                            ", $optionArr);
-                $html = <<<EOD
+                if ($this->readonly) {
+                    $html = <<<EOD
 
-                                        <div class="col-auto">
-                                            <div class="form-floating">
-                                                <select class="form-select" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}"{$required}{$controlOption}{$controlStyle}>
+                                            <input type="hidden" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}" value="{$this->defaultValue}" data-readonly="true">
+                                            <div class="d-none">
+                                                <select id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-readonly-select">
                                                 {$optionHtml}
                                                 </select>
-                                                <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}">{$title}</label>
                                             </div>
-                                            {$commentHtml}
-                                        </div>
-                    EOD;
+                                            <div class="col-auto">
+                                                <div class="form-floating{$readonly}">
+                                                    <input type="text" class="form-control{$class}" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}-readonly-text" placeholder="" value=""{$required}{$readonly}{$controlOption}{$controlStyle} autocomplete="off">
+                                                    <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}">{$title}</label>
+                                                </div>
+                                                {$commentHtml}
+                                            </div>
+                        EOD;
+                } else {
+
+                    $html = <<<EOD
+
+                                            <div class="col-auto">
+                                                <div class="form-floating{$readonly}">
+                                                    <select class="form-select" id="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}" name="{$this->alias}"{$required}{$controlOption}{$controlStyle}>
+                                                    {$optionHtml}
+                                                    </select>
+                                                    <label for="sfdt-edit-{$this->tableId}-{$this->editId}-{$this->alias}">{$title}</label>
+                                                </div>
+                                                {$commentHtml}
+                                            </div>
+                        EOD;
+                }
                 break;
         }
 
@@ -2122,12 +2163,6 @@ class DataTables
         // Replace the parts of PHP's array that cannot be converted directly to JSON.
         $replaceFrom = $replaceTo = [];
 
-        if ($this->onLoadInitSearch) {
-            $options["stateSaveParams"] = "stateSaveParams-function";
-            $replaceFrom[] = "\"stateSaveParams\": \"stateSaveParams-function\"";
-            $replaceTo[] = "\"stateSaveParams\": function(settings, data) { data.search.search = ''; for(i=0;i<data.columns.length;i++) { data.columns[i].search.search = ''; } }";
-        }
-
         $options["ajax"] = "ajax-function";
         $replaceFrom[] = "\"ajax\": \"ajax-function\"";
         $replaceTo[] = "\"ajax\": {$this->makeCodeAjax()}";
@@ -2145,6 +2180,16 @@ class DataTables
                 $options["order"][] = [ $idx, $orderInfo["dir"] ];
             }
         }
+
+        if ($this->onLoadInitSearch) {
+            $options["stateSaveParams"] = "stateSaveParams-function";
+            $replaceFrom[] = "\"stateSaveParams\": \"stateSaveParams-function\"";
+
+            $orderInit = "";
+            if ($this->defaultOrder && $options["order"]) $orderInit = "delete data.order; data.order = " . json_encode($options["order"], JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) . ";";
+            $replaceTo[] = "\"stateSaveParams\": function(settings, data) { data.search.search = ''; for(i=0;i<data.columns.length;i++) { data.columns[i].search.search = ''; } {$orderInit} }";
+        }
+
         if ($this->language == "kr") $options["language"] = [ "url" => "/assets/libs/datatables-2.1.8/i18n/ko.json" ];
         $options["drawCallback"] = "drawCallback-function";
 
