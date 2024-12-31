@@ -75,7 +75,9 @@
 
     .select2-container--bootstrap5 .select2-selection--single {
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
         background-position: right 0.8rem center;
+        background-size: 0.8rem;
         background-color:var(--bs-body-bg);
         border: 1px solid var(--bs-border-color);
     }
@@ -253,7 +255,9 @@
 
     .select2-container--bootstrap5-dark .select2-selection--single {
         background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
         background-position: right 0.8rem center;
+        background-size: 0.8rem;
         background-color:var(--bs-body-bg);
         border: 1px solid var(--bs-border-color);
     }
@@ -403,7 +407,7 @@ body {
     span.select2-container--bootstrap5 span.select2-selection--single,
     span.select2-container--bootstrap5-dark span.select2-selection--single {
         height: calc(1.5em + 0.47rem + 2px);
-        padding: 0.235rem 1.75rem 0.235rem 0.3rem;
+        padding: 0.235rem 2.75rem 0.235rem 0.3rem;
         line-height: 1.25;
     }
 
