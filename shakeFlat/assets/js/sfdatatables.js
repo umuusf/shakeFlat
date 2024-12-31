@@ -30,9 +30,9 @@ $(document).ready(function() {
     }
 
     if (sfGetTheme() === 'dark') {
-        $(".sfdt-custom-search-item>select[data-sfselect2='true']").select2({theme: 'bootstrap5-dark'});
+        $(".sfdt-custom-search-item>select[data-sfselect2='true']").select2({theme: 'bootstrap5-dark',dropdownAutoWidth:true});
     } else {
-        $(".sfdt-custom-search-item>select[data-sfselect2='true']").select2({theme: 'bootstrap5'});
+        $(".sfdt-custom-search-item>select[data-sfselect2='true']").select2({theme: 'bootstrap5',dropdownAutoWidth:true});
     }
 
     $(document).on("click", ".btn-sfdt-search-reset", function() {

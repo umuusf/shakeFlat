@@ -384,9 +384,9 @@ class DataTablesRenderButton
                 }).each(function() {
                     $(this).closest(".form-floating").removeClass("form-floating").addClass("sfdt-floating-select2");
                     if (sfGetTheme() === 'dark') {
-                        $(this).select2({theme:'bootstrap5-dark', dropdownParent:$("#sfdt-modal-{$this->tableId}-{$this->btnId}")});
+                        $(this).select2({theme:'bootstrap5-dark', dropdownParent:$("#sfdt-modal-{$this->tableId}-{$this->btnId}"), dropdownAutoWidth:true});
                     } else {
-                        $(this).select2({theme:'bootstrap5', dropdownParent:$("#sfdt-modal-{$this->tableId}-{$this->btnId}")});
+                        $(this).select2({theme:'bootstrap5', dropdownParent:$("#sfdt-modal-{$this->tableId}-{$this->btnId}"), dropdownAutoWidth:true});
                     }
                 });
 
@@ -1373,9 +1373,9 @@ class DataTablesAddRecord
                 }).each(function() {
                     $(this).closest(".form-floating").removeClass("form-floating").addClass("sfdt-floating-select2");
                     if (sfGetTheme() === 'dark') {
-                        $(this).select2({theme:'bootstrap5-dark', dropdownParent:$("#sfdt-modal-{$this->tableId}-{$this->btnId}")});
+                        $(this).select2({theme:'bootstrap5-dark', dropdownParent:$("#sfdt-modal-{$this->tableId}-{$this->btnId}"), dropdownAutoWidth:true});
                     } else {
-                        $(this).select2({theme:'bootstrap5', dropdownParent:$("#sfdt-modal-{$this->tableId}-{$this->btnId}")});
+                        $(this).select2({theme:'bootstrap5', dropdownParent:$("#sfdt-modal-{$this->tableId}-{$this->btnId}"), dropdownAutoWidth:true});
                     }
                 });
 
