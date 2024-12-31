@@ -599,6 +599,8 @@ function sfdtSearchReset(tableId)
                 break;
         }
     });
+    sfdt[tableId].search('');
+    for(i=0;i<sfdt[tableId].columns.length;i++) { sfdt[tableId].columns[i].search.search = ''; }
 }
 
 function sfdtSearchConditionAll(tableId)

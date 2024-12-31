@@ -2158,11 +2158,12 @@ class DataTables
             }
         }
 
-        // Organize the callback script. The callback script is also part of the replace target.
+        $localStorageScript = "";
         $drawCallbackScript = "";
         $drawCallbackInputMask = false;
         $addRecordHtml = "";        // Action part for add new button
         $addRecordScript = "";      // Script part for add new button
+        $customSearchHtml = "";
 
         if ($this->drawCallbackScript) $drawCallbackScript .= implode("\n", $this->drawCallbackScript);
         if ($codeColumns["drawCallbackScript"]) $drawCallbackScript .= $codeColumns["drawCallbackScript"];
@@ -2187,6 +2188,16 @@ class DataTables
                             if (col.search.search) sfdtSetDefaultValue($("#sfdt-{$this->tableId}-custom-search-" + sfdt['{$this->tableId}'].column(index).dataSrc()), col.search.search);
                         });
                 EOD;
+            $localStorageScript .= <<<EOD
+
+                    let storage = localStorage.getItem('sfdt-{$this->tableId}-custom-search-ex');
+                    if (storage) {
+                        let csEx = JSON.parse(storage);
+                        for (let key in csEx) {
+                            sfdtSetDefaultValue($("#sfdt-{$this->tableId}-custom-search-" + key), csEx[key]);
+                        }
+                    }
+                EOD;
         }
 
         if (!$this->disableTooltip) {
@@ -2201,11 +2212,36 @@ class DataTables
         }
 
         // for custom search
-        $codeCustomSearch = $this->makeCodeCustomSearch();
+        if ($this->customSearch) {
+            $localStorageScript .= <<<EOD
 
-        // input mask initialization
-        $drawCallbackInputMask = $drawCallbackInputMask | $codeCustomSearch["isEnableInputMask"]; //  | $modifyView["isEnableInputMask"]
-        if ($drawCallbackInputMask) $drawCallbackScript .= "\n        $(\":input[data-inputmask]\").inputmask();";
+                    $(document).on("hide.bs.collapse", "div.sfdt-custom-search.collapse", function () {
+                        localStorage.setItem('sfdt-{$this->tableId}-custom-search-onoff', 0);
+                        $("#btn-sfdt-custom-search-detail-collaps").html("[:dt:Detail Search:] <i class='fa-regular fa-square-caret-down'></i></i>");
+                    });
+
+                    $(document).on("show.bs.collapse", "div.sfdt-custom-search.collapse", function () {
+                        localStorage.setItem('sfdt-{$this->tableId}-custom-search-onoff', 1);
+                        $("#btn-sfdt-custom-search-detail-collaps").html("[:dt:Detail Search:] <i class='fa-regular fa-square-caret-up'></i></i>");
+                    });
+                EOD;
+
+            $codeCustomSearch = $this->makeCodeCustomSearch();
+            $customSearchHtml = $codeCustomSearch["html"];
+
+            // input mask initialization
+            $drawCallbackInputMask = $drawCallbackInputMask | $codeCustomSearch["isEnableInputMask"]; //  | $modifyView["isEnableInputMask"]
+            if ($drawCallbackInputMask) $drawCallbackScript .= "\n        $(\":input[data-inputmask]\").inputmask();";
+
+            // If there is detailed search content, highlight the detailed search toggle button.
+            $drawCallbackScript .= <<<EOD
+                        if (Object.values(sfdtSearchConditionAll('{$this->tableId}').customSearch).some(condition => condition)) {
+                            $("#btn-sfdt-custom-search-detail-collaps").addClass("btn-primary").removeClass("btn-secondary");
+                        } else {
+                            $("#btn-sfdt-custom-search-detail-collaps").removeClass("btn-primary").addClass("btn-secondary");
+                        }
+                EOD;
+        }
 
         $replaceFrom[] = "\"drawCallback\": \"drawCallback-function\"";
         $replaceTo[] = <<<EOD
@@ -2229,32 +2265,6 @@ class DataTables
 
         $containerOption = $this->containerOption;
         if ($containerOption) $containerOption = " {$containerOption}";
-        $scriptCsStorage = "";
-        if (!$this->onLoadInitSearch)
-            $scriptCsStorage .= <<<EOD
-
-                    let storage = localStorage.getItem('sfdt-{$this->tableId}-custom-search-ex');
-                    if (storage) {
-                        let csEx = JSON.parse(storage);
-                        for (let key in csEx) {
-                            sfdtSetDefaultValue($("#sfdt-{$this->tableId}-custom-search-" + key), csEx[key]);
-                        }
-                    }
-                EOD;
-
-        if ($this->customSearch)
-            $scriptCsStorage .= <<<EOD
-
-                    $(document).on("hide.bs.collapse", "div.sfdt-custom-search.collapse", function () {
-                        localStorage.setItem('sfdt-{$this->tableId}-custom-search-onoff', 0);
-                        $("#btn-sfdt-custom-search-detail-collaps").html("[:dt:Detail Search:] <i class='fa-regular fa-square-caret-down'></i></i>");
-                    });
-
-                    $(document).on("show.bs.collapse", "div.sfdt-custom-search.collapse", function () {
-                        localStorage.setItem('sfdt-{$this->tableId}-custom-search-onoff', 1);
-                        $("#btn-sfdt-custom-search-detail-collaps").html("[:dt:Detail Search:] <i class='fa-regular fa-square-caret-up'></i></i>");
-                    });
-                EOD;
 
         // A script that should be output only once on the current web page.
         $once = $this->onceOutput();
@@ -2272,7 +2282,7 @@ class DataTables
             {$addRecordHtml}
 
             <div{$containerOption}>
-                {$codeCustomSearch["html"]}
+                {$customSearchHtml}
                 <table id="{$this->tableId}" class="table table-hover table-striped text-nowrap"></table>
             </div>
 
@@ -2280,7 +2290,7 @@ class DataTables
             {$once["script"]}
             $(document).ready(function() {
                 sfdt['{$this->tableId}'] = new DataTable('#{$this->tableId}', {$optionsStr});
-                {$scriptCsStorage}
+                {$localStorageScript}
                 {$addRecordScript}
                 {$codeColumns["script"]}
                 {$jsScriptOnReady}
