@@ -1593,6 +1593,8 @@ class DataTables
         return $this->columns[$alias];
     }
 
+    public function columns() { return $this->columns; }
+
     public function columnDefaultClass($class, ...$classes)
     {
         $this->columnDefaultClass[] = $class;
@@ -1610,7 +1612,11 @@ class DataTables
     public function layoutCustomSearch($layout) { $this->layoutCustomSearch = $layout; return $this; }
 
     // columns order for list, $layout : array of column alias
-    public function layoutList($layout) { $this->layoutList = $layout; return $this; }
+    public function layoutList($layout = null) {
+        if ($layout === null) return $this->layoutList;
+        $this->layoutList = $layout;
+        return $this;
+    }
 
     // columns order for detail, $layout : array of column alias
     public function layoutDetail($layout, $id = 'detail') { $this->layoutDetail[$id] = $layout; return $this; }
@@ -2563,7 +2569,7 @@ class DataTables
                 if ($col['searchable'] === 'true') $searchableColumns[$alias] = $columnQuery;
                 if (!$this->columns[$alias]->searchable() || $value === "") continue;
 
-                $this->opQuerySearchBind($alias, $value, $columnQuery, $col['search']['regex'], $whereAnd, 'cse');
+                $this->opQuerySearchBind($alias, $value, $columnQuery, $whereAnd, $this->querySearchBind, 'cse');
             }
         }
 
@@ -2573,7 +2579,7 @@ class DataTables
                 if ($value === "") continue;
                 if (!array_key_exists($alias, $this->customSearch)) continue;
                 $columnQuery = $this->customSearch[$alias]->exColumnQuery();
-                $this->opQuerySearchBind($alias, $value, $columnQuery, 'false', $whereAnd, 'cex');
+                $this->opQuerySearchBind($alias, $value, $columnQuery, $whereAnd, $this->querySearchBind, 'cex');
             }
         }
 
@@ -2591,16 +2597,16 @@ class DataTables
         return [ "sql" => $this->querySearchSQL, "bind" => $this->querySearchBind ];
     }
 
-    private function opQuerySearchBind($alias, $value, $columnQuery, $regex, &$whereAnd, $prefix)
+    public function opQuerySearchBind($alias, $value, $columnQuery, &$whereAnd, &$bind, $prefix)
     {
         switch ($this->customSearch($alias)->type()) {
             case DataTablesCustomSearch::TYPE_STRING :
                 if ($this->customSearch($alias)->isEqualSearch()) {
                     $whereAnd[] = "({$columnQuery}) = :{$prefix}_{$alias}";
-                    $this->querySearchBind[":{$prefix}_{$alias}"] = $value;
+                    $bind[":{$prefix}_{$alias}"] = $value;
                 } else {
                     $whereAnd[] = "({$columnQuery}) LIKE :{$prefix}_{$alias}";
-                    $this->querySearchBind[":{$prefix}_{$alias}"] = "%{$value}%";
+                    $bind[":{$prefix}_{$alias}"] = "%{$value}%";
                 }
                 break;
             case DataTablesCustomSearch::TYPE_DATERANGE :
@@ -2608,7 +2614,7 @@ class DataTables
                 $between = explode(' - ', $value);
                 if (count($between) == 2 && strtotime($between[0]) && strtotime($between[1])) {
                     $whereAnd[] = "({$columnQuery}) BETWEEN :{$prefix}_{$alias}_start AND :{$prefix}_{$alias}_end";
-                    $this->querySearchBind[":{$prefix}_{$alias}_start"] = date("Y-m-d H:i:s", strtotime($between[0]));
+                    $bind[":{$prefix}_{$alias}_start"] = date("Y-m-d H:i:s", strtotime($between[0]));
                     $endDate = $between[1];
                     if (strlen($endDate) == 10) {
                         $endDate .= ' 23:59:59';
@@ -2617,7 +2623,7 @@ class DataTables
                     } elseif (strlen($endDate) == 16) {
                         $endDate .= ':59';
                     }
-                    $this->querySearchBind[":{$prefix}_{$alias}_end"] = date("Y-m-d H:i:s", strtotime($endDate));
+                    $bind[":{$prefix}_{$alias}_end"] = date("Y-m-d H:i:s", strtotime($endDate));
                 }
                 break;
             case DataTablesCustomSearch::TYPE_NUMBERRANGE :
@@ -2626,20 +2632,20 @@ class DataTables
                     $between[0] = intval(preg_replace('/\D/', '', $between[0]));
                     $between[1] = intval(preg_replace('/\D/', '', $between[1]));
                     $whereAnd[] = "({$columnQuery}) BETWEEN :{$prefix}_{$alias}_start AND :{$prefix}_{$alias}_end";
-                    $this->querySearchBind[":{$prefix}_{$alias}_start"] = $between[0];
-                    $this->querySearchBind[":{$prefix}_{$alias}_end"] = $between[1];
+                    $bind[":{$prefix}_{$alias}_start"] = $between[0];
+                    $bind[":{$prefix}_{$alias}_end"] = $between[1];
                 } else {
                     $whereAnd[] = "({$columnQuery}) = :{$prefix}_{$alias}";
-                    $this->querySearchBind[":{$prefix}_{$alias}"] = intval(preg_replace('/\D/', '', $value));
+                    $bind[":{$prefix}_{$alias}"] = intval(preg_replace('/\D/', '', $value));
                 }
                 break;
             default :
                 if ($this->customSearch($alias)->isEqualSearch()) {
                     $whereAnd[] = "({$columnQuery}) = :{$prefix}_{$alias}";
-                    $this->querySearchBind[":{$prefix}_{$alias}"] = $value;
+                    $bind[":{$prefix}_{$alias}"] = $value;
                 } else {
                     $whereAnd[] = "({$columnQuery}) LIKE :{$prefix}_{$alias}";
-                    $this->querySearchBind[":{$prefix}_{$alias}"] = "%{$value}%";
+                    $bind[":{$prefix}_{$alias}"] = "%{$value}%";
                 }
                 break;
             }
