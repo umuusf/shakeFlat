@@ -644,12 +644,30 @@ class DataTablesColumn
         return $this;
     }
 
+    public function dateX($format = "YYYY-MM-DD")
+    {
+        $this->type = "string";
+        $this->displayType = "datetime:{$format}";
+        $this->class("text-center");
+        $this->render = "function(data, type, row, meta) { return data.formatDateTime('{$format}'); }";
+        return $this;
+    }
+
     public function datetime($format = "YYYY-MM-DD HH:mm:ss")
     {
         $this->type = "string";
         $this->displayType = "datetime:{$format}";
         $this->class("text-center");
         $this->render = "DataTable.render.datetime('" . $format . "')";
+        return $this;
+    }
+
+    public function datetimeX($format = "YYYY-MM-DD HH:mm:ss")
+    {
+        $this->type = "string";
+        $this->displayType = "datetime:{$format}";
+        $this->class("text-center");
+        $this->render = "function(data, type, row, meta) { return data.formatDateTime('{$format}'); }";
         return $this;
     }
 

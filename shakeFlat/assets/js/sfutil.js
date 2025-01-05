@@ -211,14 +211,39 @@ String.prototype.bytes = function() {
 // like number_format() for PHP
 Number.prototype.numberFormat = function() {
     let num = this;
+    if (num === null || num === undefined || isNaN(num)) return 0;
     return num.toLocaleString('ko-KR');
 }
 
 // zero to blank.
 Number.prototype.numberFormatX = function() {
     let num = this;
-    if (num == 0) return "";
+    if (num === null || num === undefined || isNaN(num) || num === 0) return "";
     return num.toLocaleString('ko-KR');
+}
+
+// like number_format() for PHP for strings
+String.prototype.numberFormat = function() {
+    let num = parseFloat(this);
+    return num.numberFormat();
+}
+
+// zero to blank for strings
+String.prototype.numberFormatX = function() {
+    let num = parseFloat(this);
+    return num.numberFormatX();
+}
+
+function numberFormat(num) {
+    if (num === null || num === undefined || isNaN(num)) return 0;
+    if (typeof num === "string") num = parseFloat(num);
+    return num.numberFormat();
+}
+
+function numberFormatX(num) {
+    if (num === null || num === undefined || isNaN(num) || num === 0) return "";
+    if (typeof num === "string") num = parseFloat(num);
+    return num.numberFormatX();
 }
 
 // 스트링으로 된 날짜 값을 입력 받아서, 날짜 format 에 맞춘 스트링으로 스트링으로 반환해주는 함수
