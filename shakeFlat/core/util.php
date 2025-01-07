@@ -266,6 +266,22 @@ class Util
         return false;
     }
 
+    public static function dateX($dateString)
+    {
+        if ($dateString == "0000-00-00") return "";
+        $dateTime = self::sfDateTime($dateString, "Y-m-d");
+        if ($dateTime === false) return "";
+        return $dateTime->format("Y-m-d");
+    }
+
+    public static function dateTimeX($dateString)
+    {
+        if ($dateString == "0000-00-00 00:00:00") return "";
+        $dateTime = self::sfDateTime($dateString, "Y-m-d H:i:s");
+        if ($dateTime === false) return "";
+        return $dateTime->format("Y-m-d H:i:s");
+    }
+
     // Returns a non Y-m-d H:i:s format as a Y-m-d H:i:s format.
     public static function YmdHis($dateString, $userFormat = null)
     {
