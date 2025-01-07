@@ -130,6 +130,7 @@ usage : $("img").sfLightBox(options);
             let caption = $this.data('caption') || '';
             let bigImage = $this.data('big') || $this.attr('src');
 
+            if (group === undefined) return;
             if (window.sflightbox_images[group] === undefined) window.sflightbox_images[group] = [];
             if (window.sflightbox_images[group].find(img => img.bigImage === bigImage)) return;
             window.sflightbox_images[group].push({
