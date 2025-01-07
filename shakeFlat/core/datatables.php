@@ -175,18 +175,74 @@ class DataTablesRenderButton
         $detailScript = "";
         $detailHtml = "";
         $formatScript = "";
-        foreach($tableColumns as $alias => $column) {
+        $isZoom = false;
+        $layoutHtml = "";
+
+        $htmlItem = function($alias) use ($tableColumns) {
+            if (!array_key_exists($alias, $tableColumns)) L::system("[:dt:Column alias({$alias}) does not exist in tableColumns.:]");
+            return <<<EOD
+                                    <div class="col-auto">
+                                        <div class="sfdt-floating">
+                                            <div class="sfdt-label text-nowrap">{$tableColumns[$alias]->title()}</div>
+                                            <div class="sfdt-plaintext text-nowrap" id="sfdt-modal-{$this->tableId}-{$this->btnId}-column-{$alias}"></div>
+                                        </div>
+                                    </div>
+
+                EOD;
+        };
+
+        $columnAliases = [];
+        foreach($this->layout as $item) {
+            if ($item === '---') {
+                $layoutHtml .= <<<EOD
+
+                                <hr>
+                EOD;
+                continue;
+            }
+            $mb4 = "";
+            if (is_array($this->layout) && $item !== end($this->layout)) $mb4 = " mb-4";
+            $layoutHtml .= <<<EOD
+
+                                <div class="row{$mb4}">
+
+                EOD;
+            if (is_array($item)) {
+                foreach($item as $alias) {
+                    $layoutHtml .= $htmlItem($alias);
+                    $columnAliases[] = $alias;
+                }
+            } else {
+                $layoutHtml .= $htmlItem($item);
+                $columnAliases[] = $item;
+            }
+
+            $layoutHtml .= <<<EOD
+                                </div>
+                EOD;
+        }
+
+        foreach($columnAliases as $alias) {
+            $column = $tableColumns[$alias];
             if ($column->displayType() == "number") {
-                $formatScript .= "                        else if (alias == '{$alias}') txt = txt.numberFormat();\n";
+                $formatScript .= "                    else if (alias == '{$alias}') txt = txt.numberFormat();\n";
             } elseif (substr($column->displayType(), 0, 5) == "date:") {
                 $format = substr($column->displayType(), 5);
-                $formatScript .= "                        else if (alias == '{$alias}') txt = txt.formatDateTime('{$format}');\n";
+                $formatScript .= "                    else if (alias == '{$alias}') txt = txt.formatDateTime('{$format}');\n";
             } elseif (substr($column->displayType(), 0, 9) == "datetime:") {
                 $format = substr($column->displayType(), 9);
-                $formatScript .= "                        else if (alias == '{$alias}') txt = txt.formatDateTime('{$format}');\n";
+                $formatScript .= "                    else if (alias == '{$alias}') txt = txt.formatDateTime('{$format}');\n";
+            } elseif ($column->displayType() == "image") {
+                $formatScript .= "                    else if (alias == '{$alias}') txt = '<img src=\"' + txt + '\" style=\"max-width:100px; max-height:100px;\">';\n";
+            } elseif ($column->displayType() == "zoom") {
+                $formatScript .= "                    else if (alias == '{$alias}') txt = '<img src=\"' + txt + '\" data-sflightbox=\"sfdt-image-zoom-detail\" data-big=\"'+ result.data.queryData['{$column->zoomColumn()}'] +'\" style=\"max-width:100px; max-height:100px;\">';\n";
+                $isZoom = true;
+            } elseif ($column->displayType() == "html") {
+                $formatScript .= "                    else if (alias == '{$alias}') txt = txt;\n";
             }
         }
-        $formatScript = trim($formatScript, "else ");
+        $formatScript = ltrim($formatScript, "else ");
+        $formatScript .= "                    else txt = escapeHtml(txt);\n";
 
         if (!$this->keyParams) L::system("[:dt:Parameter for detail view({$this->btnId}) is not defined.:]");
         $paramScript = "";
@@ -204,6 +260,9 @@ class DataTablesRenderButton
                 $paramScript .= "param['{$k}'] = '{$v}';\n        ";
             }
         }
+
+        $zoomScript = "";
+        if ($isZoom) $zoomScript = "$('img[data-sflightbox]').sfLightBox();";
         $detailScript .= <<<EOD
 
                 $(document).on("click", "button[data-button-id='{$this->btnId}']", function() {
@@ -224,6 +283,7 @@ class DataTablesRenderButton
                             }
                             {$this->readCallbackScript}
                             $("#sfdt-modal-{$this->tableId}-{$this->btnId}").modal("show");
+                            {$zoomScript}
                         }
                     );
                 });
@@ -231,44 +291,7 @@ class DataTablesRenderButton
                 {$this->customScript}
             EOD;
 
-        $layoutHtml = "";
-        $htmlItem = function($alias) use ($tableColumns) {
-            if (!array_key_exists($alias, $tableColumns)) L::system("[:dt:Column alias({$alias}) does not exist in tableColumns.:]");
-            return <<<EOD
-                                    <div class="col-auto">
-                                        <div class="sfdt-floating">
-                                            <div class="sfdt-label text-nowrap">{$tableColumns[$alias]->title()}</div>
-                                            <div class="sfdt-plaintext text-nowrap" id="sfdt-modal-{$this->tableId}-{$this->btnId}-column-{$alias}"></div>
-                                        </div>
-                                    </div>
-
-                EOD;
-        };
-
         if (!$this->layout) L::system("[:dt:Layout for detail view({$this->btnId}) is not defined.:]");
-        foreach($this->layout as $item) {
-            if ($item === '---') {
-                $layoutHtml .= <<<EOD
-
-                                <hr>
-                EOD;
-                continue;
-            }
-            $mb4 = "";
-            if (is_array($this->layout) && $item !== end($this->layout)) $mb4 = " mb-4";
-            $layoutHtml .= <<<EOD
-
-                                <div class="row{$mb4}">
-
-                EOD;
-            if (is_array($item)) foreach($item as $alias) $layoutHtml .= $htmlItem($alias);
-            else $layoutHtml .= $htmlItem($item);
-
-            $layoutHtml .= <<<EOD
-                                </div>
-                EOD;
-        }
-
         $detailHtml = <<<EOD
             <!-- DataTable - Detail view modal for Table Id {$this->tableId} -->
             <div class="modal fade" tabindex="-1" id="sfdt-modal-{$this->tableId}-{$this->btnId}" aria-labelledby="Detail View" aria-describedby="Detail View" aria-hidden="true" aria-modal="true">
@@ -308,18 +331,70 @@ class DataTablesRenderButton
         $submitUrl = $this->submitUrl | $ajaxUrl;
         if ($queryUrl === $ajaxUrl) $paramScript .= "param['sfdtPageMode'] = 'modify';\n        ";
         if ($submitUrl === $ajaxUrl) $submitScript .= "formData.append('sfdtPageMode', 'submitForModify');\n    ";
-        $paramScript .= "param['sfdtBtnId'] = '{$this->btnId}';\n        ";
+        $paramScript .= "param['sfdtBtnId'] = '{$this->btnId}';\n            ";
         $submitScript .= "formData.append('sfdtBtnId', '{$this->btnId}');\n    ";
 
         if ($deliverParameters) {
             foreach($deliverParameters as $k => $v) {
-                $paramScript .= "param['{$k}'] = '{$v}';\n        ";
+                $paramScript .= "param['{$k}'] = '{$v}';\n            ";
                 $submitScript .= "formData.append('{$k}', '{$v}');\n    ";
             }
         }
 
-        $setTypesScript = "";
+        $columnAliases = [];
+        $layoutHtml = "";
+        if (!$this->layout) L::system("[:dt:Layout for modify({$this->btnId}) is not defined.:]");
+
+        $hiddenHtml = "";
         foreach($this->editColumn as $alias => $editColumn) {
+            if ($editColumn->type() == "hidden") {
+                $hiddenHtml .= "<input type=\"hidden\" name=\"{$alias}\" id=\"sfdt-edit-{$this->tableId}-{$this->btnId}-{$alias}\" value=\"\">";
+                $columnAliases[] = $alias;
+            }
+        }
+
+        $newCommentForFile = function($alias) use ($tableColumns) {
+            if (!array_key_exists($alias, $tableColumns) || !array_key_exists($alias, $this->editColumn)) L::system("[:dt:Column alias({$alias}) does not exist in tableColumns.:]");
+            if ($this->editColumn[$alias]->type() != "file") return false;
+            $comment = $this->editColumn[$alias]->comment();
+            $this->editColumn[$alias]->comment($comment . " <span class='sfdt-edit-{$this->tableId}-modify-{$alias}-oldfile'></span>");
+            return true;
+        };
+
+        foreach($this->layout as $item) {
+            if ($item === '---') {
+                $layoutHtml .= <<<EOD
+
+                                <hr class="mb-3">
+                EOD;
+                continue;
+            }
+            $layoutHtml .= <<<EOD
+
+                                <div class="row mb-4">
+
+                EOD;
+            if (is_array($item)) {
+                foreach($item as $alias) {
+                    $newCommentForFile($alias);
+                    $layoutHtml .= $this->editColumn[$alias]->html($tableColumns);
+                    $columnAliases[] = $alias;
+                }
+            } else {
+                $newCommentForFile($item);
+                $layoutHtml .= $this->editColumn[$item]->html($tableColumns);
+                $columnAliases[] = $item;
+            }
+
+            $layoutHtml .= <<<EOD
+
+                                </div>
+                EOD;
+        }
+
+        $setTypesScript = "";
+        foreach($columnAliases as $alias) {
+            $editColumn = $this->editColumn[$alias];
             $setTypesScript .= "types['{$alias}'] = '{$editColumn->type()}';\n                ";
         }
 
@@ -340,12 +415,14 @@ class DataTablesRenderButton
                             $("#sfdt-form-{$this->tableId}-{$this->btnId}")[0].reset();
                             let types = {};
                             {$setTypesScript}
-                            for(let alias in result.data.queryData) {
+                            for(let alias in types) {
                                 let txt = result.data.queryData[alias];
                                 if (types[alias] == 'radio') {
                                     sfdtSetDefaultValue($("#sfdt-edit-{$this->tableId}-{$this->btnId}-"+alias+"-1[name='"+alias+"']"), txt);
                                 } else if (types[alias] == 'checkbox') {
                                     sfdtSetDefaultValue($("#sfdt-edit-{$this->tableId}-{$this->btnId}-"+alias+"-1[name='"+alias+"[]']"), txt);
+                                } else if (types[alias] == 'file') {
+                                    $("span.sfdt-edit-{$this->tableId}-modify-"+alias+"-oldfile").html('<a href="'+txt+'" target="_blank"><div class="ms-2 badge bg-load" style="--bs-badge-font-size:0.75rem;">[:dt:Download Current File:]</div></a>');
                                 } else if (types[alias] != 'password') {
                                     sfdtSetDefaultValue($("#sfdt-edit-{$this->tableId}-{$this->btnId}-"+alias), txt);
                                 }
@@ -401,35 +478,6 @@ class DataTablesRenderButton
 
                 {$this->customScript}
             EOD;
-
-        $hiddenHtml = "";
-        foreach($this->editColumn as $alias => $editColumn) {
-            if ($editColumn->type() == "hidden") $hiddenHtml .= "<input type=\"hidden\" name=\"{$alias}\" id=\"sfdt-edit-{$this->tableId}-{$this->btnId}-{$alias}\" value=\"\">";
-        }
-
-        $layoutHtml = "";
-        if (!$this->layout) L::system("[:dt:Layout for modify({$this->btnId}) is not defined.:]");
-        foreach($this->layout as $item) {
-            if ($item === '---') {
-                $layoutHtml .= <<<EOD
-
-                                <hr class="mb-3">
-                EOD;
-                continue;
-            }
-            $layoutHtml .= <<<EOD
-
-                                <div class="row mb-4">
-
-                EOD;
-            if (is_array($item)) foreach($item as $alias) $layoutHtml .= $this->editColumn[$alias]->html($tableColumns);
-            else $layoutHtml .= $this->editColumn[$item]->html($tableColumns);
-
-            $layoutHtml .= <<<EOD
-
-                                </div>
-                EOD;
-        }
 
         $modifyHtml = <<<EOD
 
@@ -520,6 +568,7 @@ class DataTablesColumn
     private $render;
     private $type;          // for datatables column type
     private $displayType;   // for detail view display type
+    private $zoomColumn;
     private $searchable;
     private $orderable;
     private $invisible;
@@ -541,6 +590,7 @@ class DataTablesColumn
         $this->render = "";
         $this->type = "";
         $this->displayType = "string";
+        $this->zoomColumn = "";
         $this->searchable = true;
         $this->orderable = true;
         $this->invisible = false;
@@ -604,6 +654,15 @@ class DataTablesColumn
         $this->displayType = $displayType;
         return $this;
     }
+
+    public function zoom($zoomColumnAlias)
+    {
+        $this->displayType = "zoom";
+        $this->zoomColumn = $zoomColumnAlias;
+        return $this;
+    }
+
+    public function zoomColumn() { return $this->zoomColumn; }
 
     public function searchable($searchable = null)
     {
@@ -1358,6 +1417,7 @@ class DataTablesAddRecord
         $controlHtml = "";
         if (!$this->columns) L::system("[:dtaddrecord:No columns defined for DataTablesAddRecord.:]");
         if (!$this->layout) L::system("[:dtaddrecord:No layout defined for DataTablesAddRecord.:]");
+        $existFile = false;
         foreach($this->layout as $item) {
             if ($item === '---') {
                 $controlHtml .= <<<EOD
@@ -1370,8 +1430,15 @@ class DataTablesAddRecord
 
                                 <div class="row mb-4">
                 EOD;
-            if (is_array($item)) foreach($item as $alias) $controlHtml .= $this->column($alias)->html($tableColumns);
-            else $controlHtml .= $this->column($item)->html($tableColumns);
+            if (is_array($item)) {
+                foreach($item as $alias) {
+                    $controlHtml .= $this->column($alias)->html($tableColumns);
+                    if ($this->column($alias)->type() === "file") $existFile = true;
+                }
+            } else {
+                $controlHtml .= $this->column($item)->html($tableColumns);
+                if ($this->column($item)->type() === "file") $existFile = true;
+            }
 
             $controlHtml .= <<<EOD
 
@@ -1379,6 +1446,8 @@ class DataTablesAddRecord
                 EOD;
         }
 
+        $multipart = "";
+        if ($existFile) $multipart = " enctype=\"multipart/form-data\"";
         $html = <<<EOD
             <!-- DataTable - add record modal for Table Id {$this->tableId} -->
             <div class="modal fade" tabindex="-1" id="sfdt-modal-{$this->tableId}-{$this->btnId}" aria-labelledby="add new record" aria-describedby="add new record" aria-hidden="true" aria-modal="true">
@@ -1389,7 +1458,7 @@ class DataTablesAddRecord
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <form id="sfdt-form-{$this->tableId}-{$this->btnId}">
+                            <form id="sfdt-form-{$this->tableId}-{$this->btnId}"{$multipart}>
                             {$controlHtml}
                             </form>
                         </div>

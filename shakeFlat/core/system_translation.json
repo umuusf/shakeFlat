@@ -388,6 +388,11 @@
             "kr": "닫기"
         }
     },
+    "Download Current File" : {
+        "dt": {
+            "kr": "현재 파일 다운로드"
+        }
+    },
     "All" : {
         "dtcustomsearch": {
             "kr": "전체"
