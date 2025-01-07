@@ -138,6 +138,8 @@ usage : $("img").sfLightBox(options);
                 bigImage: bigImage
             });
 
+            $this.css('cursor', 'pointer');
+
             $this.on('click', function (e) {
                 e.preventDefault();
                 currentIndex = window.sflightbox_images[group].findIndex(img => img.bigImage === bigImage);
