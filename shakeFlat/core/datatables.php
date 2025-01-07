@@ -422,7 +422,9 @@ class DataTablesRenderButton
                                 } else if (types[alias] == 'checkbox') {
                                     sfdtSetDefaultValue($("#sfdt-edit-{$this->tableId}-{$this->btnId}-"+alias+"-1[name='"+alias+"[]']"), txt);
                                 } else if (types[alias] == 'file') {
-                                    $("span.sfdt-edit-{$this->tableId}-modify-"+alias+"-oldfile").html('<a href="'+txt+'" target="_blank"><div class="ms-2 badge bg-load" style="--bs-badge-font-size:0.75rem;">[:dt:Download Current File:]</div></a>');
+                                    if (txt) {
+                                        $("span.sfdt-edit-{$this->tableId}-modify-"+alias+"-oldfile").html('<a href="'+txt+'" target="_blank"><div class="ms-2 badge bg-load" style="--bs-badge-font-size:0.75rem;">[:dt:Download Current File:]</div></a>');
+                                    }
                                 } else if (types[alias] != 'password') {
                                     sfdtSetDefaultValue($("#sfdt-edit-{$this->tableId}-{$this->btnId}-"+alias), txt);
                                 }
