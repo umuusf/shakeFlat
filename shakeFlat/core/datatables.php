@@ -430,6 +430,8 @@ class DataTablesRenderButton
                                 }
                             }
                             {$this->readCallbackScript}
+                            $("#sfdt-btn-{$this->tableId}-{$this->btnId}-modify-submit").prop("disabled", false);
+                            $("#sfdt-btn-{$this->tableId}-{$this->btnId}-modify-submit").html("[:dtmodify:Modify:]");
                             $("#sfdt-modal-{$this->tableId}-{$this->btnId}").modal("show");
                         }
                     );
@@ -437,8 +439,14 @@ class DataTablesRenderButton
 
                 // modify submit
                 $("#sfdt-btn-{$this->tableId}-{$this->btnId}-modify-submit").click(function() {
+                    let \$this = $(this);
+                    \$this.prop("disabled", true);
+                    \$this.html('<span class="spinner-border spinner-border-sm align-middle" role="status" aria-hidden="true"></span> <span class="align-middle">[:dtmodify:Modify:]</span>');
+
                     if (!$("#sfdt-form-{$this->tableId}-{$this->btnId}")[0].checkValidity()) {
                         $("#sfdt-form-{$this->tableId}-{$this->btnId}")[0].reportValidity()
+                        \$this.prop("disabled", false);
+                        \$this.html("[:dtmodify:Modify:]");
                         return false;
                     }
                     let formData = new FormData($("#sfdt-form-{$this->tableId}-{$this->btnId}")[0]);
@@ -456,6 +464,8 @@ class DataTablesRenderButton
                         '{$submitUrl}',
                         formData,
                         function(result) {
+                            \$this.prop("disabled", false);
+                            \$this.html("[:dtmodify:Modify:]");
                             if (result.data.result != true) {
                                 alert("[:dtmodify:Failed to modify. Please try again.:]");
                                 return;
@@ -463,6 +473,12 @@ class DataTablesRenderButton
                             noti("[:dtmodify:Successfully modified.:]", "success");
                             sfdt['{$this->tableId}'].ajax.reload(null, false);
                             $("#sfdt-modal-{$this->tableId}-{$this->btnId}").modal("hide");
+                        },
+                        function(e) {
+                            console.log(e);
+                            \$this.prop("disabled", false);
+                            \$this.html("[:dtmodify:Modify:]");
+                            alert("[:An error occurred while calling the server. Please try again later.:]");
                         }
                     )
                 });
@@ -1482,6 +1498,8 @@ class DataTablesAddRecord
 
                     $("#{$this->btnId}").click(function() {
                         $("#sfdt-form-{$this->tableId}-{$this->btnId}")[0].reset();
+                        $("sfdt-btn-{$this->tableId}-{$this->btnId}-add-submit").prop("disabled", false);
+                        $("sfdt-btn-{$this->tableId}-{$this->btnId}-add-submit").html("[:dtaddrecord:Submit:]");
                         $("#sfdt-modal-{$this->tableId}-{$this->btnId}").modal("show");
                     });
             EOD;
@@ -1511,8 +1529,14 @@ class DataTablesAddRecord
 
                 // add record submit
                 $("#sfdt-btn-{$this->tableId}-{$this->btnId}-add-submit").click(function() {
+                    let \$this = $(this);
+                    \$this.prop("disabled", true);
+                    \$this.html('<span class="spinner-border spinner-border-sm align-middle" role="status" aria-hidden="true"></span> <span class="align-middle">[:dtaddrecord:Submit:]</span>');
+
                     if (!$("#sfdt-form-{$this->tableId}-{$this->btnId}")[0].checkValidity()) {
                         $("#sfdt-form-{$this->tableId}-{$this->btnId}")[0].reportValidity()
+                        \$this.prop("disabled", false);
+                        \$this.html("[:dtaddrecord:Submit:]");
                         return false;
                     }
                     let formData = new FormData($("#sfdt-form-{$this->tableId}-{$this->btnId}")[0]);
@@ -1523,6 +1547,8 @@ class DataTablesAddRecord
                         '{$queryUrl}',
                         formData,
                         function(result) {
+                            \$this.prop("disabled", false);
+                            \$this.html("[:dtaddrecord:Submit:]");
                             if (result.data.result != true) {
                                 alert("[:dtaddrecord:Failed to add record. Please try again.:]");
                                 return;
@@ -1530,6 +1556,12 @@ class DataTablesAddRecord
                             noti("[:dtaddrecord:Record added successfully.:]");
                             sfdt['{$this->tableId}'].ajax.reload();
                             $("#sfdt-modal-{$this->tableId}-{$this->btnId}").modal("hide");
+                        },
+                        function(e) {
+                            console.log(e);
+                            \$this.prop("disabled", false);
+                            \$this.html("[:dtaddrecord:Submit:]");
+                            alert("[:An error occurred while calling the server. Please try again later.:]");
                         }
                     )
                 });

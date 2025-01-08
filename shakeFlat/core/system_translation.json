@@ -4,6 +4,11 @@
             "kr": "오류가 발생하였습니다."
         }
     },
+    "An error occurred while calling the server. Please try again later.": {
+        "0": {
+            "kr": "서버 호출 중 오류가 발생하였습니다. 잠시 후 다시 시도해주세요."
+        }
+    },
     "Failed to create storage folder.": {
         "0": {
             "kr": "storage 폴더를 생성하지 못했습니다."
