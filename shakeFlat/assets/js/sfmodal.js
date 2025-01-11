@@ -16,12 +16,13 @@ function sfModal(id, userOptions)
         },
         footer          : {
             enable  : true,
+            submit  : { enable: false, text: "확인", class: "btn-primary", callback: null },
             close   : { text: "닫기", class: "btn-secondary" },
         }
     }
     $.extend(true, options, userOptions);
 
-    _modal[id] = $("<div>").addClass("modal fade").attr("tabindex", "-1").attr("aria-labelledby", options.title).attr("aria-hidden", "true").appendTo("body");
+    _modal[id] = $("<div>").addClass("modal fade").attr("tabindex", "-1").attr("aria-labelledby", options.title).attr("aria-hidden", "true").attr("id", id).appendTo("body");
     let modalDialog = $("<div>").addClass("modal-dialog modal-dialog-centered").appendTo(_modal[id]);
     if (options.dialogClass) modalDialog.addClass(options.dialogClass);
     if (options.dialogStyle) modalDialog.attr("style", options.dialogStyle);
@@ -40,6 +41,10 @@ function sfModal(id, userOptions)
 
     if (options.footer.enable) {
         let footer = $("<div>").addClass("modal-footer").appendTo(content);
+        if (options.footer.submit.enable) {
+            let btn = $("<button>").addClass("btn btn-sm " + options.footer.submit.class).text(options.footer.submit.text).appendTo(footer);
+            if (options.footer.submit.callback) btn.on("click", options.footer.submit.callback);
+        }
         if (options.footer.close) {
             $("<button>").addClass("btn btn-sm " + options.footer.close.class).attr("data-bs-dismiss", "modal").text(options.footer.close.text).appendTo(footer);
         }

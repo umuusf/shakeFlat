@@ -200,6 +200,18 @@ class DataTablesRenderButton
                 EOD;
                 continue;
             }
+
+            if (is_string($item) && substr($item, 0, 6) === 'label:') {
+                $item = substr($item, 6);
+                $layoutHtml .= <<<EOD
+
+                                <div class="row mb-2">
+                                    <div class="text-nowrap">{$item}</div>
+                                </div>
+                EOD;
+                continue;
+            }
+
             $mb4 = "";
             if (is_array($this->layout) && $item !== end($this->layout)) $mb4 = " mb-4";
             $layoutHtml .= <<<EOD
