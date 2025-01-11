@@ -50,5 +50,7 @@ function sfModal(id, userOptions)
         }
     }
 
+    _modal[id].on("hide.bs.modal", function() { $(document.activeElement).blur(); });
+
     return _modal[id];
 }
