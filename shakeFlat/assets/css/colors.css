@@ -1,13 +1,13 @@
 .btn-add {
     --bs-btn-color: #fff;
-    --bs-btn-bg: #8b2f5f; /* 기본 색상 */
+    --bs-btn-bg: #8b2f5f;
     --bs-btn-border-color: #8b2f5f;
     --bs-btn-hover-color: #fff;
-    --bs-btn-hover-bg: #75284f; /* 호버 색상 */
+    --bs-btn-hover-bg: #75284f;
     --bs-btn-hover-border-color: #662243;
     --bs-btn-focus-shadow-rgb: 139, 47, 95;
     --bs-btn-active-color: #fff;
-    --bs-btn-active-bg: #662243; /* 활성화 색상 */
+    --bs-btn-active-bg: #662243;
     --bs-btn-active-border-color: #5a1e3b;
     --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
     --bs-btn-disabled-color: #fff;
@@ -17,14 +17,14 @@
 
 .btn-modify {
     --bs-btn-color: #fff;
-    --bs-btn-bg: #1976d2; /* 진한 파란색 */
+    --bs-btn-bg: #1976d2;
     --bs-btn-border-color: #1976d2;
     --bs-btn-hover-color: #fff;
-    --bs-btn-hover-bg: #1565c0; /* 더 어두운 파란색 */
+    --bs-btn-hover-bg: #1565c0;
     --bs-btn-hover-border-color: #134a9c;
     --bs-btn-focus-shadow-rgb: 25, 118, 210;
     --bs-btn-active-color: #fff;
-    --bs-btn-active-bg: #134a9c; /* 눌렀을 때 색상 */
+    --bs-btn-active-bg: #134a9c;
     --bs-btn-active-border-color: #103b7d;
     --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
     --bs-btn-disabled-color: #fff;
@@ -185,12 +185,29 @@
     --bs-btn-disabled-border-color: #4269C7;
 }
 
+.btn-search {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #1e90ff;
+    --bs-btn-border-color: #1e90ff;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #1c86ee;
+    --bs-btn-hover-border-color: #1874cd;
+    --bs-btn-focus-shadow-rgb: 30, 144, 255;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #1874cd;
+    --bs-btn-active-border-color: #1560bd;
+    --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: #1e90ff;
+    --bs-btn-disabled-border-color: #1e90ff;
+}
+
 .btn-reset {
     --bs-btn-color: #000;
-    --bs-btn-bg: #C5A4DF; /* 연한 라벤더 */
+    --bs-btn-bg: #C5A4DF;
     --bs-btn-border-color: #B190CB;
     --bs-btn-hover-color: #000;
-    --bs-btn-hover-bg: #B28FD6; /* 약간 더 진한 라벤더 */
+    --bs-btn-hover-bg: #B28FD6;
     --bs-btn-hover-border-color: #9F7EBF;
     --bs-btn-focus-shadow-rgb: 197, 164, 223;
     --bs-btn-active-color: #000;
@@ -213,6 +230,7 @@
 .bg-refund { --bs-bg-opacity: 1; background-color: rgba(72, 101, 129, var(--bs-bg-opacity))!important; color:#fff; }
 .bg-save { --bs-bg-opacity: 1; background-color: rgba(217, 74, 74, var(--bs-bg-opacity)) !important; color:#fff; }
 .bg-load { --bs-bg-opacity: 1; background-color: rgba(74, 120, 217, var(--bs-bg-opacity)) !important; color:#fff; }
+.bg-search { --bs-bg-opacity: 1; background-color: rgba(30, 144, 255, var(--bs-bg-opacity)) !important; color:#fff; }
 .bg-reset { --bs-bg-opacity: 1; background-color: rgba(197, 164, 223, var(--bs-bg-opacity)) !important; color:#000; }
 
 .text-add { color: #8b2f5f; }
@@ -226,6 +244,7 @@
 .text-refund { color: #486581; }
 .text-save { color: #D94A4A; }
 .text-load { color: #4A78D9; }
+.text-search { color: #1e90ff; }
 .text-reset { color: #C5A4DF; }
 
 .btn-indigo {
