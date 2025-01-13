@@ -742,6 +742,24 @@ class DataTablesColumn
         return $this;
     }
 
+    public function time($format = "HH:mm:ss")
+    {
+        $this->type = "string";
+        $this->displayType = "datetime:{$format}";
+        $this->class("text-center");
+        $this->render = "DataTable.render.date('" . $format . "')";
+        return $this;
+    }
+
+    public function timeX($format = "HH:mm:ss")
+    {
+        $this->type = "string";
+        $this->displayType = "datetime:{$format}";
+        $this->class("text-center");
+        $this->render = "function(data, type, row, meta) { return data.formatDateTime('{$format}'); }";
+        return $this;
+    }
+
     public function datetime($format = "YYYY-MM-DD HH:mm:ss")
     {
         $this->type = "string";
@@ -2319,7 +2337,7 @@ class DataTables
             $replaceFrom[] = "\"stateSaveParams\": \"stateSaveParams-function\"";
 
             $orderInit = "";
-            if ($this->defaultOrder && $options["order"]) $orderInit = "delete data.order; data.order = " . json_encode($options["order"], JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) . ";";
+            if ($this->defaultOrder && isset($options["order"]) && $options["order"]) $orderInit = "delete data.order; data.order = " . json_encode($options["order"], JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) . ";";
             $replaceTo[] = "\"stateSaveParams\": function(settings, data) { data.search.search = ''; for(i=0;i<data.columns.length;i++) { data.columns[i].search.search = ''; } {$orderInit} }";
         }
 
