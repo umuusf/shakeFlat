@@ -253,8 +253,12 @@ class DataTablesRenderButton
                 $formatScript .= "                    else if (alias == '{$alias}') txt = txt;\n";
             }
         }
-        $formatScript = ltrim($formatScript, "else ");
-        $formatScript .= "                    else txt = escapeHtml(txt);\n";
+        if ($formatScript) {
+            $formatScript = ltrim($formatScript, "else ");
+            $formatScript .= "                    else txt = escapeHtml(txt);\n";
+        } else {
+            $formatScript = "txt = escapeHtml(txt);\n";
+        }
 
         if (!$this->keyParams) L::system("[:dt:Parameter for detail view({$this->btnId}) is not defined.:]");
         $paramScript = "";
