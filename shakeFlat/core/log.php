@@ -124,8 +124,16 @@ class L
             $message = self::getTranslation($message);
         }
 
-        $template = Template::getInstance();
-        $template->displayError($message, $context, $errCode, $errUrl);
+        if (Template::isCreated()) {
+            $template = Template::getInstance();
+            $template->displayError($message, $context, $errCode, $errUrl);
+        } else {
+            if ($errUrl) echo "errorUrl : {$errUrl}<br>\n";
+            echo "errorCode : {$errCode}<br>\n";
+            echo "errorMessage : {$message}<br>\n";
+            sfWebDump($context);
+        }
+
         exit;
     }
 

@@ -22,21 +22,21 @@ class dtSampleOnePage extends DataTables
             ->onePage()
             ->columnConfigFunction("columnConfigLoad", "columnConfigSave");
 
-        parent::column("member_id")     ->title("ID")           ->noWrap()->textCenter();
-        parent::column("name")          ->title("이름")         ->noWrap()->textCenter();
-        parent::column("phone")         ->title("전화")         ->noWrap()->textCenter();
-        parent::column("status")        ->title("상태")         ->noWrap()->textCenter();
-        parent::column("city")          ->title("도시")         ->noWrap()->textCenter();
-        parent::column("postal_code")   ->title("우편번호")     ->noWrap()->textCenter();
-        parent::column("country")       ->title("국가")         ->noWrap()->textCenter();
-        parent::column("email")         ->title("이메일")       ->noWrap();
-        parent::column("address")       ->title("주소")         ->noWrap();
-        parent::column("notes")         ->title("메모")         ->noWrap();
-        parent::column("birth_date")    ->title("생일")         ->noWrap()->date();
-        parent::column("join_date")     ->title("입사일")       ->noWrap()->date();
-        parent::column("salary")        ->title("연봉")         ->noWrap()->number();
-        parent::column("last_login")    ->title("마지막 로그인")->noWrap()->datetime();
-        parent::column("btn")->disableInvisible()->noExport()->textCenter()->noData()->noKeyCursor();
+        parent::column("member_id")     ->title("ID");
+        parent::column("name")          ->title("이름");
+        parent::column("phone")         ->title("전화");
+        parent::column("status")        ->title("상태");
+        parent::column("city")          ->title("도시");
+        parent::column("postal_code")   ->title("우편번호");
+        parent::column("country")       ->title("국가");
+        parent::column("email")         ->title("이메일");
+        parent::column("address")       ->title("주소");
+        parent::column("notes")         ->title("메모");
+        parent::column("birth_date")    ->title("생일")         ->date();
+        parent::column("join_date")     ->title("입사일")       ->date();
+        parent::column("salary")        ->title("연봉")         ->number();
+        parent::column("last_login")    ->title("마지막 로그인")->datetime();
+        parent::column("btn")->disableInvisible()->noExport()->noData()->noKeyCursor();
 
         parent::customSearch("name")        ->widthRem(12)  ->string();
         parent::customSearch("email")       ->widthRem(12)  ->string();

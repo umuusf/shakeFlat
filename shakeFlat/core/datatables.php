@@ -595,7 +595,7 @@ class DataTablesColumn
     private $tableId;
     private $alias;
     private $data;
-    private $query;         // for database field name (if different from alias)
+    private $searchColumn;  // for database field name (if different from alias)
                             // select {$columnQuery} as {$alias} from table...
     private $title;
     private $class;
@@ -617,8 +617,7 @@ class DataTablesColumn
         $this->tableId = $tableId;
         $this->alias = $alias;
         $this->data = $alias;
-        $this->query = $alias;
-
+        $this->searchColumn = $alias;
         $this->title = "";
         $this->class = [];
         $this->render = "";
@@ -647,10 +646,10 @@ class DataTablesColumn
         return $this;
     }
 
-    public function query($query = null)
+    public function searchColumn($searchColumn = null)
     {
-        if ($query === null) return $this->query;
-        $this->query = $query;
+        if ($searchColumn === null) return $this->searchColumn;
+        $this->searchColumn = $searchColumn;
         return $this;
     }
 
@@ -1972,7 +1971,7 @@ class DataTables
         $script = "";
         foreach($this->columns as $alias => $column) {
             $c = [ "name" => $alias ];
-            if ($column->query())   $c["data"] = $column->data();
+            if ($column->data())    $c["data"] = $column->data();
             if ($column->title())   $c["title"] = $column->title();
 
             $sumClass = [];
@@ -2775,11 +2774,11 @@ class DataTables
                 $alias = $col['name'];
                 $value = $col['search']['value'];
                 if (!array_key_exists($alias, $this->columns)) L::system("[:dt:Column({$alias}) not found.:]");
-                $columnQuery = $this->columns[$alias]->query();
-                if ($col['searchable'] === 'true') $searchableColumns[$alias] = $columnQuery;
+                $searchColumn = $this->columns[$alias]->searchColumn();
+                if ($col['searchable'] === 'true') $searchableColumns[$alias] = $searchColumn;
                 if (!$this->columns[$alias]->searchable() || $value === "") continue;
 
-                $this->opQuerySearchBind($alias, $value, $columnQuery, $whereAnd, $this->querySearchBind, 'cse');
+                $this->opQuerySearchBind($alias, $value, $searchColumn, $whereAnd, $this->querySearchBind, 'cse');
             }
         }
 

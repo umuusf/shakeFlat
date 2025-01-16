@@ -34,6 +34,7 @@ class Template
     const MODE_API_ENCRYPT_ZIP      = 6;
     const MODE_CLI                  = 7;
 
+    private static $instance = null;
     private $layoutFile;
     private $layoutFileForError;
     private $customTemplateFile;
@@ -47,10 +48,14 @@ class Template
 
     public static function getInstance()
     {
-        static $instance = null;
-        if ($instance) return $instance;
-        $instance = new Template();
-        return $instance;
+        if (self::$instance) return self::$instance;
+        self::$instance = new Template();
+        return self::$instance;
+    }
+
+    public static function isCreated()
+    {
+        return (self::$instance !== null);
     }
 
     private function __construct()

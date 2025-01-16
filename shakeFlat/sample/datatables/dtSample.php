@@ -20,21 +20,21 @@ class dtSample extends DataTables
         parent::extraButton("btn-extra-order")  ->title("주문하기") ->class("btn-order")    ->tooltip("주문서를 작성합니다.");
         parent::extraButton("btn-extra-refund") ->title("환불요청") ->class("btn-refund")   ->tooltip("환불요청을 합니다.");
 
-        parent::column("member_id")     ->title("ID")           ->noWrap()->textCenter();
-        parent::column("name")          ->title("이름")         ->noWrap()->textCenter();
-        parent::column("phone")         ->title("전화")         ->noWrap()->textCenter();
-        parent::column("status")        ->title("상태")         ->noWrap()->textCenter();
-        parent::column("city")          ->title("도시")         ->noWrap()->textCenter();
-        parent::column("postal_code")   ->title("우편번호")     ->noWrap()->textCenter();
-        parent::column("country")       ->title("국가")         ->noWrap()->textCenter();
-        parent::column("email")         ->title("이메일")       ->noWrap();
-        parent::column("address")       ->title("주소")         ->noWrap();
-        parent::column("notes")         ->title("메모")         ->noWrap();
-        parent::column("birth_date")    ->title("생일")         ->noWrap()->date();
-        parent::column("join_date")     ->title("입사일")       ->noWrap()->date();
-        parent::column("salary")        ->title("연봉")         ->noWrap()->number();
-        parent::column("last_login")    ->title("마지막 로그인")->noWrap()->datetime();
-        parent::column("btn")->disableInvisible()->noExport()->textCenter();
+        parent::column("member_id")     ->title("ID");
+        parent::column("name")          ->title("이름");
+        parent::column("phone")         ->title("전화");
+        parent::column("status")        ->title("상태");
+        parent::column("city")          ->title("도시");
+        parent::column("postal_code")   ->title("우편번호");
+        parent::column("country")       ->title("국가");
+        parent::column("email")         ->title("이메일");
+        parent::column("address")       ->title("주소");
+        parent::column("notes")         ->title("메모");
+        parent::column("birth_date")    ->title("생일")         ->date();
+        parent::column("join_date")     ->title("입사일")       ->date();
+        parent::column("salary")        ->title("연봉")         ->number();
+        parent::column("last_login")    ->title("마지막 로그인")->datetime();
+        parent::column("btn")->disableInvisible()->noExport();
         parent::column("btn")->button("detail")->title("상세보기")->class("btn-detail")->dataset("member-id", "\${row.member_id}");
         parent::column("btn")->button("edit")->title("수정")->class("btn-modify")->dataset("member-id", "\${row.member_id}");
         parent::column("btn")->button("delete")->title("삭제")->class("btn-delete")->dataset("member-id", "\${row.member_id}");
@@ -46,8 +46,8 @@ class dtSample extends DataTables
         parent::customSearch("join_date")   ->widthRem(13)  ->dateRange();
         parent::customSearch("salary")      ->widthRem(15)  ->numberRange(0, 999999999);
 
-        parent::customSearch("join_date2")  ->widthRem(19)  ->query()  ->datetimeRange()->title("입사일ex");
-        parent::customSearch("salary2")     ->widthRem(15)  ->query()  ->numberRange(0, 999999999)->title("연봉ex");
+        parent::customSearch("join_date2")  ->widthRem(19)  ->query("join_date")    ->datetimeRange()->title("입사일ex");
+        parent::customSearch("salary2")     ->widthRem(15)  ->query("salary")       ->numberRange(0, 999999999)->title("연봉ex");
 
         parent::layoutCustomSearch([
             [ "name", "phone", "status" ],
