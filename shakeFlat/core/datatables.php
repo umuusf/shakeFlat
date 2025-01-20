@@ -282,6 +282,7 @@ class DataTablesRenderButton
         $detailScript .= <<<EOD
 
                 $(document).on("click", "button[data-button-id='{$this->btnId}']", function() {
+                    let modalTitle = $(this).html();
                     let param = {};
                     {$paramScript}
                     callAjax(
@@ -299,6 +300,7 @@ class DataTablesRenderButton
                                 $("#sfdt-modal-{$this->tableId}-{$this->btnId}-column-" + alias).html(txt);
                             }
                             {$this->readCallbackScript}
+                            $("#sfdt-modal-{$this->tableId}-{$this->btnId} .modal-title").html(modalTitle);
                             $("#sfdt-modal-{$this->tableId}-{$this->btnId}").modal("show");
                             {$zoomScript}
                         }
