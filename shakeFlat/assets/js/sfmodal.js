@@ -22,7 +22,9 @@ function sfModal(id, userOptions)
     }
     $.extend(true, options, userOptions);
 
-    _modal[id] = $("<div>").addClass("modal fade").attr("tabindex", "-1").attr("aria-labelledby", options.title).attr("aria-hidden", "true").attr("id", id).appendTo("body");
+    let zIndex = 1050 + $(".modal-backdrop").length * 10;
+
+    _modal[id] = $("<div>").addClass("modal fade").attr("tabindex", "-1").attr("aria-labelledby", options.title).attr("aria-hidden", "true").attr("id", id).css("z-index", zIndex+1).appendTo("body");
     let modalDialog = $("<div>").addClass("modal-dialog modal-dialog-centered").appendTo(_modal[id]);
     if (options.dialogClass) modalDialog.addClass(options.dialogClass);
     if (options.dialogStyle) modalDialog.attr("style", options.dialogStyle);
@@ -50,7 +52,13 @@ function sfModal(id, userOptions)
         }
     }
 
-    _modal[id].on("hide.bs.modal", function() { $(document.activeElement).blur(); });
+    _modal[id].on("hide.bs.modal", function() {
+        $(document.activeElement).blur();
+    });
+
+    _modal[id].on("shown.bs.modal", function() {
+        $(".modal-backdrop").last().css("z-index", zIndex);
+    });
 
     return _modal[id];
 }
