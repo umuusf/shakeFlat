@@ -205,8 +205,8 @@ class DataTablesRenderButton
                 $item = substr($item, 6);
                 $layoutHtml .= <<<EOD
 
-                                <div class="row mb-2">
-                                    <div class="text-nowrap">{$item}</div>
+                                <div class="row mb-3">
+                                    <div class="text-nowrap ms-1">{$item}</div>
                                 </div>
                 EOD;
                 continue;
@@ -294,6 +294,7 @@ class DataTablesRenderButton
                             }
                             for(let alias in result.data.queryData) {
                                 let txt = result.data.queryData[alias];
+                                if (!txt) { $("#sfdt-modal-{$this->tableId}-{$this->btnId}-column-" + alias).html(""); continue; }
                                 {$formatScript}
                                 $("#sfdt-modal-{$this->tableId}-{$this->btnId}-column-" + alias).html(txt);
                             }
