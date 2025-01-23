@@ -798,6 +798,14 @@ class DataTablesColumn
         return $this;
     }
 
+    public function numberX($thousands = ',', $decimals = null, $precision = null, $prefix = null, $postfix = null)
+    {
+        $this->type = "num";
+        $this->displayType = "number";
+        $this->render = "function(data, type, row, meta) { return numberFormatX(data); }";
+        return $this;
+    }
+
     public function textCenter() { return $this->class("text-center"); }
     public function textEnd() { return $this->class("text-end"); }
     public function textStart() { return $this->class("text-start"); }

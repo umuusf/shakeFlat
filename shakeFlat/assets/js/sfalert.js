@@ -147,7 +147,7 @@ function __sfAlert(options)
 	$.extend(defaults, options);
 
 	let _show = function(alertIdx){
-        let widthTag = defaults.messageText.stringWidth() + "px";
+        let widthTag = stripHTML(defaults.messageText).stringWidth() + "px";
         if (defaults.width) widthTag = defaults.width;
         if (defaults.iconSize) iconSize = defaults.iconSize;
 
@@ -273,8 +273,8 @@ function __sfAlert(options)
             if (document.activeElement) document.activeElement.blur();
 		}).on('hidePrevented.bs.modal', function() {
         }).on('shown.bs.modal', function () {
-			if ($('#prompt').length) $('#prompt').focus();
-		}).on('show.bs.modal', function () {
+            if ($('#prompt').length) $('#prompt').focus();
+            else $(this).find('.btn:first').focus();
             $("#sfAlertOverlay").css("display", "block");
         });
 
