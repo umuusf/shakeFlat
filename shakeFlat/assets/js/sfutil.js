@@ -363,7 +363,7 @@ function getStringPixelWidth(str, element) {
 
 // width(pixel) for string with font
 String.prototype.stringWidth = function(font, fontSize) {
-    let tt = this.toLowerCase().split(/<br>|<br\/>|<br \/>|<p>/);
+    let tt = this.toLowerCase().split(/\n|<br>|<br\/>|<br \/>|<p>/);
     let max_tt = "";
     for(i=0;i<tt.length;i++) if (max_tt.length < tt[i].length) max_tt = tt[i];
 
@@ -381,4 +381,9 @@ String.prototype.stringWidth = function(font, fontSize) {
     if (w > 1200) w = 1200;
 
     return w;
+}
+
+function stripHTML(html){
+   let doc = new DOMParser().parseFromString(html, 'text/html');
+   return doc.body.textContent || "";
 }

@@ -2022,7 +2022,10 @@ class DataTables
                     $script .= $rbCode["script"];
                 }
                 $render[$alias] .= "`;\n                }";
-            } else if ($column->render()) {
+            }
+
+            // Apply renderButtons first, then if there is onlyRender, apply it
+            if ($column->render()) {
                 $c["render"] = "rendering-{$alias}";
                 $render[$alias] = trim($column->render());
             }

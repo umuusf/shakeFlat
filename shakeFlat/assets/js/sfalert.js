@@ -147,7 +147,10 @@ function __sfAlert(options)
 	$.extend(defaults, options);
 
 	let _show = function(alertIdx){
-        let widthTag = stripHTML(defaults.messageText).stringWidth() + "px";
+        let widthTag = Math.max(
+            ...defaults.messageText.split(/<br\s*\/?>/i)
+            .map(line => stripHTML(line).stringWidth())
+        ) + "px";
         if (defaults.width) widthTag = defaults.width;
         if (defaults.iconSize) iconSize = defaults.iconSize;
 
