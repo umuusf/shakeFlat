@@ -723,7 +723,6 @@ class DataTablesColumn
 
     public function onlyRender($render)
     {
-        $this->title = "";
         $this->type = "html";
         $this->render = $render;
         $this->searchable = false;
@@ -1662,7 +1661,13 @@ class DataTables
     private $jsScript;
     private $jsScriptOnReady;
 
+    private $disableDefaultSearch;
+    private $disableCustomSearchButton;
+    private $alwaysOpenCustomSearch;
+
     private $onLoadInitSearch;
+
+    private $noDataMessage;
 
     // output for template
     private $html;
@@ -1728,7 +1733,13 @@ class DataTables
         $this->jsScript = [];
         $this->jsScriptOnReady = [];
 
+        $this->disableDefaultSearch = false;
+        $this->disableCustomSearchButton = false;
+        $this->alwaysOpenCustomSearch = false;
+
         $this->onLoadInitSearch = true;
+
+        $this->noDataMessage = "";
     }
 
     public function containerOption($option) { $this->containerOption = $option; return $this; }
@@ -1750,6 +1761,7 @@ class DataTables
     public function orderBy($alias, $dir) { $this->defaultOrder[] = [ "alias" => $alias, "dir" => $dir ]; return $this; }
     public function disableOrdering() { $this->options["ordering"] = false; return $this; }
     public function keyCursor() { $this->options["keys"] = [ "blurable" => true, "columns" => ':not(.sfdt-no-keys-cursor)' ]; return $this; }
+    public function noDataMessage($message) { $this->noDataMessage = $message; return $this; }
 
     /*
      * callback script
@@ -1774,25 +1786,23 @@ class DataTables
     public function exportExcelTitle($title) { $this->exportTitleExcel = $title; return $this; }
     public function exportExcelFilename($filename) { $this->exportFilenameExcel = $filename; return $this; }
 
+    // search option
     public function searchKeep() { $this->onLoadInitSearch = false; return $this; }
+    public function disableDefaultSearch() { $this->disableDefaultSearch = true; return $this; }
+    public function disableCustomSearchButton() { $this->disableCustomSearchButton = true; return $this; }
+    public function alwaysOpenCustomSearch() { $this->disableCustomSearchButton = true;  $this->alwaysOpenCustomSearch = true; return $this; }
 
-    /*
-     * extra buttons
-     */
+    // extra buttons
     public function extraButton($btnId)
     {
         if (!isset($this->extraButtons[$btnId])) $this->extraButtons[$btnId] = new DataTablesExtraButton($this->tableId, $btnId);
         return $this->extraButtons[$btnId];
     }
 
-    /*
-     * one page
-     */
+    // one page
     public function onePage() { $this->onePage = true; return $this; }
 
-    /*
-     * column options
-     */
+    // column options
     public function column($alias)
     {
         if (!isset($this->columns[$alias])) $this->columns[$alias] = new DataTablesColumn($this->tableId, $alias);
@@ -2074,14 +2084,18 @@ class DataTables
 
         if ($ebArr) $extraButtons = "div: { html:`" . implode(" ", $ebArr) . "` },";
         $customSearchOpen = "";
-        if ($this->customSearch) $customSearchOpen = ' <button type="button" class="btn btn-sm btn-secondary" id="btn-sfdt-custom-search-detail-collaps" data-bs-toggle="collapse" data-bs-target=".sfdt-custom-search">[:dt:Detail Search:] <i class="fa-regular fa-square-caret-up"></i></button>';
+        if ($this->customSearch && !$this->disableCustomSearchButton) $customSearchOpen = ' <button type="button" class="btn btn-sm btn-secondary" id="btn-sfdt-custom-search-detail-collaps" data-bs-toggle="collapse" data-bs-target=".sfdt-custom-search">[:dt:Detail Search:] <i class="fa-regular fa-square-caret-up"></i></button>';
+
+        $topStartSearch = "'search',";
+        if ($this->disableDefaultSearch) $topStartSearch = "";
+        $topStartCustomSearchButton = "function() { return '<button type=\"button\" class=\"btn btn-sfdt-search-reset\" data-table-id=\"{$this->tableId}\"><i class=\"bi bi-arrow-clockwise\"></i></button>{$customSearchOpen}'; }";
 
         return <<<EOD
 
                     {
                         topStart: [
-                            'search',
-                            function() { return '<button type="button" class="btn btn-sfdt-search-reset" data-table-id="{$this->tableId}"><i class="bi bi-arrow-clockwise"></i></button>{$customSearchOpen}'; }
+                            {$topStartSearch}
+                            {$topStartCustomSearchButton}
                         ],
                         topEnd: {
                             buttons: [
@@ -2296,10 +2310,12 @@ class DataTables
             $noGroup = "";
         }
 
+        $collapse = " collapse";
+        if ($this->alwaysOpenCustomSearch) $collapse = "";
         $html = <<<EOD
 
                 <!-- shakeFlat DataTables Custom Search -->
-                <div class="sfdt-custom-search mb-3 collapse" data-table-id="{$this->tableId}" data-language="{$this->language}">
+                <div class="sfdt-custom-search mb-3{$collapse}" data-table-id="{$this->tableId}" data-language="{$this->language}">
                     {$html}
                 </div>
 
@@ -2358,7 +2374,8 @@ class DataTables
             $replaceTo[] = "\"stateSaveParams\": function(settings, data) { data.search.search = ''; for(i=0;i<data.columns.length;i++) { data.columns[i].search.search = ''; } {$orderInit} }";
         }
 
-        if ($this->language == "kr") $options["language"] = [ "url" => "/assets/libs/datatables-2.1.8/i18n/ko.json" ];
+        if ($this->language == "kr") $options["language"]["url"] = "/assets/libs/datatables-2.1.8/i18n/ko.json";
+        if ($this->noDataMessage) $options["language"]["emptyTable"] = $this->noDataMessage;
         $options["drawCallback"] = "drawCallback-function";
 
         // Convert the options to a JSON string.

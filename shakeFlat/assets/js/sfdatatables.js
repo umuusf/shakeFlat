@@ -29,7 +29,7 @@ $(document).ready(function() {
         sfdtColumnConfigInvalidConfig = '데이터가 손상 되었습니다. 저장된 구성을 삭제하십시오.';
     }
 
-    if (sfGetTheme() === 'dark') {
+    if (typeof sfGetTheme == "function" && sfGetTheme() === 'dark') {
         $(".sfdt-custom-search-item>select[data-sfselect2='true']").select2({theme: 'bootstrap5-dark',dropdownAutoWidth:true});
     } else {
         $(".sfdt-custom-search-item>select[data-sfselect2='true']").select2({theme: 'bootstrap5',dropdownAutoWidth:true});
@@ -85,7 +85,7 @@ $(document).ready(function() {
     });
 
     $(".sfdt-custom-search-item input[data-sfdt-custom-search-type='numberrange']").sfRangeSlide({
-        theme: sfGetTheme(),
+        theme: (typeof sfGetTheme == "function") ? sfGetTheme() : 'light',
         min: $(".sfdt-custom-search-item input[data-sfdt-custom-search-type='numberrange']").data("sfdt-numberrange-min"),
         max: $(".sfdt-custom-search-item input[data-sfdt-custom-search-type='numberrange']").data("sfdt-numberrange-max")
     });
