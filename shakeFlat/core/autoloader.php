@@ -46,6 +46,9 @@ spl_autoload_register(function($class) {
             } elseif (substr($class, 0, 14) == "shakeFlat\libs") {
                 $dataTableName = substr($class, 15);
                 require_once $gpath->LIBS . "{$dataTableName}.php";
+            } elseif (substr($class, 0, 16) == "shakeFlat\common") {
+                $dataTableName = substr($class, 17);
+                require_once __DIR__ . "/../../common/{$dataTableName}.php";
             }
     }
 });

@@ -556,7 +556,7 @@ async function sfdtColumnConfigLoad(tableId)
     if (!serverSide) {
         return JSON.parse(localStorage.getItem('sfdt-'+tableId+'-column-configs')) || {};
     } else {
-        let res = await ajaxResult(
+        let res = await ajaxSync(
             window.location.pathname,
             {
                 sfdtPageMode: 'columnConfigLoad',
@@ -575,7 +575,7 @@ async function sfdtColumnConfigSave(tableId, data)
     if (!serverSide) {
         localStorage.setItem('sfdt-'+tableId+'-column-configs', JSON.stringify(data));
     } else {
-        let res = await ajaxResult(
+        let res = await ajaxSync(
             window.location.pathname,
             {
                 sfdtPageMode: 'columnConfigSave',

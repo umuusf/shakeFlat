@@ -2374,7 +2374,7 @@ class DataTables
             $replaceTo[] = "\"stateSaveParams\": function(settings, data) { data.search.search = ''; for(i=0;i<data.columns.length;i++) { data.columns[i].search.search = ''; } {$orderInit} }";
         }
 
-        if ($this->language == "kr") $options["language"]["url"] = "/assets/libs/datatables-2.1.8/i18n/ko.json";
+        if ($this->language == "kr") $options["language"]["url"] = "/assets/libs/datatables-2.2.1/i18n/ko.json";
         if ($this->noDataMessage) $options["language"]["emptyTable"] = $this->noDataMessage;
         $options["drawCallback"] = "drawCallback-function";
 
@@ -2433,11 +2433,11 @@ class DataTables
         if (!$this->disableTooltip) {
             $drawCallbackScript .= <<<EOD
 
-                        $(".btn-sfdt-search-reset").data("bs-toggle", "tooltip").attr("title", "[:dt:Reset search conditions:]").tooltip();
-                        $(".sfdt-btn-open-column-config").data("bs-toggle", "tooltip").attr("title", "[:dt:Change column order and visibility settings:]").tooltip();
-                        $("#sfdt-btn-column-config-reset").data("bs-toggle", "tooltip").attr("title", "[:dt:Restore the initial state of column order and visibility.:]").tooltip();
-                        $("#sfdt-btn-column-config-save").data("bs-toggle", "tooltip").attr("title", "[:dt:Save or load the order and visibility of columns.:]").tooltip();
-                        $(".sfdt-btn-pagejump").data("bs-toggle", "tooltip").attr("title", "[:dt:Go directly to the page number you entered:]").tooltip();
+                        $(".btn-sfdt-search-reset").data("bs-toggle", "tooltip").attr("title", "[:dt:Reset search conditions:]").tooltip("hide");
+                        $(".sfdt-btn-open-column-config").data("bs-toggle", "tooltip").attr("title", "[:dt:Change column order and visibility settings:]").tooltip("hide");
+                        $("#sfdt-btn-column-config-reset").data("bs-toggle", "tooltip").attr("title", "[:dt:Restore the initial state of column order and visibility.:]").tooltip("hide");
+                        $("#sfdt-btn-column-config-save").data("bs-toggle", "tooltip").attr("title", "[:dt:Save or load the order and visibility of columns.:]").tooltip("hide");
+                        $(".sfdt-btn-pagejump").data("bs-toggle", "tooltip").attr("title", "[:dt:Go directly to the page number you entered:]").tooltip("hide");
                 EOD;
         }
 
@@ -2465,6 +2465,7 @@ class DataTables
 
             // If there is detailed search content, highlight the detailed search toggle button.
             $drawCallbackScript .= <<<EOD
+
                         if (Object.values(sfdtSearchConditionAll('{$this->tableId}').customSearch).some(condition => condition)) {
                             $("#btn-sfdt-custom-search-detail-collaps").addClass("btn-primary").removeClass("btn-secondary");
                         } else {
@@ -2479,7 +2480,7 @@ class DataTables
                 "drawCallback": function(settings) {
                     {$drawCallbackScript}
                     let onoff = localStorage.getItem('sfdt-{$this->tableId}-custom-search-onoff');
-                    if (onoff == '1') {
+                    if (onoff == '1' || onoff === null) {
                         $(".sfdt-custom-search").addClass("show");
                         $("#btn-sfdt-custom-search-detail-collaps").html("[:dt:Detail Search:] <i class='fa-regular fa-square-caret-up'></i></i>");
                     } else {

@@ -98,15 +98,32 @@ function callAjax(url, frm, successCallback, errorCallback, _this)
     });
 }
 
-async function ajaxResult(url, frm)
+async function ajaxSync(url, frm)
 {
-    let opt = _ajaxOpt(url, frm);
     try {
-        let response = await $.ajax(opt);
-        return response;
+        const opt = _ajaxOpt(url, frm);
+        const result = await $.ajax(opt);
+
+        if (!result || result.constructor !== Object || !("data" in result) || !("error" in result) || !("errCode" in result.error)) {
+            console.log(result);
+            return false;
+        }
+
+        if (result.error.errCode !== 0) {
+            if (result.error.errMsg && result.error.errUrl) {
+                alertJump(result.error.errMsg, result.error.errUrl);
+                return false;
+            }
+            let msg = result.error.errMsg;
+            if (!msg) msg = "잘못된 접근입니다. 잠시 후 다시 시도해주세요.";
+            alert(msg + " (" + result.error.errCode + ")");
+            return false;
+        }
+
+        return result;
     } catch (error) {
+        console.error("Ajax request failed:", error);
         alert("서버 호출시 문제가 발생하였습니다. 잠시 후 다시 시도해주세요.");
-        console.log(error);
         return false;
     }
 }

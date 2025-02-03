@@ -110,6 +110,12 @@ function sfModeAPIEncrypt()
     $template->setMode(shakeFlat\Template::MODE_API_ENCRYPT);
 }
 
+function sfModeAPIEncryptZip()
+{
+    $template = shakeFlat\Template::getInstance();
+    $template->setMode(shakeFlat\Template::MODE_API_ENCRYPT_ZIP);
+}
+
 function sfRedirect($url, $msg = null)
 {
     $template = shakeFlat\Template::getInstance();

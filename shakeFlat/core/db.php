@@ -200,6 +200,11 @@ class DB
 
     public function lastId()
     {
+        return $this->lastInsertId();
+    }
+
+    public function lastInsertId()
+    {
         return $this->dbh->lastInsertId();
     }
 
