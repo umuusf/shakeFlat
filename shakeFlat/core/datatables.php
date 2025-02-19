@@ -621,6 +621,12 @@ class DataTablesColumn
         $this->alias = $alias;
         $this->data = $alias;
         $this->searchColumn = $alias;
+
+        $this->clear();
+    }
+
+    public function clear()
+    {
         $this->title = "";
         $this->class = [];
         $this->render = "";
@@ -635,6 +641,8 @@ class DataTablesColumn
         //$this->buttons = [];
         //$this->detailButtonInfo = [];
         //$this->modifyButtonInfo = [];
+
+        return $this;
     }
 
     public function alias()
@@ -642,6 +650,7 @@ class DataTablesColumn
         return $this->alias;
     }
 
+    // This is to explicitly specify the column name when the alias is different from the actual column name
     public function data($data = null)
     {
         if ($data === null) return $this->data;
@@ -649,6 +658,8 @@ class DataTablesColumn
         return $this;
     }
 
+    // Column name to be used for integrated search and custom search.
+    // In case of a join, use tableName.columnName.
     public function searchColumn($searchColumn = null)
     {
         if ($searchColumn === null) return $this->searchColumn;
@@ -884,6 +895,8 @@ class DataTablesCustomSearch
     }
 
     public function alias() { return $this->alias; }
+
+    // Use when you want to apply search even though the column does not exist in layoutList
     public function query($exColumnQuery = null)
     {
         if ($exColumnQuery === null) $this->exColumnQuery = $this->alias;
@@ -2087,8 +2100,9 @@ class DataTables
         if ($this->customSearch && !$this->disableCustomSearchButton) $customSearchOpen = ' <button type="button" class="btn btn-sm btn-secondary" id="btn-sfdt-custom-search-detail-collaps" data-bs-toggle="collapse" data-bs-target=".sfdt-custom-search">[:dt:Detail Search:] <i class="fa-regular fa-square-caret-up"></i></button>';
 
         $topStartSearch = "'search',";
+        $topStartCustomSearchButton = "";
         if ($this->disableDefaultSearch) $topStartSearch = "";
-        $topStartCustomSearchButton = "function() { return '<button type=\"button\" class=\"btn btn-sfdt-search-reset\" data-table-id=\"{$this->tableId}\"><i class=\"bi bi-arrow-clockwise\"></i></button>{$customSearchOpen}'; }";
+        else $topStartCustomSearchButton = "function() { return '<button type=\"button\" class=\"btn btn-sfdt-search-reset\" data-table-id=\"{$this->tableId}\"><i class=\"bi bi-arrow-clockwise\"></i></button>{$customSearchOpen}'; }";
 
         return <<<EOD
 

@@ -63,7 +63,7 @@ class Template
         $this->gpath = GPath::getInstance();
 
         $this->layoutFile           = "layout.html";
-        $this->layoutFileForError   = "layout.html";
+        $this->layoutFileForError   = "layout_empty.html";
         $this->mode                 = self::MODE_WEB;
         $this->redirectUrl          = null;
         $this->redirectMsg          = null;
