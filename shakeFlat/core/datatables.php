@@ -1977,6 +1977,12 @@ class DataTables
                                 if (!('data' in json) || !('draw' in json.data) || !('recordsTotal' in json.data) || !('recordsFiltered' in json.data) || !('data' in json.data)) throw "data object is not exist";
                                 callback(json.data);
                             } catch (e) {
+                                if (e.message && e.message.includes("ColReorder - column count mismatch")) {
+                                    sfdt['{$this->tableId}'].colReorder.reset();
+                                    callback(json.data);
+                                    return;
+                                }
+
                                 alert("[:dt:The server responded incorrectly. Please try again later.:]");
                                 console.log("ajax page returns data in wrong:", e);
                                 console.log("json:", json);

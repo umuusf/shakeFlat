@@ -128,7 +128,6 @@ function __sfAlert(options)
         language: "ko",
 		messageText: 'Message',
 		alertType: 'default', //default, primary, success, info, warning, danger
-		inputFieldType: 'text', //could ask for number,email,etc
         fontSize: '1.2rem',
         width: null,
         icon: null,
@@ -143,6 +142,8 @@ function __sfAlert(options)
         inputRequired: true,
         inputWidth: '100%',
         inputPlaceholder: '',
+        inputType: 'text',
+        inputDefault: '',
 	}
 	$.extend(defaults, options);
 
@@ -223,7 +224,8 @@ function __sfAlert(options)
 				break;
             case "input":
                 let $inputDiv = $("<div/>", { "class":"mb-3 d-flex justify-content-center"});
-                let $input = $("<input/>", { "class":"form-control", "type":"text", "id":"prompt", "name":"prompt", "style":"width:" + defaults.inputWidth, "placeholder":defaults.inputPlaceholder });
+                let $input = $("<input/>", { "class":"form-control", "type":defaults.inputType, "id":"prompt", "name":"prompt", "style":"width:" + defaults.inputWidth, "placeholder":defaults.inputPlaceholder });
+                if (defaults.inputDefault) $input.val(defaults.inputDefault);
                 $input.attr("autocomplete", "off");
 
                 let $validationMessage = $("<div/>", { "class":"text-danger mb-3", "css":{ "font-size":"0.8rem" } });
