@@ -42,6 +42,8 @@ class Param
     const FILE_IMAGE     = 2002;
 
     private $params = array();
+    private $encryptParams = array();
+    private $enableEncrypt = false;
     private $typeInfo = array();    // It has type and enum information specified for each parameter.
     private $noEnc = false;
 
@@ -57,6 +59,8 @@ class Param
     private function __construct($queryString)
     {
         $this->params = array();
+        $this->encryptParams = array();
+        $this->enableEncrypt = false;
 
         if ($queryString === null) {
             $parseUrl = parse_url($_SERVER["REQUEST_URI"]);
@@ -76,32 +80,39 @@ class Param
 
     public function encryptParam($k, $key = null, $iv = null, $zip = true, $reset = true)
     {
-        if ($reset) $this->params = array();
+        if ($reset) $this->encryptParams = array();
 
         // get parameters
         $get = null;
         $parseUrl = parse_url($_SERVER["REQUEST_URI"]);
         if (isset($parseUrl["query"])) parse_str($parseUrl["query"], $get);
 
+        if (IS_DEBUG) {
+            $noenc = $_POST["noenc"] ?? $get["noenc"] ?? null;
+            if ($noenc == 1) $this->noEnc = true;
+
+            if ($get) $this->encryptParams = array_merge($this->encryptParams, $get);
+            if ($_POST) $this->encryptParams = array_merge($this->encryptParams, $_POST);
+            unset($this->encryptParams[$k]);
+        }
+
         $data = $_POST[$k] ?? $get[$k] ?? null;
         if ($data) {
             if ($key === null) $key = SHAKEFLAT_ENV["aes256"]["key_with_client"] ?? "00000000000000000000000000000000";
             if ($iv === null) $iv = SHAKEFLAT_ENV["aes256"]["iv_with_client"] ?? "0000000000000000";
             $dec = AES256::unpack($data, $key, $iv, $zip);
-            if ($dec) parse_str($dec, $this->params);
+            if ($dec) parse_str($dec, $this->encryptParams);
         }
 
-        if (IS_DEBUG) {
-            $noenc = $_POST["noenc"] ?? $get["noenc"] ?? null;
-            if ($noenc == 1) $this->noEnc = true;
-
-            if ($get) $this->params = array_merge($this->params, $get);
-            if ($_POST) $this->params = array_merge($this->params, $_POST);
-        }
+        $this->enableEncrypt = true;
     }
 
     public function getAll()
     {
+        if ($this->enableEncrypt) {
+            // If encryption is enabled, return the decrypted parameters.
+            return $this->encryptParams;
+        }
         return $this->params;
     }
 
@@ -124,12 +135,17 @@ class Param
     // When retrieving the value of a parameter, a default value can be specified.
     public function get($key, $default = "_+-=NO_VALUE=-+_")
     {
-        if (array_key_exists($key, $this->params) !== false) {
-            if ($default !== "_+-=NO_VALUE=-+_" && $this->params[$key] == "") return $default;
-            return $this->params[$key];
+        $param = $this->params;
+        if ($this->enableEncrypt) {
+            // If encryption is enabled, return the decrypted parameters.
+            $param = $this->encryptParams;
+        }
+        if (array_key_exists($key, $param) !== false) {
+            if ($default !== "_+-=NO_VALUE=-+_" && $param[$key] == "") return $default;
+            return $param[$key];
         } elseif (substr($key, 0, 3) == "_d_") {
-            if (array_key_exists(substr($key, 3), $this->params) !== false) {
-                if ($this->params[substr($key, 3)] != "") return $this->params[substr($key, 3)];
+            if (array_key_exists(substr($key, 3), $param) !== false) {
+                if ($param[substr($key, 3)] != "") return $param[substr($key, 3)];
                 if ($default !== "_+-=NO_VALUE=-+_") return $default;
                 return $this->_defaultValue(substr($key, 3));
             } elseif (array_key_exists(substr($key, 3), $this->typeInfo) !== false) {
@@ -186,25 +202,40 @@ class Param
 
     public function exists($key)
     {
-        return (array_key_exists($key, $this->params) === true || array_key_exists($key, $_FILES) === true);
+        $param = $this->params;
+        if ($this->enableEncrypt) {
+            // If encryption is enabled, check the decrypted parameters.
+            $param = $this->encryptParams;
+        }
+        return (array_key_exists($key, $param) === true || array_key_exists($key, $_FILES) === true);
     }
 
     private function _existKey($key, $type)
     {
+        $param = $this->params;
+        if ($this->enableEncrypt) {
+            // If encryption is enabled, check the decrypted parameters.
+            $param = $this->encryptParams;
+        }
         if ($type == self::TYPE_FILE) {
-            if (!isset($_FILES[$key]) && array_key_exists($key, $this->params) === false) return false;
+            if (!isset($_FILES[$key]) && array_key_exists($key, $param) === false) return false;
         } else {
-            if (array_key_exists($key, $this->params) === false) return false;
+            if (array_key_exists($key, $param) === false) return false;
         }
         return true;
     }
 
     private function _existValue($key, $type)
     {
+        $param = $this->params;
+        if ($this->enableEncrypt) {
+            // If encryption is enabled, check the decrypted parameters.
+            $param = $this->encryptParams;
+        }
         if ($type == self::TYPE_FILE) {
             if (($_FILES[$key]["error"] ?? 100) != 0) return false;
         } else {
-            if (($this->params[$key] ?? "") === "") return false;
+            if (($param[$key] ?? "") === "") return false;
         }
         return true;
     }
@@ -248,31 +279,36 @@ class Param
 
     private function _checkType($key, $type, $enum)
     {
-        if ($enum !== null && is_array($enum) && !in_array($this->params[$key], $enum)) L::exit("[:The type of parameter {$key} is incorrect.:]");
+        $param = &$this->params;
+        if ($this->enableEncrypt) {
+            // If encryption is enabled, check the decrypted parameters.
+            $param = &$this->encryptParams;
+        }
+        if ($enum !== null && is_array($enum) && !in_array($param[$key], $enum)) L::exit("[:The type of parameter {$key} is incorrect.:]");
 
         switch($type) {
             case Param::TYPE_INT :
-                $val = strval(intval($this->params[$key]));
-                if ($val != $this->params[$key]) L::exit("[:The type of parameter {$key} is incorrect.:]");
-                $this->params[$key] = intval($this->params[$key]);
+                $val = strval(intval($param[$key]));
+                if ($val != $param[$key]) L::exit("[:The type of parameter {$key} is incorrect.:]");
+                $param[$key] = intval($param[$key]);
                 return;
             case Param::TYPE_FLOAT :
-                $val = strval(floatval($this->params[$key]));
-                if ($val != $this->params[$key]) L::exit("[:The type of parameter {$key} is incorrect.:]");
-                $this->params[$key] = floatval($this->params[$key]);
+                $val = strval(floatval($param[$key]));
+                if ($val != $param[$key]) L::exit("[:The type of parameter {$key} is incorrect.:]");
+                $param[$key] = floatval($param[$key]);
                 return;
             case Param::TYPE_STRING :
-                if (!is_string($this->params[$key])) L::exit("[:The type of parameter {$key} is incorrect.:]");
-                $this->params[$key] = strval($this->params[$key]);
+                if (!is_string($param[$key])) L::exit("[:The type of parameter {$key} is incorrect.:]");
+                $param[$key] = strval($param[$key]);
                 return;
             case Param::TYPE_BOOLEAN :
-                if (strtolower($this->params[$key]) == "true") $this->params[$key] = true;
-                if (strtolower($this->params[$key]) == "false") $this->params[$key] = false;
-                if (!is_bool($this->params[$key])) L::exit("[:The type of parameter {$key} is incorrect.:]");
+                if (strtolower($param[$key]) == "true") $param[$key] = true;
+                if (strtolower($param[$key]) == "false") $param[$key] = false;
+                if (!is_bool($param[$key])) L::exit("[:The type of parameter {$key} is incorrect.:]");
                 return;
             case Param::TYPE_JSON :
-                if ($this->params[$key]) {
-                    if (!is_array(json_decode($this->params[$key], true))) {
+                if ($param[$key]) {
+                    if (!is_array(json_decode($param[$key], true))) {
                         switch (json_last_error()) {
                             case JSON_ERROR_NONE            : L::exit("[:{$key} Error in json format : No errors:]"); break;
                             case JSON_ERROR_DEPTH           : L::exit("[:{$key} Error in json format : Maximum stack depth exceeded:]"); break;
@@ -283,20 +319,20 @@ class Param
                             default                         : L::exit("[:{$key} Error in json format : Unknown error:]"); break;
                         }
                     }
-                    $this->params[$key] = json_decode($this->params[$key], true);
+                    $param[$key] = json_decode($param[$key], true);
                 } else {
-                    $this->params[$key] = array();
+                    $param[$key] = array();
                 }
                 return;
 
-            case Param::TYPE_ARRAY       : if (!is_array($this->params[$key]))                                              L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
-            case Param::TYPE_EMAIL       : if (filter_var($this->params[$key], FILTER_VALIDATE_EMAIL) === false)            L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
-            case Param::TYPE_URL         : if (filter_var($this->params[$key], FILTER_VALIDATE_URL) === false)              L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
-            case Param::TYPE_DOMAIN      : if (filter_var($this->params[$key], FILTER_VALIDATE_DOMAIN) === false)           L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
-            case Param::TYPE_IP          : if (filter_var($this->params[$key], FILTER_VALIDATE_IP) === false)               L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
-            case Param::TYPE_DATETIME    : if (Util::validateDate($this->params[$key]) === false)                           L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
-            case Param::TYPE_DATE        : if ($this->params[$key] != date("Y-m-d", strtotime($this->params[$key])))        L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
-            case Param::TYPE_FILE        : if (!isset($_FILES[$key]) || ($_FILES[$key]["error"] ?? 100) != 0)               L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_ARRAY       : if (!is_array($param[$key]))                                         L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_EMAIL       : if (filter_var($param[$key], FILTER_VALIDATE_EMAIL) === false)       L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_URL         : if (filter_var($param[$key], FILTER_VALIDATE_URL) === false)         L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_DOMAIN      : if (filter_var($param[$key], FILTER_VALIDATE_DOMAIN) === false)      L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_IP          : if (filter_var($param[$key], FILTER_VALIDATE_IP) === false)          L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_DATETIME    : if (Util::validateDate($param[$key]) === false)                      L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_DATE        : if ($param[$key] != date("Y-m-d", strtotime($param[$key])))          L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_FILE        : if (!isset($_FILES[$key]) || ($_FILES[$key]["error"] ?? 100) != 0)   L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
         }
         L::exit("[:The type of parameter {$key} is incorrect.:]");
     }

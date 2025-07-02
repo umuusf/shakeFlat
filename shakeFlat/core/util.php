@@ -17,30 +17,42 @@ class Util
         return false;
     }
 
+    // if ipv6 - 2001:0db8:85a3:0000:0000:8a2e:0370:7334
     public static function remoteIP()
     {
-        if(getenv('HTTP_CLIENT_IP') &&
-            strcasecmp(getenv('HTTP_CLIENT_IP'),'unknown')) {
-                $ip = getenv('HTTP_CLIENT_IP');
-        } elseif(getenv('HTTP_X_FORWARDED_FOR') &&
-            strcasecmp(getenv('HTTP_X_FORWARDED_FOR'),'unknown')) {
-                $ip = getenv('HTTP_X_FORWARDED_FOR');
-        } elseif(getenv('REMOTE_ADDR') &&
-            strcasecmp(getenv('REMOTE_ADDR'),'unknown')) {
-                $ip = getenv('REMOTE_ADDR');
-        } elseif(isset($_SERVER['REMOTE_ADDR']) &&
-            $_SERVER['REMOTE_ADDR']  &&
-            strcasecmp($_SERVER['REMOTE_ADDR'], 'unknown')) {
-                $ip = $_SERVER['REMOTE_ADDR'];
-        } else {
-                $ip = 'unknown';
+        $headers = [
+            'HTTP_CF_CONNECTING_IP',
+            'HTTP_CLIENT_IP',
+            'HTTP_X_FORWARDED_FOR',
+            'HTTP_X_FORWARDED',
+            'HTTP_FORWARDED_FOR',
+            'REMOTE_ADDR'
+        ];
+
+        foreach ($headers as $header) {
+            if (!empty($_SERVER[$header]) && strcasecmp($_SERVER[$header], 'unknown') !== 0) {
+                $ip = $_SERVER[$header];
+
+                // 여러 IP가 쉼표로 구분된 경우 첫 번째 IP 사용
+                if (strpos($ip, ',') !== false) {
+                    $ip = trim(explode(',', $ip)[0]);
+                }
+
+                $ip = trim($ip);
+
+                // 유효한 IP인지 확인
+                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                    return $ip;
+                }
+
+                // 사설 IP도 허용 (공용 IP를 찾지 못한 경우)
+                if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                    $fallback_ip = $ip;
+                }
+            }
         }
 
-        if (strpos($ip, ",") != false) {
-            $x = explode(",", $ip);
-            $ip = $x[0];
-        }
-        return $ip;
+        return $fallback_ip ?? 'unknown';
     }
 
     // Get the structure of the currently called URL. (protocol + domain)

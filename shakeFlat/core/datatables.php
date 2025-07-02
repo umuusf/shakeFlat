@@ -184,7 +184,7 @@ class DataTablesRenderButton
                                     <div class="col-auto">
                                         <div class="sfdt-floating">
                                             <div class="sfdt-label text-nowrap">{$tableColumns[$alias]->title()}</div>
-                                            <div class="sfdt-plaintext text-nowrap" id="sfdt-modal-{$this->tableId}-{$this->btnId}-column-{$alias}"></div>
+                                            <div class="sfdt-plaintext sfdt-detail-view-content" id="sfdt-modal-{$this->tableId}-{$this->btnId}-column-{$alias}"></div>
                                         </div>
                                     </div>
 
@@ -316,7 +316,7 @@ class DataTablesRenderButton
             <div class="modal fade" tabindex="-1" id="sfdt-modal-{$this->tableId}-{$this->btnId}" aria-labelledby="Detail View" aria-describedby="Detail View" aria-hidden="true" aria-modal="true">
                 <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                     <div class="modal-content">
-                        <div class="modal-header bg-detail">
+                        <div class="modal-header bg-color-detail">
                             <h5 class="modal-title">[:dtdetail:Detail View:]</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
@@ -388,6 +388,18 @@ class DataTablesRenderButton
                 EOD;
                 continue;
             }
+
+            if (is_string($item) && substr($item, 0, 6) === 'label:') {
+                $item = substr($item, 6);
+                $layoutHtml .= <<<EOD
+
+                                <div class="row mb-3">
+                                    <div class="text-nowrap ms-1">{$item}</div>
+                                </div>
+                EOD;
+                continue;
+            }
+
             $layoutHtml .= <<<EOD
 
                                 <div class="row mb-4">
@@ -522,7 +534,7 @@ class DataTablesRenderButton
             <div class="modal fade" tabindex="-1" id="sfdt-modal-{$this->tableId}-{$this->btnId}" aria-labelledby="Modify" aria-describedby="Modify" aria-hidden="true" aria-modal="true">
                 <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                     <div class="modal-content">
-                        <div class="modal-header bg-modify">
+                        <div class="modal-header bg-color-modify">
                             <h5 class="modal-title">[:dtmodaltitle:Modify:]</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
@@ -754,7 +766,7 @@ class DataTablesColumn
         $this->type = "string";
         $this->displayType = "datetime:{$format}";
         $this->class("text-center");
-        $this->render = "function(data, type, row, meta) { return data.formatDateTime('{$format}'); }";
+        $this->render = "function(data, type, row, meta) { if(data == null || data == '') return ''; return data.formatDateTime('{$format}'); }";
         return $this;
     }
 
@@ -772,7 +784,7 @@ class DataTablesColumn
         $this->type = "string";
         $this->displayType = "datetime:{$format}";
         $this->class("text-center");
-        $this->render = "function(data, type, row, meta) { return data.formatDateTime('{$format}'); }";
+        $this->render = "function(data, type, row, meta) { if(data == null || data == '') return ''; return data.formatDateTime('{$format}'); }";
         return $this;
     }
 
@@ -790,7 +802,7 @@ class DataTablesColumn
         $this->type = "string";
         $this->displayType = "datetime:{$format}";
         $this->class("text-center");
-        $this->render = "function(data, type, row, meta) { return data.formatDateTime('{$format}'); }";
+        $this->render = "function(data, type, row, meta) { if(data == null || data == '') return ''; return data.formatDateTime('{$format}'); }";
         return $this;
     }
 
@@ -838,19 +850,19 @@ class DataTablesColumn
 
     public function buttonDetail($btnId)
     {
-        $this->button($btnId)->typeDetailVlew()->title("[:dtdetail:View:]")->class("btn-detail");
+        $this->button($btnId)->typeDetailVlew()->title("[:dtdetail:View:]")->class("btn-color-detail");
         return $this->button($btnId);
     }
 
     public function buttonModify($btnId)
     {
-        $this->button($btnId)->typeModify()->title("[:dtmodify:Modify:]")->class("btn-modify");
+        $this->button($btnId)->typeModify()->title("[:dtmodify:Modify:]")->class("btn-color-modify");
         return $this->button($btnId);
     }
 
     public function buttonDelete($btnId)
     {
-        $this->button($btnId)->typeDelete()->title("[:dtdelete:Delete:]")->class("btn-delete");
+        $this->button($btnId)->typeDelete()->title("[:dtdelete:Delete:]")->class("btn-color-delete");
         return $this->button($btnId);
     }
 }
@@ -876,6 +888,9 @@ class DataTablesCustomSearch
     private $exColumnQuery;     // for database field name for search(where statement)
     private $likeSearch;
     private $autoSubmit;
+    private $nullValue;         // The actual value coming from the <form> when wanting to compare if a value is null in query conditions
+                                // Only evaluate when it's not "null"
+    private $isNoQuery;
 
     public function __construct($tableId, $alias)
     {
@@ -892,6 +907,8 @@ class DataTablesCustomSearch
         $this->exColumnQuery = "";
         $this->likeSearch = true;
         $this->autoSubmit = true;
+        $this->nullValue = null;
+        $this->isNoQuery = false;
     }
 
     public function alias() { return $this->alias; }
@@ -904,6 +921,13 @@ class DataTablesCustomSearch
         return $this;
     }
     public function exColumnQuery() { return $this->exColumnQuery; }
+
+    public function isNoQuery() { return $this->isNoQuery; }
+    public function noQuery()
+    {
+        $this->isNoQuery = true;
+        return $this;
+    }
 
     public function title($title = null)
     {
@@ -985,6 +1009,12 @@ class DataTablesCustomSearch
         return $this;
     }
 
+    public function nullValue($value = null) {
+        if ($value === null) return $this->nullValue;
+        $this->nullValue = $value;
+        return $this;
+    }
+
     public function string() { return $this->type(self::TYPE_STRING); }
     public function select() { $this->equalSearch(); return $this->type(self::TYPE_SELECT); }
     public function select2() { $this->equalSearch(); $this->select2 = true; return $this->type(self::TYPE_SELECT); }
@@ -1011,7 +1041,8 @@ class DataTablesCustomSearch
             "controlStyle"      => $this->controlStyle,
             "option"            => $this->options,
             "numberRangeOption" => $this->numberRangeOption,
-            "select2"           => $this->select2
+            "select2"           => $this->select2,
+            "nullValue"         => $this->nullValue
         ];
     }
 }
@@ -1023,7 +1054,7 @@ class DataTablesExtraButton
     private $title;
     private $class;
     private $option;
-    private $action;
+    //private $action;
     private $tooltip;
     private $addRecord;       // add new record
 
@@ -1033,7 +1064,7 @@ class DataTablesExtraButton
         $this->btnId = $btnId;
         $this->title = $btnId;
         $this->class = [];
-        $this->action = "";
+        //$this->action = "";
         $this->option = [];
         $this->tooltip = "";
         $this->addRecord = null;
@@ -1060,12 +1091,14 @@ class DataTablesExtraButton
         return $this;
     }
 
+    /*
     public function action($action = null)
     {
         if ($action === null) return $this->action;
         $this->action = $action;
         return $this;
     }
+    */
 
     public function option($option = null)
     {
@@ -1500,6 +1533,18 @@ class DataTablesAddRecord
                 EOD;
                 continue;
             }
+
+            if (is_string($item) && substr($item, 0, 6) === 'label:') {
+                $item = substr($item, 6);
+                $controlHtml .= <<<EOD
+
+                                <div class="row mb-3">
+                                    <div class="text-nowrap ms-1">{$item}</div>
+                                </div>
+                EOD;
+                continue;
+            }
+
             $controlHtml .= <<<EOD
 
                                 <div class="row mb-4">
@@ -1527,7 +1572,7 @@ class DataTablesAddRecord
             <div class="modal fade" tabindex="-1" id="sfdt-modal-{$this->tableId}-{$this->btnId}" aria-labelledby="add new record" aria-describedby="add new record" aria-hidden="true" aria-modal="true">
                 <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                     <div class="modal-content">
-                        <div class="modal-header bg-add">
+                        <div class="modal-header bg-color-add">
                             <h5 class="modal-title">[:dtaddrecord:Add New:]</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
@@ -1538,7 +1583,7 @@ class DataTablesAddRecord
                         </div>
                         <div class="modal-footer d-flex justify-content-end">
                             <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">[:dt:Cancel:]</button>
-                            <button type="button" class="btn btn-sm btn-add" id="sfdt-btn-{$this->tableId}-{$this->btnId}-add-submit">[:dtaddrecord:Submit:]</button>
+                            <button type="button" class="btn btn-sm btn-color-add" id="sfdt-btn-{$this->tableId}-{$this->btnId}-add-submit">[:dtaddrecord:Submit:]</button>
                         </div>
                     </div>
                 </div>
@@ -1617,7 +1662,11 @@ class DataTablesAddRecord
                             console.log(e);
                             \$this.prop("disabled", false);
                             \$this.html("[:dtaddrecord:Submit:]");
-                            alert("[:An error occurred while calling the server. Please try again later.:]");
+                            if (e.error.errMsg) {
+                                alert(e.error.errMsg);
+                            } else {
+                                alert("[:An error occurred while calling the server. Please try again later.:]");
+                            }
                         }
                     )
                 });
@@ -1642,6 +1691,7 @@ class DataTables
     private $language;
     private $ajaxUrl;
 
+    private $disableExport;
     private $exportActionPrint;
     private $exportActionPDF;
     private $exportActionExcel;
@@ -1696,16 +1746,17 @@ class DataTables
         $this->deliverParameters = [];
 
         $this->options = [
-            "stateSave"  => true,
-            "pageLength" => 20,
-            "lengthMenu" => [10, 20, 25, 30, 50, 75, 100],
-            "paging"     => true,
-            "ordering"   => true,
-            "colReorder" => true,
-            "responsive" => false,
-            "scrollX"    => true,
-            "retrieve"   => true,
-            "serverSide" => true,
+            "stateSave"     => true,
+            "pageLength"    => 20,
+            "lengthChange"  => true,
+            "lengthMenu"    => [10, 20, 25, 30, 50, 75, 100],
+            "paging"        => true,
+            "ordering"      => true,
+            "colReorder"    => true,
+            "responsive"    => false,
+            "scrollX"       => true,
+            "retrieve"      => true,
+            "serverSide"    => true,
         ];
 
         $translation = Translation::getInstance();
@@ -1725,6 +1776,8 @@ class DataTables
 
         $this->columnConfigSaveFunction = "";
         $this->columnConfigLoadFunction = "";
+
+        $this->disableExport = false;
 
         $this->exportActionPrint    = "sfdtExportAction";
         $this->exportActionPDF      = "sfdtExportAction";
@@ -1767,6 +1820,7 @@ class DataTables
     public function options($options) { $this->options = array_merge($this->options, $options); return $this; }
     public function pageLength($length) { $this->options["pageLength"] = intval($length); return $this; }
     public function lengthMenu($menu) { $this->options["lengthMenu"] = $menu; return $this; }
+    public function lengthChange($bool) { $this->options["lengthChange"] = $bool; return $this; }
     public function disableStateSave() { $this->options["stateSave"] = false; return $this; }
     public function disableColReorder() { $this->options["colReorder"] = false; return $this; }
     public function ajaxUrl($url) { $this->ajaxUrl = $url; return $this; }
@@ -1784,6 +1838,8 @@ class DataTables
     /*
      * export option
      */
+    public function disableExport() { $this->disableExport = true; return $this; }
+
     public function exportTitle($title) { $this->exportTitlePrint = $this->exportTitlePDF = $title; return $this; }
     public function exportFilename($filename) { $this->exportFilenamePDF = $this->exportFilenameExcel = $filename; return $this; }
     public function exportAction($action) { $this->exportActionPrint = $this->exportActionPDF = $this->exportActionExcel = $action; return $this; }
@@ -1892,8 +1948,8 @@ class DataTables
                             <div class="modal-body" id="sfdt-modal-column-config-body"></div>
                             <div class="modal-footer d-flex justify-content-between">
                                 <div>
-                                    <button type="button" class="btn btn-sm btn-reset" id="sfdt-btn-column-config-reset">[:dt:Reset:]</button>
-                                    <button type="button" class="btn btn-sm btn-save" id="sfdt-btn-column-config-save"><i class="bi bi-floppy"></i></button>
+                                    <button type="button" class="btn btn-sm btn-color-reset" id="sfdt-btn-column-config-reset">[:dt:Reset:]</button>
+                                    <button type="button" class="btn btn-sm btn-color-save" id="sfdt-btn-column-config-save"><i class="bi bi-floppy"></i></button>
                                 </div>
                                 <div>
                                     <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal" aria-label="Close">[:dt:Cancel:]</button>
@@ -1917,7 +1973,7 @@ class DataTables
         if ($this->customSearch) {
             $scriptEx = [];
             foreach($this->customSearch as $alias => $cs) {
-                if ($cs->exColumnQuery()) {
+                if ($cs->exColumnQuery() || $cs->isNoQuery()) {
                     $scriptEx[] = <<<EOD
                         csEx['{$alias}'] = $('#sfdt-{$this->tableId}-custom-search-{$alias}').val();
                         EOD;
@@ -2110,6 +2166,71 @@ class DataTables
         if ($this->disableDefaultSearch) $topStartSearch = "";
         else $topStartCustomSearchButton = "function() { return '<button type=\"button\" class=\"btn btn-sfdt-search-reset\" data-table-id=\"{$this->tableId}\"><i class=\"bi bi-arrow-clockwise\"></i></button>{$customSearchOpen}'; }";
 
+        $exportButtons = "";
+        if (!$this->disableExport) {
+            $exportButtons = <<<EOD
+                        buttons: [
+                            {
+                                extend: 'print',
+                                title : '{$this->exportTitlePrint}',
+                                action: {$this->exportActionPrint},
+                                exportOptions: { columns: ':visible:not(.sfdt-no-export)' },
+                                customize:
+                                    function (win) {
+                                        $(win.document.body).find('h1').each(function() {
+                                            $(this).replaceWith('<h3 class="text-center mb-3">' + $(this).html() + '</h3>');
+                                        });
+                                        $(win.document.body).find('table').addClass('compact').css('font-size', '9pt').css('text-align', 'center');
+                                        $(win.document.body).find('table').find('thead').find('th').css('text-align', 'center');
+                                    }
+                            }, {
+                                extend: 'pdf',
+                                filename: '{$this->exportFilenamePDF}',
+                                action: {$this->exportActionPDF},
+                                title: '{$this->exportTitlePDF}',
+                                exportOptions: { columns: ':visible:not(.sfdt-no-export)' },
+                                customize:
+                                    function(doc) {
+                                        doc.defaultStyle.font = 'hangul';
+                                        doc.defaultStyle.fontSize = 9;
+                                        doc.defaultStyle.alignment = 'center';
+                                        doc.styles.tableHeader = { alignment: 'center', bold: true, fontSize: 9, noWrap: true };
+
+                                        let tblIdx = 0;
+                                        for(let i=0;i<doc.content.length;i++) {
+                                            if (doc.content[i].table) { tblIdx = i; break; }
+                                        }
+                                        if ($(doc.content[tblIdx].table.body[0]).length > 7) doc.pageOrientation = 'landscape';
+                                        let mr = doc.content[tblIdx].table.body.length-1; if (mr > 20) mr = 20;
+                                        let colSum = {}, colCnt = {};
+                                        for(let j=0;j<doc.content[tblIdx].table.body[0].length;j++) { colSum[j] = 0; colCnt[j] = 0; }
+                                        for(let i=1;i<=mr;i++) {
+                                            for(let j=0;j<doc.content[tblIdx].table.body[i].length;j++) {
+                                                if (doc.content[tblIdx].table.body[i][j].text.bytes() > 0) {       // String.bytes() : see sfutil.js
+                                                    colCnt[j]++;
+                                                    colSum[j] += doc.content[tblIdx].table.body[i][j].text.bytes();
+                                                }
+                                            }
+                                        }
+                                        let avgSum = 0, colAvg = {};
+                                        for(let j=0;j<doc.content[tblIdx].table.body[0].length;j++) { colAvg[j] = colSum[j] / colCnt[j]; avgSum += colAvg[j]; }
+                                        let widths = [];
+                                        for(let j=0;j<doc.content[tblIdx].table.body[0].length;j++) {
+                                            widths.push(((colAvg[j] / avgSum) * 100) + "%");
+                                        }
+                                        doc.content[tblIdx].table.widths = widths;
+                                    }
+                            }, {
+                                extend: 'excel',
+                                filename: '{$this->exportFilenameExcel}',
+                                action: {$this->exportActionExcel},
+                                title: '{$this->exportTitleExcel}',
+                                exportOptions: { columns: ':visible:not(.sfdt-no-export)' }
+                            }{$colReorder}
+                        ],
+                EOD;
+        }
+
         return <<<EOD
 
                     {
@@ -2118,65 +2239,7 @@ class DataTables
                             {$topStartCustomSearchButton}
                         ],
                         topEnd: {
-                            buttons: [
-                                {
-                                    extend: 'print',
-                                    title : '{$this->exportTitlePrint}',
-                                    action: {$this->exportActionPrint},
-                                    exportOptions: { columns: ':visible:not(.sfdt-no-export)' },
-                                    customize:
-                                        function (win) {
-                                            $(win.document.body).find('h1').each(function() {
-                                                $(this).replaceWith('<h3 class="text-center mb-3">' + $(this).html() + '</h3>');
-                                            });
-                                            $(win.document.body).find('table').addClass('compact').css('font-size', '9pt').css('text-align', 'center');
-                                            $(win.document.body).find('table').find('thead').find('th').css('text-align', 'center');
-                                        }
-                                }, {
-                                    extend: 'pdf',
-                                    filename: '{$this->exportFilenamePDF}',
-                                    action: {$this->exportActionPDF},
-                                    title: '{$this->exportTitlePDF}',
-                                    exportOptions: { columns: ':visible:not(.sfdt-no-export)' },
-                                    customize:
-                                        function(doc) {
-                                            doc.defaultStyle.font = 'hangul';
-                                            doc.defaultStyle.fontSize = 9;
-                                            doc.defaultStyle.alignment = 'center';
-                                            doc.styles.tableHeader = { alignment: 'center', bold: true, fontSize: 9, noWrap: true };
-
-                                            let tblIdx = 0;
-                                            for(let i=0;i<doc.content.length;i++) {
-                                                if (doc.content[i].table) { tblIdx = i; break; }
-                                            }
-                                            if ($(doc.content[tblIdx].table.body[0]).length > 7) doc.pageOrientation = 'landscape';
-                                            let mr = doc.content[tblIdx].table.body.length-1; if (mr > 20) mr = 20;
-                                            let colSum = {}, colCnt = {};
-                                            for(let j=0;j<doc.content[tblIdx].table.body[0].length;j++) { colSum[j] = 0; colCnt[j] = 0; }
-                                            for(let i=1;i<=mr;i++) {
-                                                for(let j=0;j<doc.content[tblIdx].table.body[i].length;j++) {
-                                                    if (doc.content[tblIdx].table.body[i][j].text.bytes() > 0) {       // String.bytes() : see sfutil.js
-                                                        colCnt[j]++;
-                                                        colSum[j] += doc.content[tblIdx].table.body[i][j].text.bytes();
-                                                    }
-                                                }
-                                            }
-                                            let avgSum = 0, colAvg = {};
-                                            for(let j=0;j<doc.content[tblIdx].table.body[0].length;j++) { colAvg[j] = colSum[j] / colCnt[j]; avgSum += colAvg[j]; }
-                                            let widths = [];
-                                            for(let j=0;j<doc.content[tblIdx].table.body[0].length;j++) {
-                                                widths.push(((colAvg[j] / avgSum) * 100) + "%");
-                                            }
-                                            doc.content[tblIdx].table.widths = widths;
-                                        }
-                                }, {
-                                    extend: 'excel',
-                                    filename: '{$this->exportFilenameExcel}',
-                                    action: {$this->exportActionExcel},
-                                    title: '{$this->exportTitleExcel}',
-                                    exportOptions: { columns: ':visible:not(.sfdt-no-export)' }
-                                }{$colReorder}
-                            ],
+                            {$exportButtons}
                             {$extraButtons}
                         },
                         bottomEnd: [
@@ -2839,6 +2902,7 @@ class DataTables
             foreach($param->customSearchEx as $alias => $value) {
                 if ($value === "") continue;
                 if (!array_key_exists($alias, $this->customSearch)) continue;
+                if ($this->customSearch[$alias]->isNoQuery()) continue;
                 $columnQuery = $this->customSearch[$alias]->exColumnQuery();
                 $this->opQuerySearchBind($alias, $value, $columnQuery, $whereAnd, $this->querySearchBind, 'cex');
             }
@@ -2860,6 +2924,13 @@ class DataTables
 
     public function opQuerySearchBind($alias, $value, $columnQuery, &$whereAnd, &$bind, $prefix)
     {
+        if ($this->customSearch($alias)->nullValue() !== null) {
+            if ($value == $this->customSearch($alias)->nullValue()) {
+                $whereAnd[] = "({$columnQuery}) IS NULL";
+                return;
+            }
+        }
+
         switch ($this->customSearch($alias)->type()) {
             case DataTablesCustomSearch::TYPE_STRING :
                 if ($this->customSearch($alias)->isEqualSearch()) {

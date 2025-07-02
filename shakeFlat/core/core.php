@@ -18,8 +18,8 @@ use shakeFlat\Translation;
 
 class App
 {
-    private $template       = null;
-    private $gpath          = null;
+    private $template = null;
+    private $gpath    = null;
 
     public function __construct()
     {

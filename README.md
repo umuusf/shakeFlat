@@ -9,7 +9,7 @@
 - 누구나 어렵지 않게, 쉽게 접근 가능한 코드 구조를 지향합니다.
 
 #### 사용환경
-- PHP 7.0 이상
+- PHP 8.3 이상
 
 #### 설치
 1. 코드를 다운로드 받으면 htdocs, shakeFlat 2개의 폴더가 나옵니다.
@@ -52,9 +52,3 @@ layout.html   : 웹페이지의 전체적인 구조를 가진다.
 error.html    : 에러가 발생한 경우 이 템플릿이 사용된다.
 ```
 2. 패키지에 포함된 shakeFlat/sample/templates/ 아래에 있는 default, mobile, admin 등을 참조하세요.
-
-#### 계획
-- ~~에러 처리 핸들러~~
-- ~~다중 언어 웹사이트 개발 지원 기능~~
-- RESTful API 지원
-- Support for per-page caching

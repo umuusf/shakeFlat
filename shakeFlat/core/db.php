@@ -149,8 +149,9 @@ class DB
                 $statement = $this->dbh->prepare($sql);
                 foreach($bindList as $param => $value) {
                     switch(gettype($value)) {
-                        case "boolean" : $type = PDO::PARAM_BOOL; break;
-                        case "integer" : $type = PDO::PARAM_INT; break;
+                        case 'boolean' : $type = PDO::PARAM_BOOL; break;
+                        case 'integer' : $type = PDO::PARAM_INT; break;
+                        case 'NULL' : $type = PDO::PARAM_NULL; break;
                         default : $type = PDO::PARAM_STR; break;
                     }
                     $b = $statement->bindValue($param, $value, $type);

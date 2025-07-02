@@ -58,4 +58,9 @@ class Router
     {
         return $this->functionName;
     }
+
+    public function mf()
+    {
+        return $this->moduleName . "/" . $this->functionName;
+    }
 }

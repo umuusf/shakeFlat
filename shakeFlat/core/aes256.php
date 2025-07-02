@@ -51,7 +51,9 @@ class AES256
 
     public static function unpackObject($packObject, $key = null, $iv = null, $is_zip = true)
     {
-        return json_decode(self::unpack($packObject, $key, $iv, $is_zip), true);
+        $object = self::unpack($packObject, $key, $iv, $is_zip);
+        if ($object === null) return null;
+        return json_decode($object, true);
     }
 
     public static function encrypt($text, $key, $iv = null)
