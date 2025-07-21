@@ -26,6 +26,13 @@ class App
         $this->gpath = GPath::getInstance();
         $this->template = Template::getInstance();
         $this->template->setMode(Template::MODE_WEB);
+
+        $translation = Translation::getInstance();
+        if (SHAKEFLAT_ENV["config"]["translation"] ?? false) {
+            $translation->enable();
+        } else {
+            $translation->disable();
+        }
     }
 
     public function setWelcomePage($module = "welcome", $fnc = "main")
@@ -81,6 +88,20 @@ class App
     public function setDefaultErrorMessage($msg)
     {
         L::defaultErrorMessage($msg);
+    }
+
+    public function translationEnable()
+    {
+        $translation = Translation::getInstance();
+        $translation->enable();
+        return $this;
+    }
+
+    public function translationDisable()
+    {
+        $translation = Translation::getInstance();
+        $translation->disable();
+        return $this;
     }
 
     // Select the language to use when outputting results.

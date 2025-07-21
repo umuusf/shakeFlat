@@ -14,6 +14,7 @@ namespace shakeFlat;
 
 class Translation
 {
+    private $status;
     private $cacheTable;
     private $needUpdate;
     private $allTable;
@@ -29,6 +30,7 @@ class Translation
 
     private function __construct()
     {
+        $this->status = false;              // enable/disable status
         $this->needUpdate = false;
         $this->cacheTable = [];
         $this->allTable = [];
@@ -37,6 +39,18 @@ class Translation
         $this->setFilePathTranslation(__DIR__ . "/system_translation.json");
         if (SHAKEFLAT_ENV["path"]["translation_file"] ?? false) $this->setFilePathTranslation(SHAKEFLAT_PATH . trim(SHAKEFLAT_ENV["path"]["translation_file"]));
         if (SHAKEFLAT_ENV["config"]["default_language"] ?? false) $this->setTranslationLang(SHAKEFLAT_ENV["config"]["default_language"]);
+    }
+
+    public function enable()
+    {
+        $this->status = true;
+        return $this;
+    }
+
+    public function disable()
+    {
+        $this->status = false;
+        return $this;
     }
 
     private function setFilePathTranslation($filePath)
@@ -67,6 +81,7 @@ class Translation
 
     public function convert($output, $lang)
     {
+        if (!$this->status) return $output; // If translation is disabled, return the original output.
         if (!$output) return "";
 
         // In the case of debug mode, the cache file is updated every time.
@@ -113,6 +128,7 @@ class Translation
 
     public function updateCache($lang)
     {
+        if (!$this->status) return; // If translation is disabled, do not update the cache.
         if (!$this->needUpdate && !IS_DEBUG) return;
 
         $filepath = $this->cacheFilepath($lang);
