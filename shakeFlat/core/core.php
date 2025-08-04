@@ -131,7 +131,13 @@ class App
     {
         $router = Router::getInstance();
         $moduleFile = rtrim($this->gpath->MODULES, " /") . "/{$router->module()}/{$router->fnc()}.php";
-        if (!file_exists($moduleFile)) L::system("[:The file corresponding to module/function({$router->module()}/{$router->fnc()}) does not exist.:]", array( "module" => $router->module(), "function" => $router->fnc() ));
+        if (!file_exists($moduleFile)) {
+            if (IS_DEBUG) {
+                L::system("[:The file corresponding to module/function({$router->module()}/{$router->fnc()}) does not exist.:]", array( "module" => $router->module(), "function" => $router->fnc() ));
+            } else {
+                L::system("잘못 된 접근입니다.");
+            }
+        }
         if (!include_once($moduleFile)) L::system("[:The file corresponding to module/function({$router->module()}/{$router->fnc()}) cannot be included.:]", array( "module" => $router->module(), "function" => $router->fnc() ));
 
         $fncName = "fnc_" . str_replace("-", "_", $router->fnc());

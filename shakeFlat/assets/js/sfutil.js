@@ -92,6 +92,10 @@ function callAjax(url, frm, successCallback, errorCallback, _this)
             errorCallback(e, _this);
         } else {
             console.log(e);
+            if (e.error && e.error.errCode && e.error.errCode == -1 && e.error.errMsg) {
+                alert(e.error.errMsg);
+                return;
+            }
             alert("서버 호출시 문제가 발생하였습니다. 잠시 후 다시 시도해주세요.");
         }
         return false;

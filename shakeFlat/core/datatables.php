@@ -314,7 +314,7 @@ class DataTablesRenderButton
         $detailHtml = <<<EOD
             <!-- DataTable - Detail view modal for Table Id {$this->tableId} -->
             <div class="modal fade" tabindex="-1" id="sfdt-modal-{$this->tableId}-{$this->btnId}" aria-labelledby="Detail View" aria-describedby="Detail View" aria-hidden="true" aria-modal="true">
-                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="width: auto; max-width: fit-content;">
                     <div class="modal-content">
                         <div class="modal-header bg-color-detail">
                             <h5 class="modal-title">[:dtdetail:Detail View:]</h5>
@@ -509,6 +509,10 @@ class DataTablesRenderButton
                             console.log(e);
                             \$this.prop("disabled", false);
                             \$this.html("[:dtmodify:Modify:]");
+                            if (e.error && e.error.errCode && e.error.errCode == -1 && e.error.errMsg) {
+                                alert(e.error.errMsg);
+                                return;
+                            }
                             alert("[:An error occurred while calling the server. Please try again later.:]");
                         }
                     )
@@ -532,7 +536,7 @@ class DataTablesRenderButton
 
             <!-- DataTable - modify modal for Table Id {$this->tableId} -->
             <div class="modal fade" tabindex="-1" id="sfdt-modal-{$this->tableId}-{$this->btnId}" aria-labelledby="Modify" aria-describedby="Modify" aria-hidden="true" aria-modal="true">
-                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="width: auto; max-width: fit-content;">
                     <div class="modal-content">
                         <div class="modal-header bg-color-modify">
                             <h5 class="modal-title">[:dtmodaltitle:Modify:]</h5>
@@ -1570,7 +1574,7 @@ class DataTablesAddRecord
         $html = <<<EOD
             <!-- DataTable - add record modal for Table Id {$this->tableId} -->
             <div class="modal fade" tabindex="-1" id="sfdt-modal-{$this->tableId}-{$this->btnId}" aria-labelledby="add new record" aria-describedby="add new record" aria-hidden="true" aria-modal="true">
-                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="width: auto; max-width: fit-content;">
                     <div class="modal-content">
                         <div class="modal-header bg-color-add">
                             <h5 class="modal-title">[:dtaddrecord:Add New:]</h5>
@@ -1662,11 +1666,11 @@ class DataTablesAddRecord
                             console.log(e);
                             \$this.prop("disabled", false);
                             \$this.html("[:dtaddrecord:Submit:]");
-                            if (e.error.errMsg) {
+                            if (e.error && e.error.errCode && e.error.errCode == -1 && e.error.errMsg) {
                                 alert(e.error.errMsg);
-                            } else {
-                                alert("[:An error occurred while calling the server. Please try again later.:]");
+                                return;
                             }
+                            alert("[:An error occurred while calling the server. Please try again later.:]");
                         }
                     )
                 });
@@ -1943,7 +1947,7 @@ class DataTables
 
                 <!-- DataTables Column Config Modal -->
                 <div class="modal fade" tabindex="-1" id="sfdt-modal-column-config" aria-labelledby="Column Config" aria-describedby="Column Config" aria-hidden="true" aria-modal="true">
-                    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="width: auto; max-width: fit-content;">
                         <div class="modal-content">
                             <div class="modal-body" id="sfdt-modal-column-config-body"></div>
                             <div class="modal-footer d-flex justify-content-between">
@@ -2018,8 +2022,8 @@ class DataTables
                             data: data,
                         }).done(function (json, textStatus, jqXHR) {
                             try {
-                                if (typeof json !== 'object') throw "json is not object";
-                                if (!('error' in json) || !('errCode' in json.error) || !('errMsg' in json.error)) throw "error object is not exist";
+                                if (typeof json !== 'object') throw new Error("json is not object");
+                                if (!('error' in json) || !('errCode' in json.error) || !('errMsg' in json.error)) throw new Error("error object is not exist");
                                 if (json.error.errCode !== 0) {
                                     if ('errUrl' in json.error && json.error.errUrl) {
                                         alertJump(json.error.errMsg, json.error.errUrl);
@@ -2030,7 +2034,7 @@ class DataTables
                                     callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
                                     return;
                                 }
-                                if (!('data' in json) || !('draw' in json.data) || !('recordsTotal' in json.data) || !('recordsFiltered' in json.data) || !('data' in json.data)) throw "data object is not exist";
+                                if (!('data' in json) || !('draw' in json.data) || !('recordsTotal' in json.data) || !('recordsFiltered' in json.data) || !('data' in json.data)) throw new Error("data object is not exist");
                                 callback(json.data);
                             } catch (e) {
                                 if (e.message && e.message.includes("ColReorder - column count mismatch")) {
@@ -2454,7 +2458,7 @@ class DataTables
 
             $orderInit = "";
             if ($this->defaultOrder && isset($options["order"]) && $options["order"]) $orderInit = "delete data.order; data.order = " . json_encode($options["order"], JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) . ";";
-            $replaceTo[] = "\"stateSaveParams\": function(settings, data) { data.search.search = ''; for(i=0;i<data.columns.length;i++) { data.columns[i].search.search = ''; } {$orderInit} }";
+            $replaceTo[] = "\"stateSaveParams\": function(settings, data) { data.search.search = ''; for(let i=0;i<data.columns.length;i++) { data.columns[i].search.search = ''; } {$orderInit} }";
         }
 
         if ($this->language == "kr") $options["language"]["url"] = "/assets/libs/datatables-2.2.1/i18n/ko.json";
@@ -2530,12 +2534,12 @@ class DataTables
 
                     $(document).on("hide.bs.collapse", "div.sfdt-custom-search.collapse", function () {
                         localStorage.setItem('sfdt-{$this->tableId}-custom-search-onoff', 0);
-                        $("#btn-sfdt-custom-search-detail-collaps").html("[:dt:Detail Search:] <i class='fa-regular fa-square-caret-down'></i></i>");
+                        $("#btn-sfdt-custom-search-detail-collaps").html("[:dt:Detail Search:] <i class='fa-regular fa-square-caret-down'></i>");
                     });
 
                     $(document).on("show.bs.collapse", "div.sfdt-custom-search.collapse", function () {
                         localStorage.setItem('sfdt-{$this->tableId}-custom-search-onoff', 1);
-                        $("#btn-sfdt-custom-search-detail-collaps").html("[:dt:Detail Search:] <i class='fa-regular fa-square-caret-up'></i></i>");
+                        $("#btn-sfdt-custom-search-detail-collaps").html("[:dt:Detail Search:] <i class='fa-regular fa-square-caret-up'></i>");
                     });
                 EOD;
 
@@ -2565,9 +2569,9 @@ class DataTables
                     let onoff = localStorage.getItem('sfdt-{$this->tableId}-custom-search-onoff');
                     if (onoff == '1' || onoff === null) {
                         $(".sfdt-custom-search").addClass("show");
-                        $("#btn-sfdt-custom-search-detail-collaps").html("[:dt:Detail Search:] <i class='fa-regular fa-square-caret-up'></i></i>");
+                        $("#btn-sfdt-custom-search-detail-collaps").html("[:dt:Detail Search:] <i class='fa-regular fa-square-caret-up'></i>");
                     } else {
-                        $("#btn-sfdt-custom-search-detail-collaps").html("[:dt:Detail Search:] <i class='fa-regular fa-square-caret-down'></i></i>");
+                        $("#btn-sfdt-custom-search-detail-collaps").html("[:dt:Detail Search:] <i class='fa-regular fa-square-caret-down'></i>");
                     }
                 }
             EOD;
