@@ -81,7 +81,7 @@ class Translation
 
     public function convert($output, $lang)
     {
-        if (!$this->status) return $output; // If translation is disabled, return the original output.
+        if (!$this->status) return $this->passing($output); // If translation is disabled, return the original output.
         if (!$output) return "";
 
         // In the case of debug mode, the cache file is updated every time.
@@ -118,9 +118,9 @@ class Translation
         $pattern = '/\[:([a-z0-9]+:)?(.*?)\:\]/';
         preg_match_all($pattern, $output, $matches, PREG_SET_ORDER);
         if ($matches) {
-            foreach($matches[0] as $idx => $s) {
-                $text = $matches[1][$idx];
-                $output = str_replace($s, $text, $output);
+            foreach($matches as $match) {
+                // $match[2] contains the message part
+                $output = str_replace($match[0], $match[2], $output);
             }
         }
         return $output;
