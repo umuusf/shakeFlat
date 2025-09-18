@@ -42,6 +42,11 @@ function sfValidateDate($date, $format = null)
     return shakeFlat\Util::validateDate($date, $format);
 }
 
+function sfValidateDateTime($date, $format = null)
+{
+    return shakeFlat\Util::validateDateTime($date, $format);
+}
+
 function sfYmdHis($date, $format = null)
 {
     return shakeFlat\Util::YmdHis($date, $format);

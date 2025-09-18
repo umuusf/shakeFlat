@@ -133,9 +133,8 @@ class Template
                 if (isset($_SERVER["HTTP_ORIGIN"])) header("Access-Control-Allow-Origin: {$_SERVER["HTTP_ORIGIN"]}");
                 header("Content-Security-Policy: default-src 'self'; frame-src 'none'; object-src 'none';");
                 header("Content-Type: application/json; charset={$this->charset}");
-                $data = $res->data();
+                $data = json_encode($res->data(), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);
                 $data = $this->translationOutput($data);
-                $data = json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
                 if (strtoupper($this->charset) != "UTF-8") $data = iconv("UTF-8", $this->charset, $data);
                 echo $data;
                 break;
@@ -152,9 +151,8 @@ class Template
                 header("Access-Control-Allow-Methods: POST");
                 header("Access-Control-Allow-Headers: Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Auth-Token");
                 header("Content-Type: application/json; charset={$this->charset}");
-                $data = $res->data();
+                $data = json_encode($res->data(), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);
                 $data = $this->translationOutput($data);
-                $data = json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
                 if (strtoupper($this->charset) != "UTF-8") $data = iconv("UTF-8", $this->charset, $data);
                 ob_start();
                 echo $data;
@@ -168,9 +166,8 @@ class Template
                 header("Access-Control-Allow-Methods: POST");
                 header("Access-Control-Allow-Headers: Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Auth-Token");
                 header("Content-Type: text/html; charset={$this->charset}");
-                $data = $res->data();
+                $data = json_encode($res->data(), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);
                 $data = $this->translationOutput($data);
-                $data = json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
                 if (strtoupper($this->charset) != "UTF-8") $data = iconv("UTF-8", $this->charset, $data);
                 $data = AES256::pack($data, $this->aes256key, $this->aes256iv, false);
                 ob_start();
@@ -185,9 +182,8 @@ class Template
                 header("Access-Control-Allow-Methods: POST");
                 header("Access-Control-Allow-Headers: Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers, Auth-Token");
                 header("Content-Type: text/html; charset={$this->charset}");
-                $data = $res->data();
+                $data = json_encode($res->data(), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR);
                 $data = $this->translationOutput($data);
-                $data = json_encode($data, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
                 if (strtoupper($this->charset) != "UTF-8") $data = iconv("UTF-8", $this->charset, $data);
                 $data = AES256::pack($data, $this->aes256key, $this->aes256iv);
                 ob_start();

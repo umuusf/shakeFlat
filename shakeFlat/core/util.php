@@ -273,15 +273,23 @@ class Util
 
     public static function validateDate($dateString, $userFormat = null)
     {
+        // 날짜 전용 헬퍼 사용
+        $dateTime = self::sfDate($dateString, $userFormat);
+        return ($dateTime !== false);
+    }
+
+    // 날짜+시간(데이터와 시간 모두) 유효성 검사 함수
+    public static function validateDateTime($dateString, $userFormat = null)
+    {
+        // 날짜+시간 헬퍼 사용
         $dateTime = self::sfDateTime($dateString, $userFormat);
-        if ($dateTime !== false) return true;
-        return false;
+        return ($dateTime !== false);
     }
 
     public static function dateX($dateString)
     {
         if ($dateString == "0000-00-00") return "";
-        $dateTime = self::sfDateTime($dateString, "Y-m-d");
+        $dateTime = self::sfDate($dateString, "Y-m-d");
         if ($dateTime === false) return "";
         return $dateTime->format("Y-m-d");
     }
@@ -302,7 +310,8 @@ class Util
         return $dateTime->format("Y-m-d H:i:s");
     }
 
-    private static function sfDateTime($dateString, $userFormat = null)
+    // 날짜 전용 포맷 검사 (private helper)
+    private static function sfDate($dateString, $userFormat = null)
     {
         if (!$dateString) return false;
         if ($userFormat !== null) {
@@ -310,16 +319,39 @@ class Util
         } else {
             $formats = [
                 'Y-m-d',
+                'Y/m/d',
+                'Ymd',
+                'Y.m.d',
+                'Y.n.j',
+            ];
+        }
+
+        foreach ($formats as $format) {
+            $dateTime = DateTime::createFromFormat($format, $dateString);
+            if ($dateTime !== false) return $dateTime;
+        }
+
+        return false;
+    }
+
+    // 날짜+시간 포맷 검사 (private helper)
+    private static function sfDateTime($dateString, $userFormat = null)
+    {
+        if (!$dateString) return false;
+        if ($userFormat !== null) {
+            $formats = [ $userFormat ];
+        } else {
+            $formats = [
                 'Y-m-d H:i:s',
                 'Y-m-d\TH:i:s',
                 'Y-m-d\TH:i:s.u',
                 'Y-m-d\TH:i',
-                'Y/m/d',
                 'Y/m/d H:i:s',
                 "Y/m/d H:i:s.u",
-                'Ymd',
                 'Ymd H:i:s',
                 'Ymd H:i:s.u',
+                'Y.m.d H:i:s',
+                'Y.n.j H:i:s',
             ];
         }
 

@@ -107,6 +107,18 @@ class Param
         $this->enableEncrypt = true;
     }
 
+    public function importParam($params, $reset = true)
+    {
+        if ($reset) $this->params = array();
+        if (is_array($params)) {
+            foreach ($params as $k => $v) {
+                $this->params[$k] = $v;
+            }
+        } else {
+            L::exit("[:Invalid parameter format. It must be an array.:]");
+        }
+    }
+
     public function getAll()
     {
         if ($this->enableEncrypt) {
@@ -330,8 +342,8 @@ class Param
             case Param::TYPE_URL         : if (filter_var($param[$key], FILTER_VALIDATE_URL) === false)         L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
             case Param::TYPE_DOMAIN      : if (filter_var($param[$key], FILTER_VALIDATE_DOMAIN) === false)      L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
             case Param::TYPE_IP          : if (filter_var($param[$key], FILTER_VALIDATE_IP) === false)          L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
-            case Param::TYPE_DATETIME    : if (Util::validateDate($param[$key]) === false)                      L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
-            case Param::TYPE_DATE        : if ($param[$key] != date("Y-m-d", strtotime($param[$key])))          L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_DATETIME    : if (Util::validateDateTime($param[$key]) === false)                  L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_DATE        : if (Util::validateDate($param[$key]) === false)                      L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
             case Param::TYPE_FILE        : if (!isset($_FILES[$key]) || ($_FILES[$key]["error"] ?? 100) != 0)   L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
         }
         L::exit("[:The type of parameter {$key} is incorrect.:]");
