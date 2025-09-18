@@ -169,6 +169,20 @@ class Param
         return null;
     }
 
+    public function getDate($key, $format = "Y-m-d")
+    {
+        $val = $this->get($key);
+        if ($val === null || $val === "") return null;
+        $t = strtotime($val);
+        if ($t === false) return null;
+        return date($format, $t);
+    }
+
+    public function getDateTime($key, $format = "Y-m-d H:i:s")
+    {
+        return $this->getDate($key, $format);
+    }
+
     // Check the parameter format. If no parameters are passed, it is passed.
     // If there is a set list of values, put them in $enum in array.
     public function check($key, $type, $enum = null)
@@ -342,9 +356,9 @@ class Param
             case Param::TYPE_URL         : if (filter_var($param[$key], FILTER_VALIDATE_URL) === false)         L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
             case Param::TYPE_DOMAIN      : if (filter_var($param[$key], FILTER_VALIDATE_DOMAIN) === false)      L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
             case Param::TYPE_IP          : if (filter_var($param[$key], FILTER_VALIDATE_IP) === false)          L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
+            case Param::TYPE_FILE        : if (!isset($_FILES[$key]) || ($_FILES[$key]["error"] ?? 100) != 0)   L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
             case Param::TYPE_DATETIME    : if (Util::validateDateTime($param[$key]) === false)                  L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
             case Param::TYPE_DATE        : if (Util::validateDate($param[$key]) === false)                      L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
-            case Param::TYPE_FILE        : if (!isset($_FILES[$key]) || ($_FILES[$key]["error"] ?? 100) != 0)   L::exit("[:The type of parameter {$key} is incorrect.:]");  return;
         }
         L::exit("[:The type of parameter {$key} is incorrect.:]");
     }
