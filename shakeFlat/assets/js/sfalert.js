@@ -1,18 +1,20 @@
 function alert(msg) { sfAlert(msg); }
 function alertJump(msg, url) { sfAlertJump(msg, url); }
 function alertBack(msg) { sfAlertBack(msg); }
+function alertCallback(msg, callback) { sfAlert(msg, callback); }
 function noti(msg) { sfNoti(msg); }
 function notiJump(msg, url) { sfNotiJump(msg, url); }
 function notiBack(msg) { sfNotiBack(msg); }
 function confirm(msg, callback, noCallback) { sfConfirm(msg, callback, noCallback); }
 function inputConfirm(msg, callback) { sfInputConfirm(msg, callback); }
 
-function sfAlert(p) {
+function sfAlert(p, callback = null) {
     let opt = {
         type: "alert",
         messageText: "Alert!!",
         alertType: "danger",
     };
+    if (callback !== null) opt.okCallback = callback;
     if (typeof p == "string") opt.messageText = p;
     else if (typeof p == "object") $.extend(opt, p);
     __sfAlert(opt);
@@ -92,6 +94,7 @@ function sfInputConfirm(p, callback) {
         inputRequired: true,
         messageText: "Input",
         alertType: "success",
+        showIcon: false,
         yesCallback: callback,
     };
     if (typeof p == "string") opt.messageText = p;
@@ -130,6 +133,7 @@ function __sfAlert(options)
 		alertType: 'default', //default, primary, success, info, warning, danger
         fontSize: '1.2rem',
         width: null,
+        showIcon: true,
         icon: null,
         iconSize: null,
         isCenter: false,
@@ -185,7 +189,7 @@ function __sfAlert(options)
         let $sfAlertBody = $("<div/>", { "class":"modal-body" });
         $sfAlertBody.css("overflow-x", "auto");
 
-        if (defaults.type != "input") {
+        if (defaults.showIcon) {
             let iconSize = "5em";
             if (defaults.iconSize) iconSize = defaults.iconSize;
             if (defaults.icon) {
@@ -224,7 +228,7 @@ function __sfAlert(options)
 				break;
             case "input":
                 let $inputDiv = $("<div/>", { "class":"mb-3 d-flex justify-content-center"});
-                let $input = $("<input/>", { "class":"form-control", "type":defaults.inputType, "id":"prompt", "name":"prompt", "style":"width:" + defaults.inputWidth, "placeholder":defaults.inputPlaceholder });
+                let $input = $("<input/>", { "class":"form-control", "type":defaults.inputType, "id":"sf-alert-prompt", "name":"prompt", "style":"width:" + defaults.inputWidth, "placeholder":defaults.inputPlaceholder });
                 if (defaults.inputDefault) $input.val(defaults.inputDefault);
                 $input.attr("autocomplete", "off");
 
@@ -278,7 +282,7 @@ function __sfAlert(options)
             if (document.activeElement) document.activeElement.blur();
 		}).on('hidePrevented.bs.modal', function() {
         }).on('shown.bs.modal', function () {
-            if ($('#prompt').length) $('#prompt').focus();
+            if ($('#sf-alert-prompt').length) $('#sf-alert-prompt').focus();
             else $(this).find('.btn:first').focus();
             $("#sfAlertOverlay").css("display", "block");
         });

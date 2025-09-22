@@ -7,6 +7,9 @@ function sfModal(id, userOptions)
         title           : "Modal Title",
         dialogClass     : "",                   // "modal-lg",
         dialogStyle     : "",                   // "width: 800px",
+        animation       : true,
+        verticalCenter  : true,
+        zIndex          : -1,
         header          : {
             enable  : true,
             title   : "",
@@ -22,10 +25,14 @@ function sfModal(id, userOptions)
     }
     $.extend(true, options, userOptions);
 
-    let zIndex = 1050 + $(".modal-backdrop").length * 10;
+    let zIndex = 0;
+    if (options.zIndex > 0) zIndex = options.zIndex;
+    else zIndex = 1050 + $(".modal-backdrop").length * 10;
 
-    _modal[id] = $("<div>").addClass("modal fade").attr("tabindex", "-1").attr("aria-labelledby", options.title).attr("aria-hidden", "true").attr("id", id).css("z-index", zIndex+1).appendTo("body");
-    let modalDialog = $("<div>").addClass("modal-dialog modal-dialog-centered").appendTo(_modal[id]);
+    _modal[id] = $("<div>").addClass("modal").attr("tabindex", "-1").attr("aria-labelledby", options.title).attr("aria-hidden", "true").attr("id", id).css("z-index", zIndex).appendTo("body");
+    if (options.animation) _modal[id].addClass("fade");
+    let modalDialog = $("<div>").addClass("modal-dialog").appendTo(_modal[id]);
+    if (options.verticalCenter) modalDialog.addClass("modal-dialog-centered");
     if (options.dialogClass) modalDialog.addClass(options.dialogClass);
     if (options.dialogStyle) modalDialog.attr("style", options.dialogStyle);
     let content = $("<div>").addClass("modal-content").appendTo(modalDialog);
@@ -57,7 +64,7 @@ function sfModal(id, userOptions)
     });
 
     _modal[id].on("shown.bs.modal", function() {
-        $(".modal-backdrop").last().css("z-index", zIndex);
+        $(".modal-backdrop").last().css("z-index", zIndex-1);
     });
 
     return _modal[id];

@@ -50,7 +50,7 @@ function _ajaxOpt(url, frm)
     };
 }
 
-function callAjax(url, frm, successCallback, errorCallback, _this)
+function callAjax(url, frm, successCallback, errorCallback, _this = null)
 {
     let opt = _ajaxOpt(url, frm);
 
@@ -58,12 +58,12 @@ function callAjax(url, frm, successCallback, errorCallback, _this)
 
     $.ajax(opt).done(function(result, textStatus, jqXHR) {
         if (!result || result.constructor != Object || !("data" in result) || !("error" in result) || !("errCode" in result.error)) {
+            //console.log(textStatus);
+            //console.log(jqXHR);
             if (errorCallback) {
                 errorCallback(result, _this);
             } else {
                 console.log(result);
-                //console.log(textStatus);
-                //console.log(jqXHR);
                 alert("서버 호출시 문제가 발생하였습니다. 잠시 후 다시 시도해주세요.");
             }
             return false;
@@ -92,10 +92,6 @@ function callAjax(url, frm, successCallback, errorCallback, _this)
             errorCallback(e, _this);
         } else {
             console.log(e);
-            if (e.error && e.error.errCode && e.error.errCode == -1 && e.error.errMsg) {
-                alert(e.error.errMsg);
-                return;
-            }
             alert("서버 호출시 문제가 발생하였습니다. 잠시 후 다시 시도해주세요.");
         }
         return false;
@@ -239,7 +235,7 @@ Number.prototype.numberFormat = function() {
 // zero to blank.
 Number.prototype.numberFormatX = function() {
     let num = this;
-    if (num === null || num === undefined || isNaN(num) || num === 0) return "";
+    if (num === null || num === undefined || isNaN(num) || num == 0) return "";
     return num.toLocaleString('ko-KR');
 }
 
@@ -262,7 +258,7 @@ function numberFormat(num) {
 }
 
 function numberFormatX(num) {
-    if (num === null || num === undefined || isNaN(num) || num === 0) return "";
+    if (num === null || num === undefined || isNaN(num) || num == 0) return "";
     if (typeof num === "string") num = parseFloat(num);
     return num.numberFormatX();
 }
@@ -294,7 +290,7 @@ function numberToKorean(num) {
     return result.join('');
 }
 
-// 스트링으로 된 날짜 값을 입력 받아서, 날짜 format 에 맞춘 스트링으로 스트링으로 반환해주는 함수
+// 스트링으로 된 날짜 값을 입력 받아서, 날짜 format 에 맞춘 스트링으로 반환해주는 함수
 // ex) let dateStr = "2020-01-01";
 //     let formattedDate = dateStr.formatDate("YYYY년 MM월 DD일 HH시 mm분 ss초");
 String.prototype.formatDateTime = function(toFormat) {
@@ -434,4 +430,98 @@ String.prototype.stringWidth = function(font, fontSize) {
 function stripHTML(html){
    let doc = new DOMParser().parseFromString(html, 'text/html');
    return doc.body.textContent || "";
+}
+
+// alculates the number of days between a date string and today.
+function getDaysFromToday(dateString) {
+    // Validate date format
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return false;
+
+    // Get today and reset hours
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Parse input date and reset hours
+    const inputDate = new Date(dateString);
+    inputDate.setHours(0, 0, 0, 0);
+
+    // Check if date is valid
+    if (isNaN(inputDate.getTime())) return false;
+
+    // Calculate difference in days
+    const differenceInDays = Math.floor((today - inputDate) / (1000 * 3600 * 24));
+
+    // Return result
+    return differenceInDays;
+}
+
+// 날짜 기준으로 경과된 일수 계산 (시간 무관,날짜만 비교)
+function getDaysElapsed(dateString) {
+    // Validate date format
+    if (!/^\d{4}-\d{2}-\d{2}/.test(dateString)) return false;
+
+    // 입력 날짜를 Date 객체로 변환
+    const inputDate = new Date(dateString);
+    if (isNaN(inputDate.getTime())) return false;
+
+    // 오늘 날짜를 Date 객체로 변환
+    const now = new Date();
+
+    // 두 날짜의 차이(밀리초)
+    const diffTime = now - inputDate;
+
+    // 1일(24시간) 단위로 올림 처리
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays;
+}
+
+// second 값을 pretty하게 변환
+function prettySecond(second) {
+    if (second == null || second == undefined || second == 0) return "";
+    let str = "";
+    let hour = Math.floor(second / 3600);
+    let min = Math.floor((second % 3600) / 60);
+    let sec = second % 60;
+    if (hour > 0) str += hour + "시간 ";
+    if (min > 0) str += min + "분 ";
+    if (sec > 0) str += sec + "초";
+    return str;
+}
+
+// second 값을 분 단위로 pretty하게 변환
+function prettySecondMin(second) {
+    if (second == null || second == undefined || second == 0) return "";
+    let str = "";
+    let min = Math.floor(second / 60);
+    if (min > 0) str = min + "분";
+    return str;
+}
+
+// byte 를 pretty하게 변환
+function prettyByte(byte) {
+    if (byte == null || byte == undefined || byte == 0) return "";
+    let str = "";
+    if (byte < 1024) {
+        str = byte + "bytes";
+    } else if (byte < 1024 * 1024) {
+        str = (byte / 1024).toFixed(1) + "KB";
+    } else if (byte < 1024 * 1024 * 1024) {
+        str = (byte / (1024 * 1024)).toFixed(1) + "MB";
+    } else {
+        str = (byte / (1024 * 1024 * 1024)).toFixed(1) + "GB";
+    }
+    return str;
+}
+
+// string 을 클립보드에 복사
+function copyToClipboard(text) {
+    let tempInput = document.createElement("input");
+    tempInput.style.position = "absolute";
+    tempInput.style.opacity = "0";
+    tempInput.value = text;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand("copy");
+    document.body.removeChild(tempInput);
 }
