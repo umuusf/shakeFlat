@@ -147,11 +147,19 @@ class DataTablesRenderButton
 
 
 
-    public function render()
+    public function render($tableColumns = null)
     {
         if ($this->keyParams) {
             foreach($this->keyParams as $alias) {
-                if (!array_key_exists($alias, $this->dataset)) $this->dataset[$alias] = "\${row.{$alias}}";
+                if (!array_key_exists($alias, $this->dataset)) {
+                    // Use column's data value if tableColumns is provided and column exists
+                    if ($tableColumns && isset($tableColumns[$alias])) {
+                        $columnData = $tableColumns[$alias]->data();
+                        $this->dataset[$alias] = "\${row.{$columnData}}";
+                    } else {
+                        $this->dataset[$alias] = "\${row.{$alias}}";
+                    }
+                }
             }
         }
         $style = "";   if ($this->style) $style = " style=\"" . implode(" ", $this->style) . "\"";
@@ -2104,7 +2112,7 @@ class DataTables
                 $c["render"] = "rendering-{$alias}";
                 $render[$alias] = "\n                function(data, type, row, meta) {\n                    return `\n                        ";
                 foreach($column->renderButtons() as $btnId => $rb) {
-                    if ($rb->render()) $render[$alias] .= trim($rb->render()) . "\n                        ";
+                    if ($rb->render($this->columns)) $render[$alias] .= trim($rb->render($this->columns)) . "\n                        ";
                     $rbCode = $rb->code($this->columns, $this->ajaxUrl, $this->deliverParameters);
                     $html .= $rbCode["html"];
                     $drawCallbackScript .= $rbCode["drawCallbackScript"];

@@ -560,6 +560,11 @@ const sfThemeManager = {
         this.applyThemeAttributes(theme);
         this.updateUI(select);
         this.setThemeCookie(theme, select);
+
+        // Select2 테마 적용
+        if (typeof sfApplySelect2Theme === 'function') {
+            setTimeout(() => sfApplySelect2Theme(), 1);
+        }
     },
 
     // 테마 감지 및 적용
@@ -590,6 +595,11 @@ const sfThemeManager = {
                 this.currentTheme = e.matches ? this.THEMES.DARK : this.THEMES.LIGHT;
                 this.applyThemeAttributes(this.currentTheme);
                 this.setThemeCookie(this.currentTheme, this.THEMES.AUTO);
+
+                // Select2 테마 적용
+                if (typeof sfApplySelect2Theme === 'function') {
+                    setTimeout(() => sfApplySelect2Theme(), 1);
+                }
             }
         };
 
@@ -614,6 +624,60 @@ const sfThemeManager = {
 // 테마 관련 레거시 함수 (다른 파일에서 사용됨)
 function sfGetTheme() { return sfThemeManager.getTheme(); }
 
+// Select2 테마 적용 함수
+function sfApplySelect2Theme() {
+    const currentTheme = sfThemeManager.getTheme();
+
+    // 모든 select2 드롭다운에 테마 클래스 적용
+    $('.select2-dropdown').each(function() {
+        $(this).attr('data-sf-theme', currentTheme);
+    });
+
+    // body에도 테마 속성 적용 (select2 드롭다운이 body에 append되는 경우를 위해)
+    $('body').attr('data-sf-theme', currentTheme);
+}
+
+// Select2 초기화 후 테마 적용을 위한 함수
+function sfInitSelect2WithTheme(selector, options = {}) {
+    const $element = $(selector);
+    if ($element.length === 0) return;
+
+    // Select2 초기화
+    $element.select2(options);
+
+    // 드롭다운 열릴 때 테마 적용
+    $element.on('select2:open', function() {
+        setTimeout(() => {
+            sfApplySelect2Theme();
+        }, 1);
+    });
+
+    // 초기 테마 적용
+    sfApplySelect2Theme();
+}
+
+// MutationObserver로 동적 select2 드롭다운 감지
+function sfSetupSelect2Observer() {
+    if (typeof MutationObserver === 'undefined') return;
+
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            mutation.addedNodes.forEach(function(node) {
+                if (node.nodeType === 1) { // Element node
+                    if ($(node).hasClass('select2-dropdown') || $(node).find('.select2-dropdown').length > 0) {
+                        setTimeout(() => sfApplySelect2Theme(), 1);
+                    }
+                }
+            });
+        });
+    });
+
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+}
+
 // ==============================================
 //   INITIALIZATION AND EVENT HANDLERS
 // ==============================================
@@ -623,6 +687,16 @@ $(document).ready(function() {
     sfClockManager.init();
     sfLeftMenuManager.init();
     sfThemeManager.init();
+
+    // Select2 테마 적용
+    setTimeout(() => {
+        if (typeof sfApplySelect2Theme === 'function') {
+            sfApplySelect2Theme();
+        }
+        if (typeof sfSetupSelect2Observer === 'function') {
+            sfSetupSelect2Observer();
+        }
+    }, 100);
 
     // 이벤트 핸들러 정의 및 바인딩
     const bindEvents = () => {
