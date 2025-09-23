@@ -44,9 +44,10 @@ $leftMenu = [
 
 $sfThemeCookie = json_decode($_COOKIE["sfTheme"] ?? "{ theme: 'light', select: 'auto' }", true);
 if (array_key_exists("select", $sfThemeCookie ?? []) && ($sfThemeCookie["select"] == "light" || $sfThemeCookie["select"] == "dark")) $sfThemeSelect = $sfThemeCookie["select"]; else $sfThemeSelect = "auto";
+$currentTheme = $sfThemeCookie["theme"] ?? "light";
 ?>
 <!DOCTYPE html>
-<html lang="ko"<?php if (($sfThemeCookie["theme"] ?? "light") == "dark") echo " data-sf-theme=\"dark\""; ?>>
+<html lang="ko" data-sf-theme="<?php echo $currentTheme; ?>" data-bs-theme="<?php echo $currentTheme; ?>" data-theme="<?php echo $currentTheme; ?>">
 <head>
 <title><?=SHAKEFLAT_ENV["app"]["name"] ?? "Project Name";?></title>
 
@@ -90,8 +91,8 @@ if (array_key_exists("select", $sfThemeCookie ?? []) && ($sfThemeCookie["select"
 <script src="/assets/js/sfdatatables.js?<?=sfCSSJSVer();?>"></script>
 <script src="/assets/js/template-admin.js?<?=sfCSSJSVer();?>"></script>
 
-<link rel="stylesheet" href="/assets/css/fonts.css" />
-<link rel="stylesheet" href="/assets/css/colors.css" />
+<link rel="stylesheet" href="/assets/css/fonts.css?<?=sfCSSJSVer();?>" />
+<link rel="stylesheet" href="/assets/css/colors.css?<?=sfCSSJSVer();?>" />
 <link rel="stylesheet" href="/assets/css/sfdatatables.css?<?=sfCSSJSVer();?>" />
 <link rel="stylesheet" href="/assets/css/template-admin.css?<?=sfCSSJSVer();?>" />
 
@@ -113,65 +114,72 @@ if (array_key_exists("select", $sfThemeCookie ?? []) && ($sfThemeCookie["select"
             </div>
             <div class="shakeflat-topbar-content d-flex justify-content-between">
                 <div class="d-flex align-items-center">
-                    <button type="button" class="btn btn-sm ms-1" id="shakeflat-btn-left-menu">
-                        <i class="fa fa-fw fa-bars"></i>
-                    </button>
-                    <div class="shakeflat-server-comment"><?=SHAKEFLAT_ENV["config"]["server_name"] ?? "";?></div>
-                </div>
-
-                <div class="d-flex align-items-center ms-auto me-4">
-                    <div class="shakeflat-clock text-center">
-                        <div class="shakeflat-clock-time d-flex justify-content-center">
-                            <div id="shakeflat-clock-hours"></div>
-                            <div class="shakeflat-clock-point">:</div>
-                            <div id="shakeflat-clock-min"></div>
-                            <div class="shakeflat-clock-point">:</div>
-                            <div id="shakeflat-clock-sec"></div>
-                        </div>
-                        <div id="shakeflat-clock-date"></div>
-                    </div>
-                </div>
-
-                <div class="d-flex align-items-center me-1">
-                    <div class="shakeflat-theme-dropdown dropdown">
-                        <button class="btn dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown" data-bs-display="static">
-                            <?php
-                            switch($sfThemeSelect) {
-                                case "light" : echo "<i class=\"bi bi-sun-fill\"></i> Light"; break;
-                                case "dark" : echo "<i class=\"bi bi-moon-stars-fill\"></i> Dark"; break;
-                                default : echo "<i class=\"bi bi-circle-half\"></i> Auto"; break;
-                            }
-                            ?>
-
+                    <div class="d-flex align-items-center">
+                        <button type="button" class="btn btn-sm ms-1" id="shakeflat-btn-left-menu">
+                            <i class="fa fa-fw fa-bars"></i>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <button type="button" class="dropdown-item d-flex align-items-center<?php if($sfThemeSelect == "light") echo " active"; ?>" data-sf-theme-value="light">
-                                    <i class="bi bi-sun-fill"></i> Light
-                                </button>
-                            </li>
-                            <li>
-                                <button type="button" class="dropdown-item d-flex align-items-center<?php if($sfThemeSelect == "dark") echo " active"; ?>" data-sf-theme-value="dark">
-                                    <i class="bi bi-moon-stars-fill"></i> Dark
-                                </button>
-                            </li>
-                            <li>
-                                <button type="button" class="dropdown-item d-flex align-items-center<?php if($sfThemeSelect == "auto") echo " active"; ?>" data-sf-theme-value="auto">
-                                    <i class="bi bi-circle-half"></i> Auto
-                                </button>
-                            </li>
-                        </ul>
+                        <div class="shakeflat-server-comment"><?php if (IS_DEBUG) echo SHAKEFLAT_ENV["config"]["server_name"]; ?></div>
                     </div>
                 </div>
-                <div class="d-flex align-items-center me-2">
-                    <div class="shakeflat-account-dropdown dropdown">
-                        <button class="btn dropdown-toggle" data-bs-toggle="dropdown">Tom Cruise</button>
-                        <ul class="shakeflat-account-dropdown-menu dropdown-menu">
-                            <div class="row text-nowrap my-1 mx-3">Development</div>
-                            <div class="row text-nowrap my-1 mx-3">Last Login : 2022-12-25 00:00:00</div>
-                            <div class="dropdown-divider"></div>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-power me-1"></i> LOGOUT</a></li>
-                        </ul>
+
+                <div class="d-flex align-items-center">
+                    <div class="d-flex align-items-center me-2">
+                        <div class="shakeflat-account-dropdown dropdown">
+                            <button class="btn dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown" data-bs-display="static">
+                                Admin
+                            </button>
+                            <ul class="shakeflat-account-dropdown-menu dropdown-menu">
+                                <div class="row text-nowrap my-1 mx-3">Tel : 010-0000-1111</div>
+                                <div class="row text-nowrap my-1 mx-3">email : shakeflat@domain.com</div>
+                                <div class="row text-nowrap my-1 mx-3">Last Login : 2023-01-01 12:00:00</div>
+                                <div class="dropdown-divider"></div>
+                                <li><a class="dropdown-item" href="/auth/logout"><i class="bi bi-power me-1"></i> LOGOUT</a></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center me-3">
+                        <div class="shakeflat-theme-dropdown dropdown">
+                            <button class="btn dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown" data-bs-display="static">
+                                <?php
+                                switch($sfThemeSelect) {
+                                    case "light" : echo "<i class=\"bi bi-sun-fill\"></i> Light"; break;
+                                    case "dark" : echo "<i class=\"bi bi-moon-stars-fill\"></i> Dark"; break;
+                                    default : echo "<i class=\"bi bi-circle-half\"></i> Auto"; break;
+                                }
+                                ?>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <button type="button" class="dropdown-item d-flex align-items-center<?php if($sfThemeSelect == "light") echo " active"; ?>" data-sf-theme-value="light">
+                                        <i class="bi bi-sun-fill"></i> Light
+                                    </button>
+                                </li>
+                                <li>
+                                    <button type="button" class="dropdown-item d-flex align-items-center<?php if($sfThemeSelect == "dark") echo " active"; ?>" data-sf-theme-value="dark">
+                                        <i class="bi bi-moon-stars-fill"></i> Dark
+                                    </button>
+                                </li>
+                                <li>
+                                    <button type="button" class="dropdown-item d-flex align-items-center<?php if($sfThemeSelect == "auto") echo " active"; ?>" data-sf-theme-value="auto">
+                                        <i class="bi bi-circle-half"></i> Auto
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center me-5">
+                        <div class="shakeflat-clock text-center">
+                            <div class="shakeflat-clock-time d-flex justify-content-center">
+                                <div id="shakeflat-clock-hours"></div>
+                                <div class="shakeflat-clock-point">:</div>
+                                <div id="shakeflat-clock-min"></div>
+                                <div class="shakeflat-clock-point">:</div>
+                                <div id="shakeflat-clock-sec"></div>
+                            </div>
+                            <div id="shakeflat-clock-date"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -185,6 +193,8 @@ if (array_key_exists("select", $sfThemeCookie ?? []) && ($sfThemeCookie["select"
                 <?php
                 $selectedMenuTitle = null;
                 foreach($leftMenu as $idx => $menu) :
+                    //if (!Auth::isSuper() && isset($menu["permission"]) && $menu["permission"] && !array_intersect($menu["permission"], Auth::info()["permission"])) continue;
+
                     $active = "";
                     $opened = "";
                     $dataToggle = "";
@@ -198,6 +208,8 @@ if (array_key_exists("select", $sfThemeCookie ?? []) && ($sfThemeCookie["select"
 
                         foreach($menu["sub"] as $idx2 => $submenu) {
                             if (($submenu["link"] ?? null) == null) continue;
+                            //if (isset($submenu["permission"]) && $submenu["permission"] && !Auth::hasPermission($submenu["permission"])) continue;
+
                             list($m, $f) = explode("/", trim($submenu["link"], "/")) + [null, null];        // Add + [null, null] to suppress warning message
                             $menu["sub"][$idx2]["active"] = "";
                             if ($router->module() == $m && $router->fnc() == $f) {
@@ -239,11 +251,13 @@ if (array_key_exists("select", $sfThemeCookie ?? []) && ($sfThemeCookie["select"
                 <div class="list-group collapse<?php echo $subShow; ?><?php echo $opened; ?>" id="sfadmin-left-collapse-<?php echo $idx; ?>">
                     <?php
                     foreach($menu["sub"] as $submenu) :
+                        // if (!Auth::isSuper() && isset($submenu["permission"]) && $submenu["permission"] && !array_intersect($submenu["permission"], Auth::info()["permission"])) continue;
+
                         $dataSubLink = "";
                         if ($submenu["link"]) {
                     ?>
 
-                    <a class="list-group-item<?php echo $submenu["active"]; ?>" href="<?php echo $submenu["link"]; ?>">
+                    <a class="list-group-item<?php echo $submenu["active"] ?? ""; ?>" href="<?php echo $submenu["link"]; ?>">
                         <span class="list-group-item-icon-sub"><i class="fa-solid fa-angle-right"></i></span><span class="list-group-item-text sub"><?php echo $submenu["title"]; ?></span>
                     </a>
                     <?php
@@ -275,6 +289,7 @@ if (array_key_exists("select", $sfThemeCookie ?? []) && ($sfThemeCookie["select"
                 <div class="shakeflat-contents-title"><i class="bi bi-caret-right-fill"></i> <?php if (isset($res) && $res->pageTitle) echo $res->pageTitle; elseif ($selectedMenuTitle) echo $selectedMenuTitle; else echo "{$router->module()}/{$router->fnc()}"; ?></div>
                 <div class="shakeflat-contents-body p-3">
                     <?= $contentBody ?>
+
                 </div>
             </div>
 
@@ -282,11 +297,11 @@ if (array_key_exists("select", $sfThemeCookie ?? []) && ($sfThemeCookie["select"
                 <div class="shakeflat-copyright-box rounded p-2">
                     <div class="row align-items-end">
                         <div class="col-auto ms-1">
-                            <?=SHAKEFLAT_ENV["app"]["name"] ?? "Project Name";?><br>
-                            Copyright © <a href="<?=SHAKEFLAT_ENV["app"]["company_link"] ?? "https://github.com/umuusf/shakeFlat";?>" target="_blank"><?=SHAKEFLAT_ENV["app"]["company"] ?? "shakeFlat";?></a>. All rights reserved.
+                            Faikerz Admin Tool<br>
+                            Go to <a href="http://desk.faikerz.com/" target="_blank">desk.faikerz.com</a>
                         </div>
                         <div class="shakeflat-copyright-me ms-auto me-2 col-auto text-end">
-                            Design & Develop by <a href="https://github.com/umuusf/shakeFlat" target="_blank">shakeFlat</a>
+                            Develop by <a href="mailto:birdryoo@gmail.com">Keneslab</a>
                         </div>
                     </div>
                 </div>
@@ -300,8 +315,3 @@ if (array_key_exists("select", $sfThemeCookie ?? []) && ($sfThemeCookie["select"
 
 </body>
 </html>
-
-<script>
-const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
-</script>
