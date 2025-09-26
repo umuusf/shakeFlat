@@ -565,6 +565,21 @@ const sfThemeManager = {
         if (typeof sfApplySelect2Theme === 'function') {
             setTimeout(() => sfApplySelect2Theme(), 1);
         }
+
+        // SFNoticeBoard 컴포넌트들 테마 업데이트
+        this.updateNoticeBoards(theme);
+    },
+
+    // SFNoticeBoard 컴포넌트들 테마 업데이트
+    updateNoticeBoards(theme) {
+        const noticeBoards = document.querySelectorAll('sf-notice');
+        noticeBoards.forEach(board => {
+            if (board.updateTheme && typeof board.updateTheme === 'function') {
+                board.updateTheme();
+            } else {
+                board.setAttribute('data-sf-theme', theme);
+            }
+        });
     },
 
     // 테마 감지 및 적용
@@ -600,6 +615,9 @@ const sfThemeManager = {
                 if (typeof sfApplySelect2Theme === 'function') {
                     setTimeout(() => sfApplySelect2Theme(), 1);
                 }
+
+                // SFNoticeBoard 컴포넌트들 테마 업데이트
+                this.updateNoticeBoards(this.currentTheme);
             }
         };
 
@@ -739,3 +757,162 @@ $(document).ready(function() {
 
     bindEvents();
 });
+
+// ==============================================
+//   NOTICE BOARD WEB COMPONENT
+//   <sf-notice
+//     style="notice"
+//     title="Notice"
+//     message="메시지.... html 적용됨"
+//   ></sf-notice>
+// ==============================================
+class SFNoticeBoard extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+  }
+
+  connectedCallback() {
+    const styleOption = this.getAttribute("type") || "notice";
+    const title = this.getAttribute("title") || "Notice";
+    const message = this.getAttribute("message") || "";
+
+    let boardClass = "";
+    let badgeClass = "";
+
+    switch (styleOption) {
+      case "notice":
+        boardClass = "shakeflat-board-notice";
+        badgeClass = "shakeflat-board-badge-notice";
+        break;
+      case "hint":
+        boardClass = "shakeflat-board-hint";
+        badgeClass = "shakeflat-board-badge-hint";
+        break;
+      case "plain":
+        boardClass = "shakeflat-board-plain";
+        badgeClass = "shakeflat-board-badge-plain";
+        break;
+      default:
+        boardClass = "shakeflat-board-notice";
+        badgeClass = "shakeflat-board-badge-notice";
+    }
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host {
+          display: block;
+        }
+
+        /* Import CSS variables from parent document */
+        .shakeflat-board {
+          border-radius: 0.25rem;
+          padding: 0.5rem;
+          display: flex;
+        }
+
+        .shakeflat-board > div {
+          display: flex;
+          align-items: center;
+        }
+
+        .shakeflat-board > .shakeflat-board-badge {
+          white-space: nowrap;
+          border-radius: 0.25rem;
+          font-size: 0.9em;
+          padding: 0.2em 0.45em;
+          margin-right: 0.8em;
+        }
+
+        /* Plain theme */
+        .shakeflat-board-plain {
+          background-color: var(--sf-plain-bg-color, #eeeef3);
+          color: var(--sf-plain-text-color, #000000);
+        }
+
+        .shakeflat-board-plain > .shakeflat-board-badge-plain {
+          background-color: var(--sf-plain-badge-bg-color, #6c757d);
+          color: var(--sf-plain-badge-text-color, #ffffff);
+        }
+
+        /* Notice theme */
+        .shakeflat-board-notice {
+          background-color: var(--sf-notice-bg-color, #f1f8ff);
+          color: var(--sf-notice-text-color, #2c5282);
+        }
+
+        .shakeflat-board-notice > .shakeflat-board-badge-notice {
+          background-color: var(--sf-notice-badge-bg-color, #4a90a4);
+          color: var(--sf-notice-badge-text-color, #ffffff);
+        }
+
+        /* Hint theme */
+        .shakeflat-board-hint {
+          background-color: var(--sf-hint-bg-color, #e0f7fa);
+          color: var(--sf-hint-text-color, #004d40);
+        }
+
+        .shakeflat-board-hint > .shakeflat-board-badge-hint {
+          background-color: var(--sf-hint-badge-bg-color, #004d40);
+          color: var(--sf-hint-badge-text-color, #e0f7fa);
+        }
+
+        /* Dark theme overrides */
+        :host([data-sf-theme="dark"]) .shakeflat-board-plain,
+        :host-context([data-sf-theme="dark"]) .shakeflat-board-plain {
+          background-color: var(--sf-plain-bg-color, #343741);
+          color: var(--sf-plain-text-color, #dddddd);
+        }
+
+        :host([data-sf-theme="dark"]) .shakeflat-board-plain > .shakeflat-board-badge-plain,
+        :host-context([data-sf-theme="dark"]) .shakeflat-board-plain > .shakeflat-board-badge-plain {
+          background-color: var(--sf-plain-badge-bg-color, #6c757d);
+          color: var(--sf-plain-badge-text-color, #ffffff);
+        }
+
+        :host([data-sf-theme="dark"]) .shakeflat-board-notice,
+        :host-context([data-sf-theme="dark"]) .shakeflat-board-notice {
+          background-color: var(--sf-notice-bg-color, #2d3748);
+          color: var(--sf-notice-text-color, #a2d2ff);
+        }
+
+        :host([data-sf-theme="dark"]) .shakeflat-board-notice > .shakeflat-board-badge-notice,
+        :host-context([data-sf-theme="dark"]) .shakeflat-board-notice > .shakeflat-board-badge-notice {
+          background-color: var(--sf-notice-badge-bg-color, #4a90a4);
+          color: var(--sf-notice-badge-text-color, #ffffff);
+        }
+
+        :host([data-sf-theme="dark"]) .shakeflat-board-hint,
+        :host-context([data-sf-theme="dark"]) .shakeflat-board-hint {
+          background-color: var(--sf-hint-bg-color, #e0e0a0);
+          color: var(--sf-hint-text-color, #000000);
+        }
+
+        :host([data-sf-theme="dark"]) .shakeflat-board-hint > .shakeflat-board-badge-hint,
+        :host-context([data-sf-theme="dark"]) .shakeflat-board-hint > .shakeflat-board-badge-hint {
+          background-color: var(--sf-hint-badge-bg-color, #b8860b);
+          color: var(--sf-hint-badge-text-color, #000000);
+        }
+      </style>
+
+      <div class="shakeflat-board ${boardClass}">
+        <div class="shakeflat-board-badge ${badgeClass}">${title}</div>
+        <div>${message}</div>
+      </div>
+    `;
+
+    // Apply theme attribute based on current theme
+    this.updateTheme();
+  }
+
+  updateTheme() {
+    // Get theme from document or parent context
+    const documentTheme = document.documentElement.getAttribute('data-sf-theme') ||
+                         document.body.getAttribute('data-sf-theme') ||
+                         'light';
+
+    this.setAttribute('data-sf-theme', documentTheme);
+  }
+}
+
+customElements.define("sf-notice", SFNoticeBoard);

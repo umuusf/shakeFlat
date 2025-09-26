@@ -147,18 +147,12 @@ class DataTablesRenderButton
 
 
 
-    public function render($tableColumns = null)
+    public function render()
     {
         if ($this->keyParams) {
             foreach($this->keyParams as $alias) {
                 if (!array_key_exists($alias, $this->dataset)) {
-                    // Use column's data value if tableColumns is provided and column exists
-                    if ($tableColumns && isset($tableColumns[$alias])) {
-                        $columnData = $tableColumns[$alias]->data();
-                        $this->dataset[$alias] = "\${row.{$columnData}}";
-                    } else {
-                        $this->dataset[$alias] = "\${row.{$alias}}";
-                    }
+                    $this->dataset[$alias] = "\${row.{$alias}}";
                 }
             }
         }
@@ -1375,7 +1369,7 @@ class DataTablesEditColumn
                 if (!is_array($this->options)) L::system("[:dtedit:DataTablesEditColumn {$this->editId} {$this->alias} checkbox options not defined.:]");
                 if (count($this->options) > 1) $name = "{$this->alias}[]"; else $name = "{$this->alias}";
                 foreach($this->options as $value => $text) {
-                    if ($value === $this->defaultValue) $checked = " checked"; else $checked = "";
+                    if ($value == $this->defaultValue) $checked = " checked"; else $checked = "";
                     $htmlSub .= <<<EOD
 
                                                 <div class="form-check form-check-inline">
@@ -1402,7 +1396,7 @@ class DataTablesEditColumn
                 $idx = 1;
                 if (!is_array($this->options)) L::system("[:dtedit:DataTablesEditColumn {$this->editId} {$this->alias} radio options not defined.:]");
                 foreach($this->options as $value => $text) {
-                    if ($value === $this->defaultValue) $checked = " checked"; else $checked = "";
+                    if ($value == $this->defaultValue) $checked = " checked"; else $checked = "";
                     $htmlSub .= <<<EOD
 
                                                 <div class="form-check form-check-inline">
@@ -2103,7 +2097,7 @@ class DataTables
                 if ($class) $c["className"] = implode(" ", $class);
             }
 
-            if ($column->type())    $c["type"] = $column->type();
+            if ($column->type()) $c["type"] = $column->type();
             $c["searchable"] = $column->searchable();
             $c["orderable"] = $column->orderable();
             $c["visible"] = !$column->invisible();
@@ -2112,7 +2106,7 @@ class DataTables
                 $c["render"] = "rendering-{$alias}";
                 $render[$alias] = "\n                function(data, type, row, meta) {\n                    return `\n                        ";
                 foreach($column->renderButtons() as $btnId => $rb) {
-                    if ($rb->render($this->columns)) $render[$alias] .= trim($rb->render($this->columns)) . "\n                        ";
+                    if ($rb->render($this->columns)) $render[$alias] .= trim($rb->render()) . "\n                        ";
                     $rbCode = $rb->code($this->columns, $this->ajaxUrl, $this->deliverParameters);
                     $html .= $rbCode["html"];
                     $drawCallbackScript .= $rbCode["drawCallbackScript"];

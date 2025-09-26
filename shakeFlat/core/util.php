@@ -303,6 +303,13 @@ class Util
     }
 
     // Returns a non Y-m-d H:i:s format as a Y-m-d H:i:s format.
+    public static function Ymd($dateString, $userFormat = null)
+    {
+        $dateTime = self::sfDate($dateString, $userFormat);
+        if ($dateTime === false) return false;
+        return $dateTime->format("Y-m-d");
+    }
+
     public static function YmdHis($dateString, $userFormat = null)
     {
         $dateTime = self::sfDateTime($dateString, $userFormat);

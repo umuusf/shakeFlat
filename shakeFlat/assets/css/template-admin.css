@@ -50,16 +50,6 @@
     --sf-footer-border-color: #d0d0d0;
     --sf-custom-search-bg-color: #eeeef3;
     --sf-custom-search-text-color: #000000;
-    --sf-plain-bg-color: #eeeef3;
-    --sf-plain-text-color: #000000;
-    --sf-plain-badge-text-color: #000000;
-    --sf-notice-bg-color: #e0f7fa;
-    --sf-notice-text-color: #004d40;
-    --sf-notice-badge-bg-color: #004d40;
-    --sf-notice-badge-text-color: #e0f7fa;
-    --sf-hint-bg-color: #f0f0f0;
-    --sf-hint-text-color: #333333;
-
     --bs-border-color: #aaa;
 }
 
@@ -92,15 +82,6 @@
     --sf-footer-border-color: #121212;
     --sf-custom-search-bg-color: #343741;
     --sf-custom-search-text-color: #fefefe;
-    --sf-plain-bg-color: #343741;
-    --sf-plain-text-color: #dddddd;
-    --sf-plain-badge-text-color: #000000;
-    --sf-notice-bg-color: #e0e0a0;
-    --sf-notice-text-color: #000000;
-    --sf-notice-badge-bg-color: #000000;
-    --sf-notice-badge-text-color: #e0e0a0;
-    --sf-hint-bg-color: #3a3a3a;
-    --sf-hint-text-color: #d3d3d3;
 
     /* Bootstrap dark theme variables */
     color-scheme: dark;
@@ -311,51 +292,52 @@
     }
 
     .select2-container--bootstrap-5 .select2-selection {
-        background-color: #495057;
-        border-color: #6c757d;
-        color: #c0c0c0;
+        background-color: #495057 !important;
+        border-color: #6c757d !important;
+        color: #ffffff !important;
     }
 
     .select2-container--bootstrap-5 .select2-selection--single {
-        background-color: #495057;
-        border-color: #6c757d;
+        background-color: #495057 !important;
+        border-color: #6c757d !important;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
     }
 
     .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
-        color: #c0c0c0;
+        color: #ffffff !important;
     }
 
     .select2-container--bootstrap-5 .select2-selection--single .select2-selection__arrow b {
-        border-color: #c0c0c0 transparent transparent transparent;
+        border-color: #ffffff transparent transparent transparent !important;
     }
 
     .select2-container--bootstrap-5.select2-container--open .select2-selection--single .select2-selection__arrow b {
-        border-color: transparent transparent #c0c0c0 transparent;
+        border-color: transparent transparent #ffffff transparent !important;
     }
 
     .select2-container--bootstrap-5 .select2-selection--multiple {
-        background-color: #495057;
-        border-color: #6c757d;
+        background-color: #495057 !important;
+        border-color: #6c757d !important;
     }
 
     .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
-        background-color: #6c757d;
-        border-color: #6c757d;
-        color: #c0c0c0;
+        background-color: #6c757d !important;
+        border-color: #6c757d !important;
+        color: #ffffff !important;
     }
 
     .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove {
-        color: #c0c0c0;
+        color: #ffffff !important;
     }
 
     .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove:hover {
-        color: #fff;
-        background-color: #dc3545;
+        color: #fff !important;
+        background-color: #dc3545 !important;
     }
 
     .select2-container--bootstrap-5.select2-container--focus .select2-selection {
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        border-color: #0d6efd !important;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25) !important;
     }
 
     .select2-container--bootstrap-5.select2-container--disabled .select2-selection {
@@ -800,56 +782,7 @@ footer {
 .shakeflat-fs-25 { font-size: 2.5rem !important; }
 .shakeflat-fs-30 { font-size: 3.0rem !important; }
 
-/* Board color system */
-.shakeflat-board {
-    border-radius: 0.25rem;
-    padding: 0.5rem;
-    display: flex;
-}
 
-.shakeflat-board > div {
-    display: flex;
-    align-items: center;
-}
-
-.shakeflat-board > .shakeflat-board-badge {
-    white-space: nowrap;
-    border-radius: 0.25rem;
-    font-size: 0.9em;
-    padding: 0.2em 0.45em;
-    margin-right: 0.8em;
-}
-
-/* Board variants */
-.shakeflat-board-plain {
-    background-color: var(--sf-plain-bg-color);
-    color: var(--sf-plain-text-color);
-}
-
-.shakeflat-board-plain > .shakeflat-board-badge-plain {
-    background-color: var(--sf-plain-badge-bg-color);
-    color: var(--sf-plain-badge-text-color);
-}
-
-.shakeflat-board-notice {
-    background-color: var(--sf-notice-bg-color);
-    color: var(--sf-notice-text-color);
-}
-
-.shakeflat-board-notice > .shakeflat-board-badge-notice {
-    background-color: var(--sf-notice-badge-bg-color);
-    color: var(--sf-notice-badge-text-color);
-}
-
-.shakeflat-board-hint {
-    background-color: var(--sf-hint-bg-color);
-    color: var(--sf-hint-text-color);
-}
-
-.shakeflat-board-hint > .shakeflat-board-badge-hint {
-    background-color: var(--sf-hint-badge-bg-color);
-    color: var(--sf-hint-badge-text-color);
-}
 
 /* ==============================================
    SELECT2 GLOBAL DARK MODE OVERRIDES
@@ -912,23 +845,79 @@ html[data-sf-theme="dark"] .select2-container--bootstrap-5 .select2-selection,
 body[data-sf-theme="dark"] .select2-container--bootstrap-5 .select2-selection {
     background-color: #495057 !important;
     border-color: #6c757d !important;
-    color: #c0c0c0 !important;
+    color: #ffffff !important;
 }
 
 [data-sf-theme="dark"] .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered,
 html[data-sf-theme="dark"] .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered,
 body[data-sf-theme="dark"] .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
-    color: #c0c0c0 !important;
+    color: #ffffff !important;
 }
 
 [data-sf-theme="dark"] .select2-container--bootstrap-5 .select2-selection--single .select2-selection__arrow b,
 html[data-sf-theme="dark"] .select2-container--bootstrap-5 .select2-selection--single .select2-selection__arrow b,
 body[data-sf-theme="dark"] .select2-container--bootstrap-5 .select2-selection--single .select2-selection__arrow b {
-    border-color: #c0c0c0 transparent transparent transparent !important;
+    border-color: #ffffff transparent transparent transparent !important;
 }
 
 [data-sf-theme="dark"] .select2-container--bootstrap-5.select2-container--open .select2-selection--single .select2-selection__arrow b,
 html[data-sf-theme="dark"] .select2-container--bootstrap-5.select2-container--open .select2-selection--single .select2-selection__arrow b,
 body[data-sf-theme="dark"] .select2-container--bootstrap-5.select2-container--open .select2-selection--single .select2-selection__arrow b {
-    border-color: transparent transparent #c0c0c0 transparent !important;
+    border-color: transparent transparent #ffffff transparent !important;
+}
+
+/* Additional high-priority dark mode rules for select2 */
+[data-sf-theme="dark"] .select2-container .select2-selection--single .select2-selection__rendered {
+    color: #ffffff !important;
+}
+
+[data-sf-theme="dark"] .select2-container .select2-selection--multiple .select2-selection__rendered {
+    color: #ffffff !important;
+}
+
+[data-sf-theme="dark"] .select2-container .select2-selection--multiple .select2-selection__choice {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    color: #ffffff !important;
+}
+
+/* Additional arrow styling for better visibility */
+[data-sf-theme="dark"] .select2-container--bootstrap-5 .select2-selection__arrow b,
+[data-sf-theme="dark"] .select2-selection__arrow b {
+    border-color: #ffffff transparent transparent transparent !important;
+}
+
+[data-sf-theme="dark"] .select2-container--bootstrap-5.select2-container--open .select2-selection__arrow b,
+[data-sf-theme="dark"] .select2-container--open .select2-selection__arrow b {
+    border-color: transparent transparent #ffffff transparent !important;
+}
+
+/* Override SVG arrow color in dark mode */
+[data-sf-theme="dark"] .select2-container--bootstrap-5 .select2-selection--single,
+[data-sf-theme="dark"] .select2-container--bootstrap5 .select2-selection--single {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e") !important;
+}
+
+.form-floating > span.select2-container > span.selection > span.select2-selection {
+    height: calc(3.5rem + calc(var(--bs-border-width) * 2));
+    min-height: calc(3.5rem + calc(var(--bs-border-width) * 2));
+}
+
+.form-floating > span.select2-container > span.selection > span.select2-selection > span.select2-selection__rendered {
+    padding-top: calc(1.54rem + calc(var(--bs-border-width) * 2));
+    padding-left: 0.4rem;
+}
+
+/* Show a red asterisk on the label when .form-floating contains
+    a required <select> and a Select2 container (span.select2-container) */
+.form-floating:has(select[required]):has(span.select2-container) label::after {
+    content: " *";
+    color: red;
+    font-weight: bold;
+    position: relative;
+    top: -0.5rem;
+    left: -0.1rem;
+    font-size: 0.8rem;
+    opacity: 1 !important;
+    transform: scale(1) !important;
 }

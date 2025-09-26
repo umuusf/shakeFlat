@@ -480,6 +480,9 @@ function sfdtSetDefaultValue(input, value)
                 input.val(value);
             }
             break;
+        case "TEXTAREA":
+            input.val(value);
+            break;
     }
 }
 

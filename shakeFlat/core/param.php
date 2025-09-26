@@ -165,22 +165,31 @@ class Param
             }
         }
 
-        if ($default !== "_+-=NO_VALUE=-+_") return $default;
+        if ($default !== "_+-=NO_VALUE=-+_") {
+            switch($this->typeInfo[$key]["type"]) {
+                case Param::TYPE_DATE: return Util::Ymd($default);
+                case Param::TYPE_DATETIME: return Util::YmdHis($default);
+
+                default: return $default;
+            }
+        }
         return null;
     }
 
-    public function getDate($key, $format = "Y-m-d")
+    // return Y-m-d
+    public function getDateYmd($key)
     {
         $val = $this->get($key);
         if ($val === null || $val === "") return null;
-        $t = strtotime($val);
-        if ($t === false) return null;
-        return date($format, $t);
+        return \shakeFlat\Util::Ymd($val);
     }
 
-    public function getDateTime($key, $format = "Y-m-d H:i:s")
+    // return Y-m-d H:i:s
+    public function getDateTimeYmdHis($key)
     {
-        return $this->getDate($key, $format);
+        $val = $this->get($key);
+        if ($val === null || $val === "") return null;
+        return \shakeFlat\Util::YmdHis($val);
     }
 
     // Check the parameter format. If no parameters are passed, it is passed.
