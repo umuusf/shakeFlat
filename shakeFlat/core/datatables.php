@@ -2023,6 +2023,7 @@ class DataTables
                             type: 'POST',
                             data: data,
                         }).done(function (json, textStatus, jqXHR) {
+                            console.log(json);
                             try {
                                 if (typeof json !== 'object') throw new Error("json is not object");
                                 if (!('error' in json) || !('errCode' in json.error) || !('errMsg' in json.error)) throw new Error("error object is not exist");
@@ -2418,6 +2419,7 @@ class DataTables
         // Setting up a branch for one page
         if ($this->onePage) {
             $param = Param::getInstance();
+            $param->check("sfdtPageMode", Param::TYPE_STRING, [ "data", "submitForAddRecord", "modify", "submitForModify", "submitForDelete", "detailView", "columnConfigSave", "columnConfigLoad" ]);
             switch($param->sfdtPageMode) {
                 case "data"                 : return $this->opAjax();
                 case "submitForAddRecord"   : return $this->opSubmitForAddRecord();
@@ -2651,6 +2653,7 @@ class DataTables
     private function opAjax()
     {
         $param = Param::getInstance();
+        $param->check("draw", Param::TYPE_INT);
         $res = Response::getInstance();
         $template = Template::getInstance();
 
@@ -2837,6 +2840,7 @@ class DataTables
         }
 
         $param = Param::getInstance();
+        $param->checkKeyValue('sfdtBtnId', Param::TYPE_STRING);
         $btnId = $param->sfdtBtnId;
         if (!isset($this->extraButtons[$btnId])) L::system("[:dtaddrecord:Extra button {$btnId} not found.:]");
         if (!$this->extraButtons[$btnId]->isAddRecord()) L::system("[:dtaddrecord:Extra button {$btnId} is not AddRecord.:]");
@@ -2883,6 +2887,9 @@ class DataTables
         if ($this->querySearchSQL) return [ "sql" => $this->querySearchSQL, "bind" => $this->querySearchBind ];
 
         $param = Param::getInstance();
+        $param->check("columns", Param::TYPE_ARRAY);
+        $param->check("search", Param::TYPE_ARRAY);
+        $param->check("customSearchEx", Param::TYPE_ARRAY);
 
         $whereOr = [];
         $whereAnd = [];
@@ -3002,6 +3009,7 @@ class DataTables
             }
         } else {
             $param = Param::getInstance();
+            $param->check("order", Param::TYPE_ARRAY);
             $order = "";
             if ($param->order) {
                 $orders = [];
@@ -3017,12 +3025,14 @@ class DataTables
     protected function opQueryLimitStart()
     {
         $param = Param::getInstance();
+        $param->check("start", Param::TYPE_INT);
         return $param->start;
     }
 
     protected function opQueryLimitLength()
     {
         $param = Param::getInstance();
+        $param->check("length", Param::TYPE_INT);
         return $param->length;
     }
 

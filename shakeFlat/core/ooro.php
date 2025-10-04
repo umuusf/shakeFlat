@@ -14,6 +14,7 @@
 namespace shakeFlat;
 use shakeFlat\DB;
 use shakeFlat\Modt;
+use shakeFlat\L;
 
 class Ooro extends Modt
 {
@@ -81,13 +82,13 @@ class Ooro extends Modt
             if ($whereList) $where = implode(" and ", $whereList);
             $stmt = $db->query("select count(*) as cnt from ".$this->tableName." where $where", $bind);
             $count = intval($db->fetch($stmt)["cnt"]);
-            if ($count > 1) $this->exit("OORO : The query result is not one row.");
+            if ($count > 1) L::exit("OORO : The query result is not one row.");
             if ($count == 1) {
                 $stmt = $db->query("select * from ".$this->tableName." where $where", $bind);
                 $row = $db->fetch($stmt);
                 $this->sourceDataList = $this->dataList = $row;
             } else {
-                if (($modelsInfo["nodata_error"] ?? false) == true) $this->exit("OORO : The data does not exist.");
+                if (($modelsInfo["nodata_error"] ?? false) == true) L::exit("OORO : The data does not exist.");
                 foreach($this->pkFieldNameList as $idx => $f) {
                     $this->dataList[$f] = $this->pkList[$idx];      // This means that data is inserted with a new pk value.
                 }
